@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import {
   Wand2,
   FlaskConical,
@@ -386,8 +387,8 @@ export function ProblemEditorForm({
           </CardHeader>
           <CardContent>
             {previewMode ? (
-              <div className="p-4 rounded-xl border bg-slate-50 whitespace-pre-wrap text-sm leading-relaxed">
-                {descriptionMd}
+              <div className="p-4 rounded-xl border bg-slate-50">
+                <MarkdownRenderer content={descriptionMd} />
               </div>
             ) : (
               <Textarea

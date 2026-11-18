@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import {
   BookOpen,
   Code2,
@@ -139,9 +140,9 @@ export default function CompanyCurriculumViewPage() {
                                 </div>
                               </div>
 
-                              <p className="text-xs text-slate-600 whitespace-pre-line bg-slate-50 p-3 rounded-lg border">
-                                {prob.description_md}
-                              </p>
+                              <div className="bg-slate-50 p-3 rounded-lg border">
+                                <MarkdownRenderer content={prob.description_md} />
+                              </div>
 
                               <div className="flex flex-wrap items-center gap-2 pt-1">
                                 <BookOpen className="h-3.5 w-3.5 text-slate-400" />

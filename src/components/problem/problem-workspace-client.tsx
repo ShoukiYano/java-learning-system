@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ProgressBar } from "@/components/ui/progress";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 import type { TestCaseClientJudgeResult } from "@/app/api/problems/submit/route";
 import {
   Play,
@@ -454,11 +455,9 @@ export function ProblemWorkspaceClient({
               </span>
             </div>
 
-            {/* 問題文 */}
-            <div className="prose prose-sm max-w-none space-y-3 text-slate-800">
-              <div className="whitespace-pre-wrap text-sm leading-relaxed font-sans bg-slate-50 p-4 rounded-xl border border-slate-200">
-                {problem.description_md}
-              </div>
+            {/* 問題文（Markdownレンダリング） */}
+            <div className="bg-slate-50/90 p-4 rounded-xl border border-slate-200">
+              <MarkdownRenderer content={problem.description_md} />
             </div>
 
             {/* 公開テストケースの入出力例 */}
@@ -533,9 +532,7 @@ export function ProblemWorkspaceClient({
                         <div className="font-bold text-amber-800">
                           💡 ヒント {h.step_number}
                         </div>
-                        <div className="whitespace-pre-wrap leading-relaxed">
-                          {h.content_md}
-                        </div>
+                        <MarkdownRenderer content={h.content_md} />
                       </div>
                     ))}
                 </div>
@@ -549,8 +546,8 @@ export function ProblemWorkspaceClient({
                 問題の解説
               </h3>
               {isCleared ? (
-                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 leading-relaxed whitespace-pre-wrap">
-                  {problem.explanation_md}
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 leading-relaxed">
+                  <MarkdownRenderer content={problem.explanation_md} />
                 </div>
               ) : (
                 <div className="p-3 rounded-lg bg-slate-100 border border-slate-200 text-xs text-slate-500">
