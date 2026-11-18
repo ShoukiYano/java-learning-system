@@ -38,17 +38,36 @@ export async function POST(request: NextRequest) {
         ? createAdminClient()
         : userSupabase;
 
-    // 管理者権限の確認（ログインしている場合は role === 'admin' をチェック）
+    // 権限の確認（admin または 評価コメント操作を行う company ロール）
+    let callerRole = "admin";
+    let callerCompanyId: string | null = null;
+    let callerName = "担当者";
+
     if (user) {
       const { data: profile } = await db
         .from("profiles")
-        .select("role")
+        .select("role, company_id, full_name")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (profile && profile.role !== "admin") {
+      callerRole =
+        profile?.role ??
+        (user.user_metadata?.role as string | undefined) ??
+        "admin";
+      callerCompanyId = profile?.company_id ?? null;
+      callerName =
+        profile?.full_name ??
+        (user.user_metadata?.full_name as string | undefined) ??
+        "担当者";
+
+      const isFeedbackAction =
+        action === "create_feedback" ||
+        action === "update_feedback" ||
+        action === "delete_feedback";
+
+      if (callerRole !== "admin" && !(callerRole === "company" && isFeedbackAction)) {
         return NextResponse.json(
-          { error: "管理者権限が必要です。" },
+          { error: "この操作を行う権限がありません。" },
           { status: 403 }
         );
       }
@@ -332,30 +351,45 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // 8. 受講生へのフィードバック・5段階評価の登録
+      // 8. 受講生への評価・コメントの新規登録（管理者・企業担当者共通）
       case "create_feedback": {
         const { student_id, submission_id, rating, comment } = payload;
-        let adminId = user?.id;
 
-        if (!adminId) {
+        // 企業担当者の場合、自社の受講生であるか確認
+        if (callerRole === "company" && callerCompanyId) {
+          const { data: targetSt } = await db
+            .from("profiles")
+            .select("company_id")
+            .eq("id", student_id)
+            .maybeSingle();
+          if (targetSt?.company_id && targetSt.company_id !== callerCompanyId) {
+            return NextResponse.json(
+              { error: "他社の受講生には評価・コメントを登録できません。" },
+              { status: 403 }
+            );
+          }
+        }
+
+        let authorId = user?.id;
+        if (!authorId) {
           const { data: anyAdmin } = await db
             .from("profiles")
             .select("id")
-            .eq("role", "admin")
+            .in("role", ["admin", "company"])
             .limit(1)
             .maybeSingle();
-          adminId = anyAdmin?.id;
+          authorId = anyAdmin?.id;
         }
 
-        if (!adminId) {
-          throw new Error("管理者プロファイルが見つかりません。");
+        if (!authorId) {
+          throw new Error("作成者プロファイルが見つかりません。");
         }
 
         const { data: fb, error: fbErr } = await db
           .from("feedbacks")
           .insert({
             student_id,
-            admin_id: adminId,
+            admin_id: authorId,
             submission_id: submission_id ?? null,
             rating: Number(rating),
             comment: String(comment).trim(),
@@ -364,7 +398,48 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (fbErr) throw fbErr;
-        return NextResponse.json({ ok: true, feedback: fb });
+        return NextResponse.json({
+          ok: true,
+          feedback: fb,
+          authorName: fb?.admin?.full_name ?? callerName,
+        });
+      }
+
+      // 8-2. 既存の評価・コメントの編集（管理者・企業担当者共通）
+      case "update_feedback": {
+        const { feedback_id, rating, comment } = payload;
+
+        // デモ用ID（eval-...）の場合はDBクエリをスキップして成功を返す
+        if (String(feedback_id).startsWith("eval-")) {
+          return NextResponse.json({ ok: true });
+        }
+
+        const { data: updatedFb, error: upFbErr } = await db
+          .from("feedbacks")
+          .update({
+            rating: Number(rating),
+            comment: String(comment).trim(),
+          })
+          .eq("id", feedback_id)
+          .select("*, admin:profiles!feedbacks_admin_id_fkey(id, full_name)")
+          .single();
+
+        if (upFbErr) throw upFbErr;
+        return NextResponse.json({ ok: true, feedback: updatedFb });
+      }
+
+      // 8-3. 評価・コメントの削除（管理者・企業担当者共通）
+      case "delete_feedback": {
+        const { feedback_id } = payload;
+        if (String(feedback_id).startsWith("eval-")) {
+          return NextResponse.json({ ok: true });
+        }
+        const { error: delFbErr } = await db
+          .from("feedbacks")
+          .delete()
+          .eq("id", feedback_id);
+        if (delFbErr) throw delFbErr;
+        return NextResponse.json({ ok: true });
       }
 
       // 9. お知らせ（全体／テナント企業別）の配信登録

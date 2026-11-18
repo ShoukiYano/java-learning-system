@@ -1,30 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { StudentAnalyticsRecord } from "@/lib/mock-analytics";
 import { Submission } from "@/types/database";
 import { SEED_PROBLEMS } from "@/lib/seed-data";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { EvaluationCommentManager } from "@/components/dashboard/evaluation-comment-manager";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress";
-import {
-  ArrowLeft,
-  Send,
-  Star,
-  Code2,
-  CheckCircle2,
-  MessageSquarePlus,
-} from "lucide-react";
+import { ArrowLeft, Code2 } from "lucide-react";
 
 export function AdminStudentDetailClient({
   student,
@@ -33,53 +24,6 @@ export function AdminStudentDetailClient({
   student: StudentAnalyticsRecord;
   submissions: Submission[];
 }) {
-  const [evaluations, setEvaluations] = useState(student.evaluations);
-  const [rating, setRating] = useState<number>(5);
-  const [comment, setComment] = useState<string>("");
-  const [saving, setSaving] = useState(false);
-  const [savedNotice, setSavedNotice] = useState<string | null>(null);
-
-  const handleAddFeedback = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!comment.trim()) return;
-    setSaving(true);
-    setSavedNotice(null);
-
-    try {
-      const res = await fetch("/api/admin/actions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "create_feedback",
-          payload: {
-            student_id: student.id,
-            submission_id: submissions[0]?.id ?? null,
-            rating,
-            comment: comment.trim(),
-          },
-        }),
-      });
-
-      const data = await res.json();
-      const newEval = {
-        id: data.feedback?.id ?? `eval-${Date.now()}`,
-        adminName: data.feedback?.admin?.full_name ?? "システム管理者・講師",
-        rating,
-        comment: comment.trim(),
-        createdAt: new Date().toISOString().slice(0, 10),
-      };
-      setEvaluations((prev) => [newEval, ...prev]);
-      setComment("");
-      setSavedNotice(
-        "フィードバックと評価をデータベースに保存しました。受講生ダッシュボードおよび企業担当者画面に即時反映されます。"
-      );
-    } catch {
-      setSavedNotice("保存中にエラーが発生しました。");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const latestCode =
     submissions[0]?.code ?? SEED_PROBLEMS[4].solution_code;
   const latestProblemTitle =
@@ -98,7 +42,7 @@ export function AdminStudentDetailClient({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {student.fullName} さんの学習詳細・フィードバック管理
+            {student.fullName} さんの学習詳細・評価・コメント管理
           </h1>
           <p className="text-sm text-slate-600 mt-1">
             所属テナント：{student.companyName} ／ メール：{student.email}
@@ -109,13 +53,6 @@ export function AdminStudentDetailClient({
           {student.totalProblems}問)
         </Badge>
       </div>
-
-      {savedNotice && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-          <span>{savedNotice}</span>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-5 space-y-6">
@@ -152,82 +89,13 @@ export function AdminStudentDetailClient({
         </div>
 
         <div className="lg:col-span-7 space-y-6">
-          <Card className="border-indigo-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <MessageSquarePlus className="h-4 w-4 text-indigo-600" />
-                講師フィードバック・評価の入力（DB保存）
-              </CardTitle>
-              <CardDescription className="text-xs">
-                ここで登録した評価とコメントは、`feedbacks` テーブルに保存され、受講生本人および所属企業の研修担当者にも共有されます。
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAddFeedback} className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <label className="text-xs font-semibold text-slate-700">
-                    5段階スキル評価:
-                  </label>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((num) => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => setRating(num)}
-                        className={`px-2.5 py-1 rounded border text-xs font-bold inline-flex items-center gap-1 ${
-                          rating >= num
-                            ? "bg-amber-50 border-amber-300 text-amber-700"
-                            : "bg-slate-50 text-slate-400"
-                        }`}
-                      >
-                        <Star className="h-3.5 w-3.5 fill-current" />
-                        {num}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <Textarea
-                  required
-                  rows={3}
-                  placeholder="提出コードの良かった点や改善アドバイスを入力してください..."
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                />
-
-                <Button type="submit" disabled={saving}>
-                  <Send className="h-3.5 w-3.5" />
-                  {saving ? "保存中..." : "フィードバックを登録する"}
-                </Button>
-              </form>
-
-              <div className="mt-6 pt-4 border-t space-y-3">
-                <div className="text-xs font-bold text-slate-600">
-                  送信済みフィードバック履歴
-                </div>
-                {evaluations.length === 0 ? (
-                  <p className="text-xs text-slate-400">
-                    まだフィードバック履歴はありません。
-                  </p>
-                ) : (
-                  evaluations.map((ev) => (
-                    <div
-                      key={ev.id}
-                      className="p-3 rounded-lg bg-slate-50 border text-xs space-y-1"
-                    >
-                      <div className="flex justify-between font-semibold">
-                        <span>{ev.adminName}</span>
-                        <span className="text-amber-600">
-                          ★ {ev.rating} / 5 ({ev.createdAt})
-                        </span>
-                      </div>
-                      <p className="text-slate-700">{ev.comment}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          {/* ★ 管理者側からも「評価・コメント」を追加・編集・削除可能 */}
+          <EvaluationCommentManager
+            studentId={student.id}
+            submissionId={submissions[0]?.id ?? null}
+            initialEvaluations={student.evaluations}
+            defaultAuthorLabel="システム管理者"
+          />
 
           <Card>
             <CardHeader className="pb-3">

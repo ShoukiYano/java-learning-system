@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { getStudentDetailForAdminOrCompany } from "@/lib/data-service";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
+import { EvaluationCommentManager } from "@/components/dashboard/evaluation-comment-manager";
 import {
   Card,
   CardContent,
@@ -11,15 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress";
-import {
-  ArrowLeft,
-  Target,
-  Layers,
-  MessageSquareQuote,
-  Star,
-  Clock,
-  Lock,
-} from "lucide-react";
+import { ArrowLeft, Target, Layers, Clock } from "lucide-react";
 
 export default async function CompanyStudentDetailPage({
   params,
@@ -27,7 +20,7 @@ export default async function CompanyStudentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { student } = await getStudentDetailForAdminOrCompany(id);
+  const { student, submissions } = await getStudentDetailForAdminOrCompany(id);
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl space-y-6">
@@ -39,11 +32,6 @@ export default async function CompanyStudentDetailPage({
           <ArrowLeft className="h-4 w-4" />
           自社受講生一覧へ戻る
         </Link>
-
-        <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 bg-slate-200/80 px-3 py-1 rounded-full">
-          <Lock className="h-3 w-3" />
-          企業担当者向け閲覧専用ビュー（編集不可）
-        </span>
       </div>
 
       <Card>
@@ -140,44 +128,13 @@ export default async function CompanyStudentDetailPage({
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <MessageSquareQuote className="h-4 w-4 text-amber-600" />
-                講師評価・コメント
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {student.evaluations.length === 0 ? (
-                <p className="text-xs text-slate-500">
-                  まだ講師からの評価コメントはありません。
-                </p>
-              ) : (
-                student.evaluations.map((ev) => (
-                  <div
-                    key={ev.id}
-                    className="p-4 rounded-xl bg-amber-50/60 border border-amber-200 space-y-2"
-                  >
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-slate-900">
-                        {ev.adminName}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 font-bold text-amber-700">
-                          <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
-                          総合評価 {ev.rating} / 5
-                        </span>
-                        <span className="text-slate-400">{ev.createdAt}</span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-700 leading-relaxed">
-                      {ev.comment}
-                    </p>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
+          {/* ★ 企業側からも「評価・コメント」を追加・編集・削除可能 */}
+          <EvaluationCommentManager
+            studentId={student.id}
+            submissionId={submissions[0]?.id ?? null}
+            initialEvaluations={student.evaluations}
+            defaultAuthorLabel={`${student.companyName} 研修担当`}
+          />
         </div>
       </div>
     </div>
