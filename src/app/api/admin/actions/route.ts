@@ -1,17 +1,25 @@
-// =============================================================================
-// 管理者専用 CRUD 永続化 Route Handler (POST /api/admin/actions)
-// - コース作成・公開/非公開切替
-// - 章・単元の作成、公開/非公開切替、ドラッグ&ドロップ並び替え順序のDB保存
-// - 問題（Java / SQL）・テストケース（公開/非公開）・段階的ヒント（1〜3）の保存
-// - テナント（企業）登録・企業コード発行・企業担当者アカウント招待（auth.admin.createUser）
-// - 受講生へのフィードバック・5段階評価の登録
-// - お知らせ（全体／テナント企業別）の配信登録
-// =============================================================================
+/**
+ * ファイル概要：
+ * 管理者・企業担当者向け CRUD 永続化 Route Handler (POST /api/admin/actions)
+ *
+ * 主な処理：
+ * 1. コース・章・単元・問題の作成・編集・並び替え順序の永続化
+ * 2. 企業テナント管理（企業登録、企業コード発行、企業担当者アカウント発行・PW再設定）
+ * 3. 企業別カリキュラム表示／非表示トグル（company_courses）の保存
+ * 4. 受講生への評価・コメント（フィードバック）の追加・編集・削除（企業担当者も自社受講生に対して実行可能）
+ * 5. 受講生ごとのコース受講制限・個別ロック/解放設定（student_course_locks）
+ * 6. 全体および特定企業向けお知らせ（announcements）の配信
+ *
+ * 注意事項：
+ * - 実行権限チェック：原則システム管理者（admin）のみ。ただしフィードバック管理と受講ロック管理は自社受講生に限り企業担当者（company）も実行可能。
+ * - サービスロールキー（SUPABASE_SERVICE_ROLE_KEY）が存在する場合は、Supabase Auth の特権操作（ユーザー作成・パスワード更新）を実行します。
+ */
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/data-service";
+import { resetLoginAttemptsForEmail } from "@/lib/login-attempts";
 import {
   setInMemoryStudentCourseLock,
   addInMemoryCompanyManager,
@@ -20,6 +28,13 @@ import {
   deleteInMemoryCompanyManager,
 } from "@/lib/seed-data";
 
+/**
+ * 処理概要：
+ * 管理者・企業向け各種アクションのディスパッチハンドラー
+ *
+ * @param request 送信されたNextRequest（actionおよびpayloadを含むJSON）
+ * @returns 処理結果のNextResponse
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -41,10 +56,14 @@ export async function POST(request: NextRequest) {
         });
         return NextResponse.json({ ok: true, demo: true, manager: newMgr });
       } else if (action === "reset_company_manager_password") {
+        const targetEmailOrId = payload.managerId || payload.email;
         updateInMemoryCompanyManagerPassword(
-          payload.managerId || payload.email,
+          targetEmailOrId,
           payload.newPassword
         );
+        if (payload.email) {
+          resetLoginAttemptsForEmail(payload.email);
+        }
         return NextResponse.json({ ok: true, demo: true });
       } else if (action === "update_company_manager") {
         updateInMemoryCompanyManagerInfo(
@@ -56,6 +75,31 @@ export async function POST(request: NextRequest) {
       } else if (action === "delete_company_manager") {
         deleteInMemoryCompanyManager(payload.managerId);
         return NextResponse.json({ ok: true, demo: true });
+      } else if (action === "update_company") {
+        const cleanEmail = payload.contact_email
+          ? String(payload.contact_email).trim()
+          : null;
+        let managerUpdated = false;
+        if (cleanEmail && payload.new_manager_password) {
+          const pass = String(payload.new_manager_password).trim();
+          const updated = updateInMemoryCompanyManagerPassword(cleanEmail, pass);
+          if (!updated) {
+            addInMemoryCompanyManager({
+              company_id: payload.companyId,
+              full_name: `${payload.name || "企業"} 研修担当者`,
+              email: cleanEmail,
+              password: pass,
+            });
+          }
+          resetLoginAttemptsForEmail(cleanEmail);
+          managerUpdated = true;
+        }
+        return NextResponse.json({
+          ok: true,
+          demo: true,
+          managerUpdated,
+          message: "ローカルデモモードで企業情報を更新しました。",
+        });
       }
 
       return NextResponse.json({
@@ -547,6 +591,13 @@ export async function POST(request: NextRequest) {
 
         // もし新しいパスワードが指定されており、サービスロールキーがある場合は企業担当者アカウントを作成またはPW更新
         let managerUpdated = false;
+        if (cleanEmail && new_manager_password) {
+          const pass = String(new_manager_password).trim();
+          updateInMemoryCompanyManagerPassword(cleanEmail, pass);
+          resetLoginAttemptsForEmail(cleanEmail);
+          managerUpdated = true;
+        }
+
         if (
           cleanEmail &&
           new_manager_password &&
@@ -778,6 +829,9 @@ export async function POST(request: NextRequest) {
         }
 
         updateInMemoryCompanyManagerPassword(managerId || email, cleanPass);
+        if (email) {
+          resetLoginAttemptsForEmail(email);
+        }
 
         if (
           process.env.SUPABASE_SERVICE_ROLE_KEY &&

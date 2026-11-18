@@ -1,32 +1,44 @@
-// =============================================================================
-// 高セキュリティ認証 Route Handler (POST /api/auth/secure-login)
-// 1. マルチテナント分離型ブルートフォース対策：
-//    - ロック単位を「接続元IP ＋ ロール ＋ 企業コード ＋ メールアドレス」の複合キーに分離
-//    - これにより「A社の失敗でB社がロックされる」「社内の一人の失敗で同僚がロックされる」
-//      「外部攻撃者の失敗で正規担当者がロックされる」といった巻き添えを100%防止
-//    - 同一IPから異なる企業・メールを無差別に試すボットのみ、IP単体の上限（30回）で遮断
-// 2. ゲートキー検証：管理者・企業ポータルは正しい gateKey または HttpOnly Cookie が必須
-// 3. 多要素検証：
-//    - company ロール：DB上の所属企業の company_code と入力された企業コードが完全一致すること
-//    - admin ロール：サーバー環境変数 ADMIN_MASTER_PIN（デフォルト: "778899"）と入力PINが完全一致すること
-// =============================================================================
+/**
+ * ファイル概要：
+ * 高セキュリティ認証 Route Handler (POST /api/auth/secure-login)
+ *
+ * 主な処理：
+ * 1. マルチテナント分離型ブルートフォース対策：
+ *    - 失敗回数・ロック状態を「接続元IP ＋ ロール ＋ 企業コード ＋ メールアドレス」の複合キーでメモリ管理
+ *    - これにより「A社のログイン失敗でB社がロックされる」「社内の一人の失敗で同僚がロックされる」
+ *      「外部攻撃者の失敗で正規ユーザーがロックされる」といった巻き添え被害を100%防止
+ *    - 同一IPから異なる企業・メールを無差別に試す不正ボットのみ、IP単体の上限（30回）で一時遮断
+ * 2. ステルスゲートキー検証：
+ *    - 管理者・企業ログイン時は、正しいgateKeyまたはHttpOnly Cookie（dss_admin_gate / dss_company_gate）の保持を検証
+ * 3. 多要素・ロール境界検証：
+ *    - company ロール：DB上の所属企業の company_code と入力された企業コードが完全一致することを照合
+ *    - admin ロール：サーバー環境変数 ADMIN_MASTER_PIN（デフォルト: "778899"）と入力PINが完全一致することを照合
+ * 4. Supabase Auth によるパスワード検証（およびデモモード時のインメモリアカウント検証）
+ *
+ * 注意事項：
+ * - ログイン失敗時は残り試行回数を明示し、5回連続失敗で15分間のロックアウトが発動します。
+ */
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { UserRole } from "@/types/database";
 import { verifyInMemoryCompanyManagerLogin } from "@/lib/seed-data";
+import {
+  MAX_ACCOUNT_FAILED_ATTEMPTS,
+  MAX_BOT_IP_FAILED_ATTEMPTS,
+  loginAttemptsMap,
+  recordFailedAttempt,
+  clearAttempts,
+} from "@/lib/login-attempts";
 
-interface AttemptRecord {
-  count: number;
-  lockedUntil: number | null;
-}
-
-const MAX_ACCOUNT_FAILED_ATTEMPTS = 5; // 同一IP × 同一企業コード × 同一メールの上限（5回）
-const MAX_BOT_IP_FAILED_ATTEMPTS = 30; // 同一IPからの無差別ボット攻撃の上限（30回）
-const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15分間ロック
-const loginAttemptsMap = new Map<string, AttemptRecord>();
-
+/**
+ * 処理概要：
+ * 指定されたロールに対応する期待されるゲートキー文字列を取得する
+ *
+ * @param role 認証対象のロール（admin / company）
+ * @returns 環境変数設定値またはフォールバックのゲートキー文字列
+ */
 function getExpectedGateKey(role: UserRole): string {
   if (role === "admin") {
     return process.env.ADMIN_GATE_KEY || "dss-admin-gate-2025";
@@ -37,25 +49,34 @@ function getExpectedGateKey(role: UserRole): string {
   return "";
 }
 
+/**
+ * 処理概要：
+ * 管理者ログイン用のマスターPINコードを取得する
+ *
+ * @returns 環境変数設定値またはデフォルトのマスターPIN（"778899"）
+ */
 function getExpectedAdminPin(): string {
   return process.env.ADMIN_MASTER_PIN || "778899";
 }
 
-function recordFailedAttempt(key: string, maxLimit: number): AttemptRecord {
-  const now = Date.now();
-  const prev = loginAttemptsMap.get(key) ?? { count: 0, lockedUntil: null };
-  const nextCount = prev.count + 1;
-  const lockedUntil =
-    nextCount >= maxLimit ? now + LOCKOUT_DURATION_MS : null;
-  const updated = { count: nextCount, lockedUntil };
-  loginAttemptsMap.set(key, updated);
-  return updated;
-}
-
-function clearAttempts(key: string) {
-  loginAttemptsMap.delete(key);
-}
-
+/**
+ * 処理概要：
+ * セキュア認証POSTリクエストハンドラー
+ *
+ * 処理詳細：
+ * 1. リクエストボディ（メール、パスワード、ロール、企業コード、管理者PIN等）およびIPアドレスの抽出・正規化
+ * 2. 複合キーによるロックアウト状態の確認（ロック中の場合は429 Too Many Requestsを即座に返却）
+ * 3. 管理者・企業ログイン時のゲートキー／Cookie検証（不正アクセスは403 Forbidden）
+ * 4. 管理者専用マスターPINの検証
+ * 5. 企業担当者ログイン時の企業コード入力存在確認
+ * 6. Supabase Auth によるパスワード照合（失敗時は試行回数を記録し401返却）
+ *    ※デモ環境時はインメモリ担当者ストアでの照合もフォールバック実行
+ * 7. ユーザーのDBプロファイルロールおよび企業コードの合致確認
+ * 8. 認証成功時：失敗カウンターのリセットと最終ログイン日時の更新を行い、ロール情報を返却
+ *
+ * @param request 送信されたNextRequest
+ * @returns 認証判定結果のNextResponse（JSON）
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

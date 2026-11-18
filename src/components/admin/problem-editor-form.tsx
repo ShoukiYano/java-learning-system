@@ -1,5 +1,19 @@
 "use client";
 
+/**
+ * ファイル概要：
+ * 演習問題作成・編集フォームコンポーネント（Java / SQL両対応）
+ *
+ * 主な処理：
+ * - 問題メタデータ（タイトル、所属章、難易度、想定時間、タグ、言語種別）の入力編集
+ * - 問題文・解説文のMarkdownリアルタイムプレビュー機能
+ * - スターターコードおよび模範解答（solution_code）の編集
+ * - 公開・非公開テストケースの追加・編集・削除
+ * - 模範解答を用いた全テストケースの事前サンドボックス実行検証（保存前にテストが通るか確認）
+ * - 段階的ヒント（1〜3段階）の編集
+ * - サーバーAPI（/api/admin/actions: save_problem）への永続化
+ */
+
 import React, { useState } from "react";
 import Link from "next/link";
 import { runJavaCode, compareOutputs } from "@/lib/java";

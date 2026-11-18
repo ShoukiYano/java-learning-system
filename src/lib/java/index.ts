@@ -1,7 +1,15 @@
-// =============================================================================
-// 自作Javaインタプリタ 統合エントリポイント＆採点ユーティリティ
-// ブラウザ（Web Worker）および Node.js（Route Handler）の両方で同一動作
-// =============================================================================
+/**
+ * ファイル概要：
+ * 自作Javaインタプリタ 統合エントリポイント＆採点ユーティリティ
+ *
+ * 主な処理：
+ * - 字句解析（lexer）、構文解析（parser）、意味解析（analyzer）、評価器（evaluator）のパイプライン実行
+ * - コンパイルエラー時の親切な日本語ヒント付き診断情報（JavaDiagnostic）の生成
+ * - テストケース出力比較用の正規化（末尾改行・空白の無視）処理（compareOutputs）
+ *
+ * 注意事項：
+ * - ブラウザ（Web Worker）および Node.js（Next.js Route Handler）の両方で完全同一に動作する共通ライブラリです。
+ */
 
 import { tokenize } from "./lexer";
 import { parseJava } from "./parser";
@@ -17,8 +25,18 @@ export * from "./types";
 export * from "./errors";
 
 /**
- * Javaソースコードをコンパイルチェック（字句解析・構文解析・意味解析）し、
- * エラーがなければツリーウォーキング評価器で実行する。
+ * 処理概要：
+ * Javaソースコードをコンパイルチェック（字句・構文・意味解析）し、AST評価器でサンドボックス実行する
+ *
+ * 処理詳細：
+ * 1. tokenize: ソースコードを字句トークン列に分解
+ * 2. parseJava: 再帰下降構文解析によりAST（抽象構文木）を生成
+ * 3. analyzeProgram: 型チェック、スコープ検証、mainメソッド定義、抽象メソッド実装を検査
+ * 4. evaluateProgram: ASTツリーウォーキング評価器でmainメソッドから実行
+ *
+ * @param sourceCode 実行対象のJavaソースコード文字列
+ * @param options 標準入力文字列や最大ステップ数などの実行時オプション
+ * @returns JavaExecutionResult 実行結果（標準出力、エラー、ステップ数、診断情報等）
  */
 export function runJavaCode(
   sourceCode: string,
@@ -90,6 +108,14 @@ export function normalizeOutput(output: string): string {
     .replace(/\n+$/g, "");
 }
 
+/**
+ * 処理概要：
+ * 提出コードの標準出力とテストケースの期待出力を正規化して比較判定する
+ *
+ * @param actual 実行結果の標準出力
+ * @param expected テストケースに定義された期待出力
+ * @returns true: 完全一致（合格）, false: 不一致
+ */
 export function compareOutputs(actual: string, expected: string): boolean {
   return normalizeOutput(actual) === normalizeOutput(expected);
 }

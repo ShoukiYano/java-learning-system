@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * ファイル概要：
+ * カリキュラム（コース）管理・テナント企業別表示マトリクス設定画面コンポーネント
+ *
+ * 主な処理：
+ * - コース一覧表示（Java / SQLおよび新規追加コース）
+ * - 新規コースの作成および全社向け公開／非公開トグル
+ * - テナント企業×コースの公開マトリクストグル（company_courses: 企業ごとにコースをON/OFF可能）
+ * - コース詳細・章・問題管理（/admin/courses/[courseId]）への導線
+ */
+
 import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";

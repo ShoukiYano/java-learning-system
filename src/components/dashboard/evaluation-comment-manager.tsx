@@ -1,5 +1,19 @@
 "use client";
 
+/**
+ * ファイル概要：
+ * 受講生への「評価・コメント」管理コンポーネント（管理者・企業担当者共通）
+ *
+ * 主な処理：
+ * - 5段階の星評価（★1〜★5）およびフィードバックコメントの一覧表示
+ * - 新規評価・コメントの投稿処理（/api/admin/actions: create_feedback）
+ * - 既存コメントのインライン編集・保存処理（update_feedback）
+ * - コメントの削除処理（delete_feedback）
+ *
+ * 注意事項：
+ * - 企業担当者が操作する場合、自社所属の受講生に対する操作のみ許可されます。
+ */
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";

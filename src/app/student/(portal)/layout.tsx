@@ -1,3 +1,13 @@
+/**
+ * ファイル概要：
+ * 受講生専用ポータル共通レイアウト（Server Component）
+ *
+ * 主な処理：
+ * - 受講生ナビゲーションヘッダー（マイダッシュボード、カリキュラム受講、提出履歴、プロフィール）
+ * - ログイン中の受講生名、所属企業名、連続学習ストリークバッジの表示
+ * - ログアウトボタン（SignOutButton）の配置
+ */
+
 import React from "react";
 import Link from "next/link";
 import { getCurrentProfile } from "@/lib/data-service";

@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * ファイル概要：
+ * DevSkillStudio サービスランディングページ（トップ画面）
+ *
+ * 主な処理：
+ * - サービスのコア価値（環境構築ゼロ、完全ブラウザ内完結、Java/SQL実践演習、企業別受講管理）の紹介
+ * - インタラクティブなコーディングデモプレビュー（Java / SQLのコード切り替え＆実行シミュレーション）
+ * - 受講生向け無料体験（/student/signup, /student/login）への導線
+ * - 企業担当者向けポータル（/company/login）およびシステム管理者用ゲートへのアクセス導線
+ */
+
 import React, { useState } from "react";
 import Link from "next/link";
 import {

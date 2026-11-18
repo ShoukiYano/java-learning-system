@@ -1,14 +1,21 @@
-// =============================================================================
-// 自作SQL実行エンジン（インメモリRDBMS & SQLクエリ評価器）
-// ブラウザ（Web Worker / クライアント）と Node.js（Route Handler）の両方で同一動作
-// 対応構文：
-// - CREATE TABLE / INSERT INTO / UPDATE / DELETE
-// - SELECT (DISTINCT, *, カラム指定, AS 別名, 算術式, 文字列連結)
-// - 集約関数: COUNT(*), COUNT(col), SUM(col), AVG(col), MAX(col), MIN(col), ROUND(val, n), COALESCE(a, b)
-// - FROM / INNER JOIN / LEFT JOIN / ON
-// - WHERE (AND, OR, NOT, =, !=, <>, <, <=, >, >=, LIKE, IN, BETWEEN, IS NULL, IS NOT NULL)
-// - GROUP BY / HAVING / ORDER BY (ASC / DESC, 複数カラム) / LIMIT / OFFSET
-// =============================================================================
+/**
+ * ファイル概要：
+ * 完全独立・インメモリSQLクエリ実行エンジン（自作RDBMS & クエリパーサー/評価器）
+ *
+ * 主な処理：
+ * - 外部DBやWASMに一切依存せず、TypeScriptのみで完全実装されたインメモリリレーショナルデータベース
+ * - ブラウザ（クライアント / Web Worker）とサーバー（Next.js Route Handler）の両環境で完全同一動作
+ * - 対応構文：
+ *   - CREATE TABLE / INSERT INTO / UPDATE / DELETE
+ *   - SELECT (DISTINCT, *, カラム指定, AS別名, 算術計算式, 文字列連結)
+ *   - 集約関数: COUNT(*), COUNT(col), SUM(col), AVG(col), MAX(col), MIN(col), ROUND(val, n), COALESCE(a, b)
+ *   - テーブル結合: FROM / INNER JOIN / LEFT JOIN / ON
+ *   - 絞り込み条件: WHERE (AND, OR, NOT, =, !=, <>, <, <=, >, >=, LIKE, IN, BETWEEN, IS NULL, IS NOT NULL)
+ *   - グループ化・集計・ソート: GROUP BY / HAVING / ORDER BY (ASC / DESC, 複数列ソート) / LIMIT / OFFSET
+ *
+ * 注意事項：
+ * - クエリ結果は標準的なテキストテーブルまたはJSON形式として整形され、自動採点エンジンで比較検証されます。
+ */
 
 import { JavaDiagnostic, JavaExecutionResult } from "@/lib/java/types";
 import { createDiagnostic } from "@/lib/java/errors";

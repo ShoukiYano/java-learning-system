@@ -1,13 +1,23 @@
-// =============================================================================
-// 提出採点 Route Handler (POST /api/problems/submit)
-// 仕様：
-// - サーバー側（Route Handler）で、同じインタプリタを使って公開テストと非公開テストの両方を判定する
-// - サービスロールキー（createAdminClient）を使うサーバー側だけで非公開テスト（is_hidden=true）を取得・判定する
-// - 出力の比較では、末尾の空白と改行の違いは無視する（compareOutputs）
-// - 結果を submissions テーブルに保存し、全テストに通過したら progress.status = 'completed' とする
-// - 挑戦回数（attempts_count）と所要時間（time_spent_seconds）を記録する
-// - 非公開テストの入力値・期待出力はクライアントレスポンスに含めない
-// =============================================================================
+/**
+ * ファイル概要：
+ * 提出コード自動採点・実行判定 Route Handler (POST /api/problems/submit)
+ *
+ * 主な処理：
+ * 1. レート制限の適用（同一IP・問題に対する1.5秒以内の連続提出連打スパムを遮断）
+ * 2. コース受講権限（ロック状態）のサーバーサイド検証（ロック中コースへの不正提出を403でブロック）
+ * 3. 公開テストケースおよび非公開テストケース（is_hidden = true）の取得
+ *    （サービスロールキーを用いた特権クライアントで非公開テストを安全に取得）
+ * 4. 自作Javaインタプリタ / 自作SQLクエリエンジンによるサーバー側サンドボックス実行・出力比較
+ * 5. セキュリティ保護：非公開テストの入力値・期待出力・実行時スタックトレースをレスポンスから完全隠蔽
+ * 6. 判定結果および学習記録のDB永続化：
+ *    - submissions テーブル：提出コード、合否、実行時間、消費メモリ等の履歴保存
+ *    - progress テーブル：問題別の挑戦回数、学習所要時間、合格ステータス（completed）の更新
+ *    - study_logs テーブル：学習カレンダー・草グラフ用の当日の学習分数・クリア問数の集計
+ *    - profiles テーブル：連続学習日数（ストリークカウント）と最終学習日の自動更新
+ *
+ * 注意事項：
+ * - 外部APIやDocker等のコンテナ環境に依存せず、Node.js内の自作インタプリタで完結して高速採点を行います。
+ */
 
 import { NextRequest, NextResponse } from "next/server";
 import { runJavaCode, compareOutputs } from "@/lib/java";
@@ -23,22 +33,53 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SubmissionStatus, TestCase } from "@/types/database";
 
-// 簡易レート制限（同一IP/ユーザーからの連続提出スパム防止）
+/**
+ * 簡易レート制限用のIP・問題キーごとの最終提出タイムスタンプ管理マップ
+ */
 const recentSubmitMap = new Map<string, number>();
 
+/**
+ * クライアントに返却するテストケースごとの判定結果型
+ */
 export interface TestCaseClientJudgeResult {
+  /** テストケース名（非公開テストの場合は「〇〇（非公開テスト）」と表示） */
   name: string;
+  /** 非公開テストフラグ */
   isHidden: boolean;
+  /** 合格フラグ（期待出力と実出力が完全一致したか） */
   passed: boolean;
+  /** 実行所要時間（ミリ秒） */
   executionTimeMs: number;
+  /** 実行された命令ステップ数（計算量指標） */
   stepsExecuted: number;
-  // 公開テストのみ差分表示用に格納（非公開テストでは絶対に送らない）
+  /** 入力データ（公開テストのみ差分表示用に格納。非公開テストではセキュリティ上undefined） */
   input?: string;
+  /** 期待される標準出力（公開テストのみ格納） */
   expectedOutput?: string;
+  /** 実際の標準出力（公開テストのみ格納） */
   actualOutput?: string;
+  /** エラー詳細メッセージ（公開テストのみ格納） */
   errorDetail?: string;
 }
 
+/**
+ * 処理概要：
+ * 提出コードの自動採点実行および学習履歴保存POSTハンドラー
+ *
+ * 処理詳細：
+ * 1. リクエストパラメータ（problemId, code, timeSpentSeconds, unlockedHintStep）のバリデーション
+ * 2. 1.5秒以内の連打リクエストに対するレート制限（429 Too Many Requests）
+ * 3. 認証ユーザーの場合、所属コースが受講制限（ロック）されていないかサーバー側検証
+ * 4. テストケース（公開＋非公開）をSupabaseまたはシードデータからロード
+ * 5. 問題の対象言語（JavaまたはSQL）を自動判別し、全テストケースをサンドボックス実行
+ * 6. 出力比較関数（末尾空白・改行の違いを吸収するcompareOutputs）で成否を厳格判定
+ * 7. 非公開テストの機密情報をマスクしたクライアント返却用オブジェクト（results）を構成
+ * 8. Supabase接続時は提出履歴、問題進捗、学習ログ、連続学習ストリーク日数をトランザクション的に更新
+ * 9. 総合判定結果（passed / wrong_answer / compile_error 等）をJSONレスポンスとして返却
+ *
+ * @param request 送信されたNextRequest
+ * @returns 採点結果オブジェクトのNextResponse
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -54,6 +95,7 @@ export async function POST(request: NextRequest) {
       unlockedHintStep?: number;
     } = body;
 
+    // パラメータ検証
     if (!problemId || typeof code !== "string") {
       return NextResponse.json(
         { error: "problemId と code は必須です。" },

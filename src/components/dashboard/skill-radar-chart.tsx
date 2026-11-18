@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * ファイル概要：
+ * スキル分野別習得度レーダーチャートコンポーネント（Recharts利用）
+ *
+ * 主な処理：
+ * - 受講生の分野別（変数、ループ、オブジェクト指向、SQL抽出/集計/結合など）の正答・習得率をレーダーチャートで可視化
+ *
+ * 注意事項：
+ * - Rechartsを使用しているため、Client Component（"use client"）として動作します。
+ */
+
 import React from "react";
 import {
   Radar,

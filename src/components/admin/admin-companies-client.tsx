@@ -1,5 +1,15 @@
 "use client";
 
+/**
+ * ファイル概要：
+ * テナント（導入企業）管理・企業コード発行画面クライアントコンポーネント
+ *
+ * 主な処理：
+ * - 登録済み企業テナント一覧と所属受講生数の表示
+ * - 新規テナント登録・企業コード自動生成および担当者招待
+ * - テナント詳細・編集画面（/admin/companies/[companyId]）への遷移導線
+ */
+
 import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";

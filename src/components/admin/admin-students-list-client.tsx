@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * ファイル概要：
+ * システム管理者向け受講生全体一覧・進捗モニタリング画面コンポーネント
+ *
+ * 主な処理：
+ * - 全企業または特定企業ごとの受講生一覧フィルタリング表示
+ * - 各受講生の進捗率、クリア問題数、遅れアラート状態の把握
+ * - 全体または企業別のBOM付きUTF-8 CSV進捗レポート一括エクスポート機能
+ * - 受講生個別詳細・評価・受講ロック管理画面への遷移
+ */
+
 import React, { useState } from "react";
 import Link from "next/link";
 import { StudentAnalyticsRecord } from "@/lib/mock-analytics";

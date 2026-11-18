@@ -481,8 +481,8 @@ export function AdminCompanyDetailClient({
                     onChange={(e) => setNewManagerPassword(e.target.value)}
                     placeholder="変更する場合のみ6文字以上で入力"
                   />
-                  <p className="text-[11px] text-slate-400">
-                    ※ 入力して保存すると、上記メールアドレスの企業担当者アカウントを作成（またはパスワード更新）します。
+                  <p className="text-[11px] text-slate-500">
+                    ※ 初期パスワードは <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono font-bold">Password123!</code> です。変更する場合のみ入力して保存してください（保存すると即座にログインパスワードに反映され、ロックも解除されます）。
                   </p>
                 </div>
 

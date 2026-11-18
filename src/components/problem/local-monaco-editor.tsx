@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * ファイル概要：
+ * 完全ローカル完結型 Monaco Editor ラッパーコンポーネント
+ *
+ * 主な処理：
+ * - 外部CDN（jsdelivr / cloudflare等）を一切使わず、バンドル内の monaco-editor を動的ロード（完全閉域網・オフライン対応）
+ * - Java構文エラー（JavaDiagnostic）をMonacoのマーカー（波線下線）としてリアルタイム描画
+ * - キーボードショートカット（Ctrl/Cmd + Enter でテスト実行、Ctrl/Cmd + Shift + Enter で提出）のバインド
+ *
+ * 注意事項：
+ * - Web WorkerをBlob経由でインライン生成するため、外部オリジンのWorkerブロックに影響されません。
+ */
+
 import React, { useEffect, useState } from "react";
 import Editor, { loader, OnMount } from "@monaco-editor/react";
 import { JavaDiagnostic } from "@/lib/java";

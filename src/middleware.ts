@@ -1,15 +1,39 @@
+/**
+ * ファイル概要：
+ * Next.js Edge Middleware（ロールベース画面・パス分離 ＋ ステルス404保護）
+ *
+ * 主な処理：
+ * 1. レガシーURL互換リダイレクト（/login -> /student/login, /signup -> /student/signup, /app -> /student）
+ * 2. 管理者・企業ログイン画面のステルス404偽装保護（正しいゲートキーまたはCookieがないアクセスを/_not-foundへRewrite）
+ * 3. セキュリティヘッダー（X-Frame-Options, X-Content-Type-Options, Referrer-Policy, X-Robots-Tag, Cache-Control）の強制付与
+ * 4. Supabase Authセッションの検証・Cookie同期
+ * 5. 未ログイン時の保護（各ロールの正規ログイン画面へのリダイレクト、または404偽装）
+ * 6. ロール境界の厳格チェック（受講生が/adminや/companyにアクセスした際に自ロールのホームへ追い出す等）
+ *
+ * 注意事項：
+ * - Edgeランタイムで動作するため、Node.js専用APIは使用できません。
+ * - ゲートキーの検証に失敗したリクエストはステータス404でRewriteし、ポータルの存在自体を外部ボットや不正アクセス者から隠蔽します。
+ */
+
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { UserRole } from "@/types/database";
 
-// =============================================================================
-// ロールベース画面・パス分離 ＋ ステルス404保護（Middleware）
-// 1. /admin/login および /company/login は、正しいゲートキー (?gate=...) または
-//    承認済み HttpOnly Cookie がない限り /not-found へ Rewrite（404偽装）する
-// 2. /admin/... と /company/... には X-Robots-Tag: noindex, nofollow, noarchive を強制付与
-// 3. ロール境界の厳格チェック
-// =============================================================================
-
+/**
+ * 処理概要：
+ * レスポンスオブジェクトに対してセキュリティヘッダーを付与する
+ *
+ * 処理詳細：
+ * 1. クリックジャッキング防止用（X-Frame-Options: DENY）
+ * 2. MIMEタイプスニッフィング防止用（X-Content-Type-Options: nosniff）
+ * 3. リファラー情報保護用（Referrer-Policy: same-origin）
+ * 4. 管理者・企業ポータルの場合、検索エンジンのインデックスやキャッシュを完全に遮断
+ *    （X-Robots-Tag: noindex, nofollow, noarchive / Cache-Control: no-store）
+ *
+ * @param res 適用対象のNextResponse
+ * @param isSensitivePortal 管理者または企業向けの高機密ポータルであるかどうかのフラグ
+ * @returns ヘッダー付与後のNextResponse
+ */
 function applySecurityHeaders(
   res: NextResponse,
   isSensitivePortal: boolean
@@ -27,10 +51,25 @@ function applySecurityHeaders(
   return res;
 }
 
+/**
+ * 処理概要：
+ * 全HTTPリクエストに対する認証・認可・ステルスURL保護・ロールルーティング制御
+ *
+ * 処理詳細：
+ * 1. 旧URL（/login, /signup, /app）からの後方互換リダイレクト
+ * 2. ステルスゲートキーのチェック（/admin/login, /company/login に対する404偽装または認証Cookie発行）
+ * 3. Supabase Authクライアントの初期化およびCookieの読み書き
+ * 4. 未認証ユーザーのポータルアクセス遮断（受講生は/student/loginへ、企業・管理者はゲート認証有無により分岐）
+ * 5. 認証済みユーザーのロール確認（profiles.role, user_metadata.role）
+ * 6. ロール不一致アクセスの検知と正規ポータルへの強制リダイレクト（権限昇格攻撃の防止）
+ *
+ * @param request 受信したNextRequest
+ * @returns 判定結果に応じたNextResponse（リダイレクト、リライト、または次のミドルウェアへの通過）
+ */
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // 旧パス互換リダイレクト
+  // 1. 旧パス互換リダイレクト
   if (pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/student/login";
@@ -51,7 +90,7 @@ export async function middleware(request: NextRequest) {
   const isCompanyPath = pathname.startsWith("/company");
   const isSensitivePortal = isAdminPath || isCompanyPath;
 
-  // ★ ステルス・ゲートキー検証（/admin/login と /company/login）
+  // 2. ステルス・ゲートキー検証（/admin/login と /company/login）
   const expectedAdminGate =
     process.env.ADMIN_GATE_KEY || "dss-admin-gate-2025";
   const expectedCompanyGate =
@@ -120,6 +159,7 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  // Supabase未設定または初期値の場合はモック動作として通過
   if (
     !supabaseUrl ||
     !supabaseAnonKey ||
@@ -128,6 +168,7 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(supabaseResponse, isSensitivePortal);
   }
 
+  // 3. Supabase Authクライアントの初期化（Next.js SSR用Cookieアダプタ）
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
@@ -153,6 +194,7 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  // セッションユーザー情報の取得
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -167,7 +209,7 @@ export async function middleware(request: NextRequest) {
   const isCompanyPortal = pathname.startsWith("/company") && !isAuthPage;
   const isAdminPortal = pathname.startsWith("/admin") && !isAuthPage;
 
-  // 未ログイン時の保護
+  // 4. 未ログイン時の保護
   if (!user) {
     if (isStudentPortal) {
       const url = request.nextUrl.clone();
@@ -207,7 +249,7 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(supabaseResponse, isSensitivePortal);
   }
 
-  // ログイン済みの場合、profiles.role（または user_metadata.role）を取得してロール境界を厳格に強制
+  // 5. ログイン済みの場合、profiles.role（または user_metadata.role）を取得してロール境界を厳格に強制
   if (isAuthPage || isStudentPortal || isCompanyPortal || isAdminPortal) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -236,6 +278,7 @@ export async function middleware(request: NextRequest) {
         ? "/company"
         : "/student";
 
+    // 既にログイン済みでログイン/サインアップ画面に訪れた場合は、該当ロールのホームへ誘導
     if (isAuthPage) {
       const url = request.nextUrl.clone();
       url.pathname = roleHome;
@@ -245,6 +288,7 @@ export async function middleware(request: NextRequest) {
       );
     }
 
+    // 他ロールポータルへの不正アクセス時の強制リダイレクト（権限外ポータルからの追い出し）
     if (isAdminPortal && role !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = roleHome;
@@ -267,6 +311,9 @@ export async function middleware(request: NextRequest) {
   return applySecurityHeaders(supabaseResponse, isSensitivePortal);
 }
 
+/**
+ * Middlewareの適用対象パス（静的アセットや画像等を除外）
+ */
 export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",

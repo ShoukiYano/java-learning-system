@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * ファイル概要：
+ * 受講生ごとの教材コース受講制限・個別ロック/解放管理コンポーネント
+ *
+ * 主な処理：
+ * - 受講生一人ひとりのコース進捗状況および現在の受講制限ステータスを一覧表示
+ * - 3つのステータス（自動判定 / 特別解放 / 手動ロック）のワンクリック切り替え
+ * - /api/admin/actions への即時保存およびローカル状態の楽観的更新
+ *
+ * 注意事項：
+ * - 企業担当者は自社所属の受講生に対してのみ設定変更権限を持ちます（API側で検証）。
+ */
+
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { StudentCourseStatusItem, CourseLockStatus } from "@/types/database";
@@ -31,6 +44,14 @@ interface StudentCourseLockManagerProps {
   initialCourseStatuses: StudentCourseStatusItem[];
 }
 
+/**
+ * 処理概要：
+ * 受講生詳細画面に表示するコース受講制限・解放管理UIコンポーネント
+ *
+ * @param studentId 対象受講生のユーザーID
+ * @param studentName 対象受講生の氏名
+ * @param initialCourseStatuses 初期コース状態一覧（サーバーサイドで事前取得された配列）
+ */
 export function StudentCourseLockManager({
   studentId,
   studentName,

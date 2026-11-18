@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * ファイル概要：
+ * 学習アクティビティ可視化コンポーネント（月間カレンダー表示 ＆ 14週間草ヒートマップ切替）
+ *
+ * 主な処理：
+ * - 受講生の日々の学習時間・クリア問題数（study_logs）をカレンダーおよびGitHubライクな草グラフで描画
+ * - 年月日と曜日を含む月間カレンダービューと、長期的な学習傾向を把握する14週ヒートマップビューの切り替え
+ * - 各セルクリック時の詳細情報（日付、学習時間、クリア問題数）表示
+ *
+ * 注意事項：
+ * - タイムゾーンによる日付のズレを防ぐため、ローカルタイム基準で日付文字列（YYYY-MM-DD）を生成・照合します。
+ */
+
 import React, { useState } from "react";
 import { StudyLog } from "@/types/database";
 import { ChevronLeft, ChevronRight, Calendar, LayoutGrid } from "lucide-react";

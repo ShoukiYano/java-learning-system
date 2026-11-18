@@ -1,5 +1,21 @@
 "use client";
 
+/**
+ * ファイル概要：
+ * コーディング演習統合ワークスペースクライアントコンポーネント
+ *
+ * 主な処理：
+ * - 3ペイン構成（問題文・ヒント / Monacoコードエディタ / 実行結果・テストケース・ターミナル）
+ * - Web Workerを用いたブラウザ内即時実行（コードのテスト実行機能）
+ * - 段階的ヒント開放（1〜3段階）と解説表示
+ * - サーバー側提出・自動採点API（/api/problems/submit）との連携
+ * - 全テスト合格時の紙吹雪アニメーション（canvas-confetti）および次問題への導線表示
+ * - エディタテーマ（VS Dark / VS Light）切り替えおよびコード自動保存（localStorage）
+ *
+ * 注意事項：
+ * - Java実行時はUIブロッキングを防ぐためWeb Worker内でステップ実行され、無限ループ時にはタイムアウトで安全に強制停止されます。
+ */
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";

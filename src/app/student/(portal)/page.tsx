@@ -1,3 +1,16 @@
+/**
+ * ファイル概要：
+ * 受講生マイダッシュボード画面（/student、Server Component）
+ *
+ * 主な処理：
+ * - 続きから再開する問題へのダイレクトアクセスカード
+ * - 主要KPI（全体進捗率、連続学習日数、累計学習時間）
+ * - スキル習得度レーダーチャート（SkillRadarChart）
+ * - 学習アクティビティ草グラフ・月間カレンダー（StudyHeatmap）
+ * - 講師・企業からの最新評価・コメント一覧
+ * - 全体および自社向けお知らせ一覧
+ */
+
 import React from "react";
 import Link from "next/link";
 import { getCurrentProfile, getStudentDashboardData } from "@/lib/data-service";

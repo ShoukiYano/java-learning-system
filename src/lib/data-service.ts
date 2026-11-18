@@ -1,7 +1,17 @@
-// =============================================================================
-// サーバー側・受講生／管理者／企業担当者用 データ取得サービス（シードフォールバック付き）
-// Supabase接続時は実DB＋RLSを参照し、未設定時や空データ時はシードデータで完全動作する
-// =============================================================================
+/**
+ * ファイル概要：
+ * サーバー側・受講生／管理者／企業担当者用 データ取得・進捗集計サービス
+ *
+ * 主な処理：
+ * - ログイン中ユーザー情報（getCurrentProfile）の取得
+ * - コース進捗・前提ロック状態（getCoursesWithProgress）の集計
+ * - カリキュラムツリー（コース・章・単元・問題）の階層構造フェッチ
+ * - 受講生ダッシュボード用データ（直近問題、スキルレーダー、学習カレンダー草ログ等）の集計
+ * - 管理者／企業向けアナリティクス（受講生一覧、遅れ検知、企業別コース公開マトリクス、CSV出力用データ等）の生成
+ *
+ * 注意事項：
+ * - Supabase接続時は実PostgreSQL＋RLSを参照し、未設定時や接続エラー時もシードデータに自動フォールバックして画面が動作を継続します。
+ */
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -35,12 +45,24 @@ import {
   TestCase,
 } from "@/types/database";
 
+/**
+ * 処理概要：
+ * Supabaseへの接続設定が有効であるか（環境変数が実値で設定されているか）を判定する
+ *
+ * @returns true: Supabase接続設定済み, false: 未設定（デモモードフォールバック）
+ */
 export function isSupabaseConfigured(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   return Boolean(url && key && !url.includes("your-project-id"));
 }
 
+/**
+ * 処理概要：
+ * 現在のログインユーザーのプロファイル情報を取得する（未認証時やデモ時はフォールバックプロファイル）
+ *
+ * @returns Promise<Profile> プロファイル情報
+ */
 export async function getCurrentProfile(): Promise<Profile> {
   const fallbackProfile: Profile = {
     id: "demo-student-id",
@@ -83,16 +105,41 @@ export async function getCurrentProfile(): Promise<Profile> {
   }
 }
 
+/**
+ * 進捗統計およびロック状態情報を含むコース情報型
+ */
 export interface CourseWithStats extends Course {
+  /** コース内総問題数 */
   totalProblems: number;
+  /** 合格クリア問題数 */
   completedProblems: number;
+  /** 挑戦中（未合格）問題数 */
   inProgressProblems: number;
+  /** 現在受講がロックされているかどうかの真偽値 */
   isLocked: boolean;
-  lockStatus?: CourseLockStatus; // 'auto' | 'unlocked' | 'locked'
+  /** ロックの制御設定（auto: 自動判定, unlocked: 特別解放, locked: 手動制限） */
+  lockStatus?: CourseLockStatus;
+  /** ロックまたは解放の理由説明テキスト */
   lockReason?: string;
+  /** 前提コースが存在する場合のコースタイトル */
   prerequisiteCourseTitle?: string | null;
 }
 
+/**
+ * 処理概要：
+ * 受講生がアクセス可能なコース一覧と、各コースの進捗数・前提ロック状態を取得する
+ *
+ * 処理詳細：
+ * 1. 所属企業（companyId）がある場合、company_courses で非表示設定（is_visible = false）されたコースを除外
+ * 2. 各コース配下の問題数、受講生のprogressテーブルからクリア数および挑戦中問題数を集計
+ * 3. 前提コース（prerequisite_course_id）のクリア完了状態を検証
+ * 4. 受講生個別オーバーライド（student_course_locks）を確認し、手動解放・制限を優先反映
+ * 5. 各コースの統計情報および実効ロック状態（isLocked）を配列で返却
+ *
+ * @param userId 受講生ユーザーID
+ * @param companyId 受講生の所属企業ID（指定時は企業のコース表示設定を考慮）
+ * @returns Promise<CourseWithStats[]> コース進捗一覧
+ */
 export async function getCoursesWithProgress(
   userId: string,
   companyId?: string | null
@@ -310,11 +357,19 @@ export async function getCoursesWithProgress(
   }
 }
 
+/**
+ * 章・単元・問題の階層ツリー構造型
+ */
 export interface CourseTreeChapter {
+  /** 章ID */
   id: string;
+  /** 章タイトル */
   title: string;
+  /** 章詳細説明（null許容） */
   description: string | null;
+  /** 表示順序番号 */
   order_index: number;
+  /** 章配下の単元および問題一覧 */
   lessons: {
     id: string;
     title: string;
@@ -326,6 +381,14 @@ export interface CourseTreeChapter {
   }[];
 }
 
+/**
+ * 処理概要：
+ * 特定コースの章・単元・問題ツリーおよび受講生の進捗状態を階層構造で取得する
+ *
+ * @param courseId コースID
+ * @param userId 受講生ユーザーID
+ * @returns Promise<{ course: Course; chapters: CourseTreeChapter[] }> コース情報と章ツリー
+ */
 export async function getCourseTree(
   courseId: string,
   userId: string
@@ -461,6 +524,20 @@ export async function getCourseTree(
   }
 }
 
+/**
+ * 処理概要：
+ * 受講生が演習を行う問題の詳細情報（公開テストケース、段階的ヒント、進捗、次問題ID）を取得する
+ *
+ * 処理詳細：
+ * 1. 対象問題情報（タイトル、問題文Markdown、スターターコード）を取得
+ * 2. 公開テストケース（is_hidden = false）のみを抽出し、非公開テストケースは受講生から隠蔽
+ * 3. 段階的ヒント（1〜3段階）および受講生の現在進捗（progress）を取得
+ * 4. 同一コース内で次に解くべき次問題のID（nextProblemId）を特定
+ *
+ * @param problemId 問題ID
+ * @param userId 受講生ユーザーID
+ * @returns Promise<{ problem; publicTestCases; hints; progress; nextProblemId; courseId }> 問題詳細オブジェクト
+ */
 export async function getProblemDetailForStudent(
   problemId: string,
   userId: string
@@ -563,6 +640,14 @@ export async function getProblemDetailForStudent(
   }
 }
 
+/**
+ * 処理概要：
+ * 受講生マイダッシュボード画面（/student）に必要な全データ（再開対象問題、進捗サマリー、スキルレーダー、草グラフ、お知らせ、最新評価）を取得・集計する
+ *
+ * @param userId 受講生ユーザーID
+ * @param companyId 所属企業ID（企業別お知らせやコース表示設定に利用）
+ * @returns Promise<StudentDashboardData> ダッシュボード用集計データ
+ */
 export async function getStudentDashboardData(
   userId: string,
   companyId?: string | null
@@ -747,8 +832,17 @@ function getServerQueryClient() {
 }
 
 /**
- * 受講生一覧と各受講生の進捗・学習時間・遅れアラート・スキルマップ・評価をDBからリアルタイム集計
- * companyIdFilter が指定されている場合はその企業の受講生のみを返す
+ * 処理概要：
+ * 受講生一覧と各受講生の進捗・学習時間・遅れアラート・スキルマップ・評価をDBからリアルタイム集計する
+ *
+ * 処理詳細：
+ * 1. profiles テーブルから student ロールの受講生を取得（companyIdFilter 指定時は企業で絞り込み）
+ * 2. 受講生たちの進捗（progress）、学習時間ログ（study_logs）、講師評価（feedbacks）を一括バッチフェッチ
+ * 3. 各受講生の全体進捗率（%）、章別クリア数、今週の学習時間、スキル別レーダースコア（Java/SQL）を算出
+ * 4. 進捗率および最終学習日から「遅れ（要フォロー）」状態を自動判定
+ *
+ * @param companyIdFilter 絞り込み対象の企業ID（管理者はnullで全体、企業側は自社IDを指定）
+ * @returns Promise<StudentAnalyticsRecord[]> 受講生アナリティクス配列
  */
 export async function getStudentsAnalyticsFromDb(
   companyIdFilter?: string | null

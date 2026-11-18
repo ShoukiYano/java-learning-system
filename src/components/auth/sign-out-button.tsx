@@ -1,5 +1,14 @@
 "use client";
 
+/**
+ * ファイル概要：
+ * ログアウト実行ボタンコンポーネント
+ *
+ * 主な処理：
+ * - Supabase Auth の signOut API を呼び出してセッションを破棄
+ * - 指定のリダイレクト先パス（デフォルト: "/"）へ遷移し、ルーターをリフレッシュ
+ */
+
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
