@@ -3,14 +3,34 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { UserRole } from "@/types/database";
 
 // =============================================================================
-// ロールベース画面アクセス制御（Middleware）
+// ロールベース画面・パス分離アクセス制御（Middleware）
 // 仕様：
-// - admin（管理者）：すべてを管理（/admin/..., /app/..., /company/... 閲覧可）
-// - student（受講生）：/app/... のみアクセス可（/admin, /company はリダイレクト）
-// - company（企業担当者）：/company/... のみアクセス可（/admin, /app はリダイレクト）
+// - 受講生（student）：/student/login, /student/signup, /student/...
+// - 企業担当者（company）：/company/login, /company/...
+// - 管理者（admin）：/admin/login, /admin/...
+// - 旧パス（/app, /login, /signup）は /student 側の対応パスへ安全にリダイレクト
 // =============================================================================
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // 旧パス互換リダイレクト
+  if (pathname === "/login") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/student/login";
+    return NextResponse.redirect(url);
+  }
+  if (pathname === "/signup") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/student/signup";
+    return NextResponse.redirect(url);
+  }
+  if (pathname === "/app" || pathname.startsWith("/app/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace(/^\/app/, "/student");
+    return NextResponse.redirect(url);
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -18,7 +38,6 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // 環境変数が未設定またはプレースホルダーの場合はスキップ（ローカルデモ動作確認を妨げない）
   if (
     !supabaseUrl ||
     !supabaseAnonKey ||
@@ -56,22 +75,38 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
-  const isProtectedPath =
-    pathname.startsWith("/app") ||
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/company");
+  const isAuthPage =
+    pathname === "/student/login" ||
+    pathname === "/student/signup" ||
+    pathname === "/company/login" ||
+    pathname === "/admin/login";
 
-  // 未ログインで保護ルートへアクセスした場合は /login へリダイレクト
-  if (!user && isProtectedPath) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/login";
-    loginUrl.searchParams.set("redirectTo", pathname);
-    return NextResponse.redirect(loginUrl);
+  const isStudentPortal = pathname.startsWith("/student") && !isAuthPage;
+  const isCompanyPortal = pathname.startsWith("/company") && !isAuthPage;
+  const isAdminPortal = pathname.startsWith("/admin") && !isAuthPage;
+
+  // 未ログイン時は該当ロール専用のログインURLへリダイレクト
+  if (!user) {
+    if (isStudentPortal) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/student/login";
+      return NextResponse.redirect(url);
+    }
+    if (isCompanyPortal) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/company/login";
+      return NextResponse.redirect(url);
+    }
+    if (isAdminPortal) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/login";
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
   }
 
-  // ログイン済みの場合、profiles.role を取得してロール別アクセス制御を行う
-  if (user && (isProtectedPath || pathname === "/login" || pathname === "/signup")) {
+  // ログイン済みの場合、profiles.role を取得してロール境界を厳格に強制
+  if (isAuthPage || isStudentPortal || isCompanyPortal || isAdminPortal) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -85,34 +120,33 @@ export async function middleware(request: NextRequest) {
         ? "/admin"
         : role === "company"
         ? "/company"
-        : "/app";
+        : "/student";
 
-    // ログイン済みで /login または /signup に来た場合は各ロールのホームへリダイレクト
-    if (pathname === "/login" || pathname === "/signup") {
-      const homeUrl = request.nextUrl.clone();
-      homeUrl.pathname = roleHome;
-      return NextResponse.redirect(homeUrl);
+    if (isAuthPage) {
+      const url = request.nextUrl.clone();
+      url.pathname = roleHome;
+      return NextResponse.redirect(url);
     }
 
-    // /admin/... は admin ロールのみ許可
-    if (pathname.startsWith("/admin") && role !== "admin") {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = roleHome;
-      return NextResponse.redirect(redirectUrl);
+    // 管理者ポータルは admin のみ
+    if (isAdminPortal && role !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = roleHome;
+      return NextResponse.redirect(url);
     }
 
-    // /company/... は company または admin ロールのみ許可
-    if (pathname.startsWith("/company") && role !== "company" && role !== "admin") {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = roleHome;
-      return NextResponse.redirect(redirectUrl);
+    // 企業ポータルは company（または確認用のadmin）のみ
+    if (isCompanyPortal && role !== "company" && role !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = roleHome;
+      return NextResponse.redirect(url);
     }
 
-    // /app/... は student または admin ロールのみ許可
-    if (pathname.startsWith("/app") && role === "company") {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/company";
-      return NextResponse.redirect(redirectUrl);
+    // 受講生ポータルは student（またはプレビュー用のadmin）のみ
+    if (isStudentPortal && role !== "student" && role !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = roleHome;
+      return NextResponse.redirect(url);
     }
   }
 

@@ -6,7 +6,8 @@
 
 import { describe, it, expect } from "vitest";
 import { runJavaCode, compareOutputs } from "../index";
-import { SEED_PROBLEMS } from "@/lib/seed-data";
+import { runSqlCode } from "@/lib/sql";
+import { SEED_PROBLEMS, detectProblemLanguage } from "@/lib/seed-data";
 
 describe("Java Interpreter - 基本構文・型・演算子", () => {
   it("プリミティブ型（int, long, double, boolean, char, String）と算術・文字列連結が動作する", () => {
@@ -388,13 +389,15 @@ describe("Java Interpreter - エラー診断（コンパイルエラー＆日本
   });
 });
 
-describe("Seed Data Verification - シードデータ全12問の模範解答が全テストケースに通過する", () => {
+describe("Seed Data Verification - Java全12問＋SQL全6問の模範解答が全テストケースに通過する", () => {
   for (const problem of SEED_PROBLEMS) {
     it(`問題「${problem.title}」の模範解答が全${problem.test_cases.length}件のテストケースに合格する`, () => {
+      const lang = detectProblemLanguage(problem);
       for (const tc of problem.test_cases) {
-        const result = runJavaCode(problem.solution_code, {
-          stdin: tc.input,
-        });
+        const result =
+          lang === "sql"
+            ? runSqlCode(problem.solution_code, { setupSql: tc.input })
+            : runJavaCode(problem.solution_code, { stdin: tc.input });
         expect(result.status).toBe("success");
         expect(compareOutputs(result.stdout, tc.expected_output)).toBe(true);
       }

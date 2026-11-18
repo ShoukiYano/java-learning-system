@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   SEED_CHAPTERS,
   SEED_COURSE_ID,
+  SEED_COURSES,
   SEED_PROBLEMS,
 } from "@/lib/seed-data";
 import {
@@ -78,27 +79,21 @@ export interface CourseWithStats extends Course {
 }
 
 export async function getCoursesWithProgress(userId: string): Promise<CourseWithStats[]> {
-  const defaultCourse: Course = {
-    id: SEED_COURSE_ID,
-    title: "Java入門コース：ゼロから学ぶオブジェクト指向実践",
-    description:
-      "標準出力・変数・四則演算からスタートし、条件分岐とループ、配列とメソッド、クラス設計と継承・ポリモーフィズムまで全12問のコーディング演習で体系的に習得します。",
-    order_index: 1,
-    is_published: true,
-    prerequisite_course_id: null,
-    created_at: new Date().toISOString(),
-  };
+  const fallbackList: CourseWithStats[] = SEED_COURSES.map((c, idx) => {
+    const chIds = SEED_CHAPTERS.filter((ch) => ch.course_id === c.id).map((ch) => ch.id);
+    const probs = SEED_PROBLEMS.filter((p) => chIds.includes(p.chapter_id));
+    return {
+      ...c,
+      created_at: new Date().toISOString(),
+      totalProblems: probs.length,
+      completedProblems: idx === 0 ? 3 : 1,
+      inProgressProblems: 1,
+      isLocked: false,
+    };
+  });
 
   if (!isSupabaseConfigured()) {
-    return [
-      {
-        ...defaultCourse,
-        totalProblems: SEED_PROBLEMS.length,
-        completedProblems: 3,
-        inProgressProblems: 1,
-        isLocked: false,
-      },
-    ];
+    return fallbackList;
   }
 
   try {
@@ -119,15 +114,7 @@ export async function getCoursesWithProgress(userId: string): Promise<CourseWith
       .eq("user_id", userId);
 
     if (!courses || courses.length === 0) {
-      return [
-        {
-          ...defaultCourse,
-          totalProblems: SEED_PROBLEMS.length,
-          completedProblems: 0,
-          inProgressProblems: 0,
-          isLocked: false,
-        },
-      ];
+      return fallbackList;
     }
 
     const progressMap = new Map<string, Progress>();
@@ -185,15 +172,7 @@ export async function getCoursesWithProgress(userId: string): Promise<CourseWith
       };
     });
   } catch {
-    return [
-      {
-        ...defaultCourse,
-        totalProblems: SEED_PROBLEMS.length,
-        completedProblems: 3,
-        inProgressProblems: 1,
-        isLocked: false,
-      },
-    ];
+    return fallbackList;
   }
 }
 
@@ -217,19 +196,19 @@ export async function getCourseTree(
   courseId: string,
   userId: string
 ): Promise<{ course: Course; chapters: CourseTreeChapter[] }> {
+  const matchedCourse =
+    SEED_COURSES.find((c) => c.id === courseId) ?? SEED_COURSES[0];
+
   const fallbackCourse: Course = {
-    id: SEED_COURSE_ID,
-    title: "Java入門コース：ゼロから学ぶオブジェクト指向実践",
-    description:
-      "標準出力・変数・四則演算からスタートし、条件分岐とループ、配列とメソッド、クラス設計と継承・ポリモーフィズムまで全12問のコーディング演習で体系的に習得します。",
-    order_index: 1,
-    is_published: true,
-    prerequisite_course_id: null,
+    ...matchedCourse,
     created_at: new Date().toISOString(),
   };
 
   const buildFallbackTree = (progressMap: Map<string, Progress>) => {
-    const chapters: CourseTreeChapter[] = SEED_CHAPTERS.map((ch) => {
+    const targetChapters = SEED_CHAPTERS.filter(
+      (ch) => ch.course_id === fallbackCourse.id
+    );
+    const chapters: CourseTreeChapter[] = targetChapters.map((ch) => {
       const chProblems = SEED_PROBLEMS.filter((p) => p.chapter_id === ch.id).map(
         (p, idx) => {
           const prog = progressMap.get(p.id);
@@ -361,6 +340,8 @@ export async function getProblemDetailForStudent(
 }> {
   const seedIdx = SEED_PROBLEMS.findIndex((p) => p.id === problemId);
   const seedProb = SEED_PROBLEMS[seedIdx >= 0 ? seedIdx : 0];
+  const seedChapter = SEED_CHAPTERS.find((ch) => ch.id === seedProb.chapter_id);
+  const resolvedCourseId = seedChapter?.course_id ?? SEED_COURSE_ID;
   const nextSeed =
     seedIdx >= 0 && seedIdx + 1 < SEED_PROBLEMS.length
       ? SEED_PROBLEMS[seedIdx + 1].id
@@ -370,6 +351,7 @@ export async function getProblemDetailForStudent(
     problem: {
       id: seedProb.id,
       lesson_id: seedProb.lesson_id,
+      language: seedProb.language,
       title: seedProb.title,
       description_md: seedProb.description_md,
       difficulty: seedProb.difficulty,
@@ -396,7 +378,7 @@ export async function getProblemDetailForStudent(
     })),
     progress: null,
     nextProblemId: nextSeed,
-    courseId: SEED_COURSE_ID,
+    courseId: resolvedCourseId,
   };
 
   if (!isSupabaseConfigured()) {
@@ -448,8 +430,10 @@ export async function getProblemDetailForStudent(
 }
 
 export async function getStudentDashboardData(userId: string) {
-  const tree = await getCourseTree(SEED_COURSE_ID, userId);
-  const allProblems = tree.chapters.flatMap((c) =>
+  const javaTree = await getCourseTree(SEED_COURSE_ID, userId);
+  const sqlTree = await getCourseTree("11111111-1111-4111-8111-111111111102", userId);
+  const allChapters = [...javaTree.chapters, ...sqlTree.chapters];
+  const allProblems = allChapters.flatMap((c) =>
     c.lessons.flatMap((l) => l.problems)
   );
 
@@ -463,15 +447,16 @@ export async function getStudentDashboardData(userId: string) {
     allProblems.find((p) => p.status === "not_started") ??
     allProblems[0];
 
-  // スキルマップ（問題タグ別のクリア率・正答率）
+  // スキルマップ（Java＋SQL問題タグ別のクリア率・正答率）
   const skillTags = [
     "出力と変数",
-    "算術演算",
     "条件分岐",
     "ループ",
     "配列",
-    "メソッド",
     "オブジェクト指向",
+    "SQL抽出",
+    "SQL集計",
+    "SQL結合",
   ];
 
   const skillRadarData = skillTags.map((tag) => {
@@ -584,6 +569,6 @@ export async function getStudentDashboardData(userId: string) {
     recentFeedbacks,
     recentSubmissions,
     announcements,
-    chapters: tree.chapters,
+    chapters: allChapters,
   };
 }

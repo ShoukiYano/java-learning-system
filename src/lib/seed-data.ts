@@ -4,7 +4,7 @@
 //   およびDBフォールバック表示で共通利用するマスターデータ
 // =============================================================================
 
-import { Difficulty } from "@/types/database";
+import { Difficulty, ProblemLanguage } from "@/types/database";
 
 export interface SeedTestCase {
   name: string;
@@ -23,6 +23,7 @@ export interface SeedProblem {
   id: string;
   lesson_id: string;
   chapter_id: string;
+  language?: ProblemLanguage;
   title: string;
   description_md: string;
   difficulty: Difficulty;
@@ -47,6 +48,28 @@ export interface SeedChapter {
 }
 
 export const SEED_COURSE_ID = "11111111-1111-4111-8111-111111111101";
+export const SEED_SQL_COURSE_ID = "11111111-1111-4111-8111-111111111102";
+
+export const SEED_COURSES = [
+  {
+    id: SEED_COURSE_ID,
+    title: "Java入門コース：ゼロから学ぶオブジェクト指向実践",
+    description:
+      "標準出力・変数・四則演算からスタートし、条件分岐とループ、配列とメソッド、クラス設計と継承・ポリモーフィズムまで全12問のコーディング演習で体系的に習得します。",
+    order_index: 1,
+    is_published: true,
+    prerequisite_course_id: null,
+  },
+  {
+    id: SEED_SQL_COURSE_ID,
+    title: "SQL実践コース：データ抽出・集計・テーブル結合マスター",
+    description:
+      "SELECT文の基本とWHERE条件指定からスタートし、GROUP BY / HAVING による集計分析、INNER JOIN / LEFT JOIN による複数テーブル結合まで全8問の実践クエリ演習で習得します。",
+    order_index: 2,
+    is_published: true,
+    prerequisite_course_id: null,
+  },
+];
 
 export const SEED_CHAPTERS: SeedChapter[] = [
   {
@@ -84,6 +107,34 @@ export const SEED_CHAPTERS: SeedChapter[] = [
     order_index: 4,
     lesson_id: "33333333-3333-4333-8333-333333333304",
     lesson_title: "4-1. オブジェクト指向プログラミング実践",
+  },
+  // --- SQL実践コース（3章構成・全6問） ---
+  {
+    id: "22222222-2222-4222-8222-222222222211",
+    course_id: SEED_SQL_COURSE_ID,
+    title: "SQL第1章：SELECTとWHEREによるデータ抽出",
+    description: "SELECTによるカラム選択、WHEREによる条件絞り込み、ORDER BYとLIMITによる並び替えを学びます。",
+    order_index: 1,
+    lesson_id: "33333333-3333-4333-8333-333333333311",
+    lesson_title: "1-1. 基本クエリと条件フィルタリング",
+  },
+  {
+    id: "22222222-2222-4222-8222-222222222212",
+    course_id: SEED_SQL_COURSE_ID,
+    title: "SQL第2章：集約関数とGROUP BYによるデータ集計",
+    description: "COUNT, SUM, AVG, MAX, MIN と GROUP BY / HAVING を使って、部門別・カテゴリ別の集計レポートを作成します。",
+    order_index: 2,
+    lesson_id: "33333333-3333-4333-8333-333333333312",
+    lesson_title: "2-1. グループ集計とHAVING条件",
+  },
+  {
+    id: "22222222-2222-4222-8222-222222222213",
+    course_id: SEED_SQL_COURSE_ID,
+    title: "SQL第3章：JOINによる複数テーブル結合",
+    description: "INNER JOIN と LEFT JOIN を使いこなし、正規化された複数テーブルから必要な情報を結合して抽出します。",
+    order_index: 3,
+    lesson_id: "33333333-3333-4333-8333-333333333313",
+    lesson_title: "3-1. テーブル結合（INNER JOIN / LEFT JOIN）",
   },
 ];
 
@@ -1285,4 +1336,394 @@ public class Main {
       },
     ],
   },
+
+  // ===========================================================================
+  // SQL実践コース（全6問：SELECT / WHERE / GROUP BY / HAVING / JOIN）
+  // ===========================================================================
+  {
+    id: "44444444-4444-4444-8444-444444444501",
+    chapter_id: "22222222-2222-4222-8222-222222222211",
+    lesson_id: "33333333-3333-4333-8333-333333333311",
+    language: "sql",
+    title: "SQL 1-1. 条件に合う社員データの抽出（SELECT / WHERE）",
+    description_md: `### 問題概要
+社員テーブル \`employees\` から、部門（\`department\`）が \`'Engineering'\` である社員の **氏名（\`name\`）** と **給与（\`salary\`）** を抽出するSQLクエリを作成してください。
+
+### テーブル定義：\`employees\`
+| カラム名 | 型 | 説明 |
+| :--- | :--- | :--- |
+| \`id\` | INT | 社員ID |
+| \`name\` | TEXT | 氏名 |
+| \`department\` | TEXT | 所属部門 |
+| \`salary\` | INT | 給与（万円） |
+
+### 期待される出力カラム
+\`name\`, \`salary\``,
+    difficulty: "easy",
+    estimated_minutes: 10,
+    tags: ["SQL抽出", "基礎構文"],
+    starter_code: `-- Engineering 部門の name と salary を取得してください
+SELECT name, salary
+FROM employees
+`,
+    solution_code: `SELECT name, salary
+FROM employees
+WHERE department = 'Engineering';`,
+    explanation_md: `特定の条件に一致する行だけを抽出するには \`WHERE カラム名 = '値'\` を使用します。文字列リテラルはシングルクォート \`'Engineering'\` で囲みます。`,
+    order_index: 1,
+    test_cases: [
+      {
+        name: "公開テスト1：基本社員テーブル",
+        input: `CREATE TABLE employees (id INT, name TEXT, department TEXT, salary INT);
+INSERT INTO employees VALUES (1, 'Tanaka', 'Engineering', 650), (2, 'Suzuki', 'Sales', 520), (3, 'Sato', 'Engineering', 720);`,
+        expected_output: `name | salary\nTanaka | 650\nSato | 720`,
+        is_hidden: false,
+        order_index: 1,
+      },
+      {
+        name: "非公開テスト1：別データセット検証",
+        input: `CREATE TABLE employees (id INT, name TEXT, department TEXT, salary INT);
+INSERT INTO employees VALUES (10, 'Yamada', 'HR', 480), (11, 'Ito', 'Engineering', 800), (12, 'Watanabe', 'Engineering', 590);`,
+        expected_output: `name | salary\nIto | 800\nWatanabe | 590`,
+        is_hidden: true,
+        order_index: 2,
+      },
+    ],
+    hints: [
+      {
+        step_number: 1,
+        content_md: `取得するカラムは \`SELECT name, salary\`、テーブルは \`FROM employees\` です。`,
+      },
+      {
+        step_number: 2,
+        content_md: `条件の絞り込みには \`WHERE\` 句を使います。`,
+      },
+      {
+        step_number: 3,
+        content_md: `\`WHERE department = 'Engineering';\` を追加すれば完成です。`,
+      },
+    ],
+  },
+  {
+    id: "44444444-4444-4444-8444-444444444502",
+    chapter_id: "22222222-2222-4222-8222-222222222211",
+    lesson_id: "33333333-3333-4333-8333-333333333311",
+    language: "sql",
+    title: "SQL 1-2. 高額商品の並び替えと上位取得（ORDER BY / LIMIT）",
+    description_md: `### 問題概要
+商品テーブル \`products\` から、価格（\`price\`）が \`1000\` 以上の商品を抽出し、**価格の高い順（降順）** に並び替えて上位 **3件** の \`name\` と \`price\` を取得してください。
+
+### テーブル定義：\`products\`
+- \`id\` (INT)
+- \`name\` (TEXT)
+- \`price\` (INT)`,
+    difficulty: "easy",
+    estimated_minutes: 10,
+    tags: ["SQL抽出", "ソート"],
+    starter_code: `-- 価格1000以上の商品を価格の降順で上位3件取得してください
+SELECT name, price
+FROM products
+`,
+    solution_code: `SELECT name, price
+FROM products
+WHERE price >= 1000
+ORDER BY price DESC
+LIMIT 3;`,
+    explanation_md: `降順（大きい順）で並び替えるには \`ORDER BY カラム名 DESC\` を使い、取得件数を制限するには末尾に \`LIMIT 件数\` を指定します。`,
+    order_index: 2,
+    test_cases: [
+      {
+        name: "公開テスト1：5商品のうち上位3件",
+        input: `CREATE TABLE products (id INT, name TEXT, price INT);
+INSERT INTO products VALUES (1, 'Mouse', 2500), (2, 'Cable', 800), (3, 'Keyboard', 8500), (4, 'Monitor', 32000), (5, 'Stand', 4200);`,
+        expected_output: `name | price\nMonitor | 32000\nKeyboard | 8500\nStand | 4200`,
+        is_hidden: false,
+        order_index: 1,
+      },
+      {
+        name: "非公開テスト1：境界値1000円を含むケース",
+        input: `CREATE TABLE products (id INT, name TEXT, price INT);
+INSERT INTO products VALUES (1, 'ItemA', 1000), (2, 'ItemB', 999), (3, 'ItemC', 5000), (4, 'ItemD', 3000);`,
+        expected_output: `name | price\nItemC | 5000\nItemD | 3000\nItemA | 1000`,
+        is_hidden: true,
+        order_index: 2,
+      },
+    ],
+    hints: [
+      {
+        step_number: 1,
+        content_md: `まず \`WHERE price >= 1000\` で1000円以上の商品に絞り込みます。`,
+      },
+      {
+        step_number: 2,
+        content_md: `高い順に並べるには \`ORDER BY price DESC\` を指定します。`,
+      },
+      {
+        step_number: 3,
+        content_md: `最後に \`LIMIT 3\` を付けて上位3件だけを取得します。`,
+      },
+    ],
+  },
+  {
+    id: "44444444-4444-4444-8444-444444444503",
+    chapter_id: "22222222-2222-4222-8222-222222222212",
+    lesson_id: "33333333-3333-4333-8333-333333333312",
+    language: "sql",
+    title: "SQL 2-1. 部門別の社員数と平均給与の集計（GROUP BY）",
+    description_md: `### 問題概要
+社員テーブル \`employees\` を部門（\`department\`）ごとにグループ化し、以下の3項目を取得してください。
+1. \`department\`（部門名）
+2. \`COUNT(*) AS emp_count\`（社員数）
+3. \`AVG(salary) AS avg_salary\`（平均給与）
+
+さらに、結果は社員数（\`emp_count\`）の多い順（降順）に並び替えてください。`,
+    difficulty: "medium",
+    estimated_minutes: 15,
+    tags: ["SQL集計", "GROUP BY"],
+    starter_code: `-- 部門ごとの社員数(emp_count)と平均給与(avg_salary)を集計してください
+SELECT department, COUNT(*) AS emp_count, AVG(salary) AS avg_salary
+FROM employees
+`,
+    solution_code: `SELECT department, COUNT(*) AS emp_count, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY department
+ORDER BY emp_count DESC;`,
+    explanation_md: `\`GROUP BY department\` を指定すると部門ごとにレコードが集約され、各グループに対する \`COUNT(*)\`（件数）や \`AVG(salary)\`（平均値）を計算できます。`,
+    order_index: 1,
+    test_cases: [
+      {
+        name: "公開テスト1：3部門の集計",
+        input: `CREATE TABLE employees (id INT, name TEXT, department TEXT, salary INT);
+INSERT INTO employees VALUES (1, 'A', 'Engineering', 600), (2, 'B', 'Engineering', 800), (3, 'C', 'Engineering', 700), (4, 'D', 'Sales', 500), (5, 'E', 'Sales', 600), (6, 'F', 'HR', 450);`,
+        expected_output: `department | emp_count | avg_salary\nEngineering | 3 | 700\nSales | 2 | 550\nHR | 1 | 450`,
+        is_hidden: false,
+        order_index: 1,
+      },
+      {
+        name: "非公開テスト1：別データの部門集計",
+        input: `CREATE TABLE employees (id INT, name TEXT, department TEXT, salary INT);
+INSERT INTO employees VALUES (1, 'X', 'Marketing', 500), (2, 'Y', 'Marketing', 700), (3, 'Z', 'Support', 400);`,
+        expected_output: `department | emp_count | avg_salary\nMarketing | 2 | 600\nSupport | 1 | 400`,
+        is_hidden: true,
+        order_index: 2,
+      },
+    ],
+    hints: [
+      {
+        step_number: 1,
+        content_md: `部門ごとにまとめるには \`GROUP BY department\` を使います。`,
+      },
+      {
+        step_number: 2,
+        content_md: `SELECT句で付けた別名 \`emp_count\` は \`ORDER BY\` でもそのまま使えます。`,
+      },
+      {
+        step_number: 3,
+        content_md: `\`GROUP BY department ORDER BY emp_count DESC;\` を記述しましょう。`,
+      },
+    ],
+  },
+  {
+    id: "44444444-4444-4444-8444-444444444504",
+    chapter_id: "22222222-2222-4222-8222-222222222212",
+    lesson_id: "33333333-3333-4333-8333-333333333312",
+    language: "sql",
+    title: "SQL 2-2. 売上合計が基準以上の顧客を抽出（GROUP BY / HAVING）",
+    description_md: `### 問題概要
+注文テーブル \`orders\` から、顧客ID（\`customer_id\`）ごとの合計注文金額 \`SUM(amount) AS total_amount\` を集計し、**合計金額が 10000 以上** の顧客のみを \`total_amount\` の降順で抽出してください。
+
+### テーブル定義：\`orders\`
+- \`id\` (INT)
+- \`customer_id\` (INT)
+- \`amount\` (INT)`,
+    difficulty: "medium",
+    estimated_minutes: 15,
+    tags: ["SQL集計", "GROUP BY"],
+    starter_code: `-- 顧客ごとの合計金額(total_amount)が10000以上のデータを抽出してください
+SELECT customer_id, SUM(amount) AS total_amount
+FROM orders
+`,
+    solution_code: `SELECT customer_id, SUM(amount) AS total_amount
+FROM orders
+GROUP BY customer_id
+HAVING SUM(amount) >= 10000
+ORDER BY total_amount DESC;`,
+    explanation_md: `グループ化した後の集約結果（\`SUM(amount)\` など）に対して条件を指定する場合は、\`WHERE\` ではなく \`HAVING\` 句を使用します。`,
+    order_index: 2,
+    test_cases: [
+      {
+        name: "公開テスト1：顧客別売上フィルタ",
+        input: `CREATE TABLE orders (id INT, customer_id INT, amount INT);
+INSERT INTO orders VALUES (1, 101, 6000), (2, 101, 5500), (3, 102, 4000), (4, 103, 15000), (5, 102, 3000);`,
+        expected_output: `customer_id | total_amount\n103 | 15000\n101 | 11500`,
+        is_hidden: false,
+        order_index: 1,
+      },
+      {
+        name: "非公開テスト1：10000ちょうどの境界値",
+        input: `CREATE TABLE orders (id INT, customer_id INT, amount INT);
+INSERT INTO orders VALUES (1, 201, 5000), (2, 201, 5000), (3, 202, 9999);`,
+        expected_output: `customer_id | total_amount\n201 | 10000`,
+        is_hidden: true,
+        order_index: 2,
+      },
+    ],
+    hints: [
+      {
+        step_number: 1,
+        content_md: `まず \`GROUP BY customer_id\` で顧客ごとにグループ化します。`,
+      },
+      {
+        step_number: 2,
+        content_md: `集約関数に対する条件は \`HAVING SUM(amount) >= 10000\` と記述します。`,
+      },
+      {
+        step_number: 3,
+        content_md: `最後に \`ORDER BY total_amount DESC\` で降順に並べます。`,
+      },
+    ],
+  },
+  {
+    id: "44444444-4444-4444-8444-444444444505",
+    chapter_id: "22222222-2222-4222-8222-222222222213",
+    lesson_id: "33333333-3333-4333-8333-333333333313",
+    language: "sql",
+    title: "SQL 3-1. 社員と部門テーブルの内部結合（INNER JOIN）",
+    description_md: `### 問題概要
+社員テーブル \`employees\` と部門テーブル \`departments\` を \`dept_id\` と \`id\` で内部結合（\`INNER JOIN\`）し、社員名 \`emp_name\` と部門名 \`dept_name\` を社員ID（\`employees.id\`）の昇順で取得してください。
+
+### テーブル定義
+- \`employees\`: \`id\` (INT), \`emp_name\` (TEXT), \`dept_id\` (INT)
+- \`departments\`: \`id\` (INT), \`dept_name\` (TEXT)`,
+    difficulty: "medium",
+    estimated_minutes: 15,
+    tags: ["SQL結合", "JOIN"],
+    starter_code: `-- employees と departments を結合して emp_name, dept_name を取得してください
+SELECT e.emp_name, d.dept_name
+FROM employees e
+`,
+    solution_code: `SELECT e.emp_name, d.dept_name
+FROM employees e
+INNER JOIN departments d ON e.dept_id = d.id
+ORDER BY e.id ASC;`,
+    explanation_md: `2つのテーブルに共通するキー（\`e.dept_id = d.id\`）を \`ON\` 句に指定して \`INNER JOIN\` することで、両方のテーブルに存在するデータを結合して取得できます。`,
+    order_index: 1,
+    test_cases: [
+      {
+        name: "公開テスト1：社員と部門の結合",
+        input: `CREATE TABLE departments (id INT, dept_name TEXT);
+CREATE TABLE employees (id INT, emp_name TEXT, dept_id INT);
+INSERT INTO departments VALUES (10, 'プラットフォーム開発部'), (20, 'クラウド営業部');
+INSERT INTO employees VALUES (1, 'Yamada', 10), (2, 'Suzuki', 20), (3, 'Sato', 10);`,
+        expected_output: `emp_name | dept_name\nYamada | プラットフォーム開発部\nSuzuki | クラウド営業部\nSato | プラットフォーム開発部`,
+        is_hidden: false,
+        order_index: 1,
+      },
+      {
+        name: "非公開テスト1：未配属社員を除外する内部結合の確認",
+        input: `CREATE TABLE departments (id INT, dept_name TEXT);
+CREATE TABLE employees (id INT, emp_name TEXT, dept_id INT);
+INSERT INTO departments VALUES (1, 'AI研究部');
+INSERT INTO employees VALUES (1, 'Takahashi', 1), (2, 'Kato', 99);`,
+        expected_output: `emp_name | dept_name\nTakahashi | AI研究部`,
+        is_hidden: true,
+        order_index: 2,
+      },
+    ],
+    hints: [
+      {
+        step_number: 1,
+        content_md: `\`FROM employees e\` に続けて \`INNER JOIN departments d\` と書きます。`,
+      },
+      {
+        step_number: 2,
+        content_md: `結合条件は \`ON e.dept_id = d.id\` です。`,
+      },
+      {
+        step_number: 3,
+        content_md: `\`ORDER BY e.id ASC;\` を末尾に付ければ完成です。`,
+      },
+    ],
+  },
+  {
+    id: "44444444-4444-4444-8444-444444444506",
+    chapter_id: "22222222-2222-4222-8222-222222222213",
+    lesson_id: "33333333-3333-4333-8333-333333333313",
+    language: "sql",
+    title: "SQL 3-2. 外部結合と注文実績のない顧客も含めた集計（LEFT JOIN）",
+    description_md: `### 問題概要
+顧客テーブル \`customers\` と注文テーブル \`orders\` を外部結合（\`LEFT JOIN\`）し、**まだ一度も注文していない顧客も含めて**、各顧客の \`name\` と注文回数 \`COUNT(o.id) AS order_count\` を顧客ID（\`c.id\`）の昇順で取得してください。
+
+### テーブル定義
+- \`customers\`: \`id\` (INT), \`name\` (TEXT)
+- \`orders\`: \`id\` (INT), \`customer_id\` (INT)`,
+    difficulty: "hard",
+    estimated_minutes: 20,
+    tags: ["SQL結合", "JOIN", "SQL集計"],
+    starter_code: `-- 注文が0件の顧客も含めて注文回数(order_count)を集計してください
+SELECT c.name, COUNT(o.id) AS order_count
+FROM customers c
+`,
+    solution_code: `SELECT c.name, COUNT(o.id) AS order_count
+FROM customers c
+LEFT JOIN orders o ON c.id = o.customer_id
+GROUP BY c.id, c.name
+ORDER BY c.id ASC;`,
+    explanation_md: `\`LEFT JOIN\` を使うと、右側の \`orders\` テーブルに一致する行がない場合でも左側の \`customers\` の行が残り、\`o.id\` は \`NULL\` になります。\`COUNT(*)\` ではなく \`COUNT(o.id)\` を使うことで、\`NULL\` の行を 0 件として正しくカウントできます。`,
+    order_index: 2,
+    test_cases: [
+      {
+        name: "公開テスト1：注文0件の顧客を含む集計",
+        input: `CREATE TABLE customers (id INT, name TEXT);
+CREATE TABLE orders (id INT, customer_id INT);
+INSERT INTO customers VALUES (1, 'Alice'), (2, 'Bob'), (3, 'Charlie');
+INSERT INTO orders VALUES (101, 1), (102, 1), (103, 3);`,
+        expected_output: `name | order_count\nAlice | 2\nBob | 0\nCharlie | 1`,
+        is_hidden: false,
+        order_index: 1,
+      },
+      {
+        name: "非公開テスト1：全員0件〜複数件の検証",
+        input: `CREATE TABLE customers (id INT, name TEXT);
+CREATE TABLE orders (id INT, customer_id INT);
+INSERT INTO customers VALUES (10, 'Ken'), (20, 'Miki');
+INSERT INTO orders VALUES (1, 20), (2, 20), (3, 20);`,
+        expected_output: `name | order_count\nKen | 0\nMiki | 3`,
+        is_hidden: true,
+        order_index: 2,
+      },
+    ],
+    hints: [
+      {
+        step_number: 1,
+        content_md: `注文がない顧客も残すため \`LEFT JOIN orders o ON c.id = o.customer_id\` を使います。`,
+      },
+      {
+        step_number: 2,
+        content_md: `\`COUNT(*)\` だと NULL 行も 1 と数えてしまうため、必ず \`COUNT(o.id)\` を使います。`,
+      },
+      {
+        step_number: 3,
+        content_md: `\`GROUP BY c.id, c.name ORDER BY c.id ASC;\` でグループ化と並び替えを行います。`,
+      },
+    ],
+  },
 ];
+
+export function detectProblemLanguage(problem: {
+  language?: ProblemLanguage;
+  tags?: string[];
+  starter_code?: string;
+}): ProblemLanguage {
+  if (problem.language === "sql" || problem.language === "java") {
+    return problem.language;
+  }
+  if (problem.tags?.some((t) => t.toUpperCase().includes("SQL"))) {
+    return "sql";
+  }
+  if (problem.starter_code && /^\s*(--|SELECT|INSERT|UPDATE|DELETE|CREATE)\b/i.test(problem.starter_code)) {
+    return "sql";
+  }
+  return "java";
+}
+

@@ -6,7 +6,11 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 
-export function SignOutButton() {
+export function SignOutButton({
+  redirectPath = "/",
+}: {
+  redirectPath?: string;
+}) {
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -14,9 +18,9 @@ export function SignOutButton() {
       const supabase = createClient();
       await supabase.auth.signOut();
     } catch {
-      // 未接続時でもログイン画面へ遷移
+      // 未接続時でも指定画面へ遷移
     }
-    router.push("/login");
+    router.push(redirectPath);
     router.refresh();
   };
 
@@ -25,7 +29,7 @@ export function SignOutButton() {
       variant="ghost"
       size="sm"
       onClick={handleSignOut}
-      className="text-slate-500 hover:text-slate-900"
+      className="text-slate-400 hover:text-slate-600"
       title="ログアウト"
     >
       <LogOut className="h-4 w-4" />

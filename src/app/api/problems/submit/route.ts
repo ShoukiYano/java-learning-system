@@ -11,7 +11,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { runJavaCode, compareOutputs } from "@/lib/java";
-import { SEED_PROBLEMS } from "@/lib/seed-data";
+import { runSqlCode } from "@/lib/sql";
+import { SEED_PROBLEMS, detectProblemLanguage } from "@/lib/seed-data";
 import { isSupabaseConfigured } from "@/lib/data-service";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -105,7 +106,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. 自作Javaインタプリタで全テストケースを実行・判定
+    // 2. 問題言語（Java または SQL）を判定し、全テストケースを実行・判定
+    const problemLanguage = detectProblemLanguage({
+      language: seedProb?.language,
+      tags: seedProb?.tags,
+      starter_code: code,
+    });
+
     const results: TestCaseClientJudgeResult[] = [];
     let passedCount = 0;
     let totalExecTimeMs = 0;
@@ -115,11 +122,14 @@ export async function POST(request: NextRequest) {
     let compileDiagnostics = null;
 
     for (const tc of allTestCases) {
-      const execRes = runJavaCode(code, {
-        stdin: tc.input,
-        maxSteps: 3_000_000,
-        maxCallDepth: 400,
-      });
+      const execRes =
+        problemLanguage === "sql"
+          ? runSqlCode(code, { setupSql: tc.input })
+          : runJavaCode(code, {
+              stdin: tc.input,
+              maxSteps: 3_000_000,
+              maxCallDepth: 400,
+            });
 
       totalExecTimeMs += execRes.executionTimeMs;
       totalSteps += execRes.stepsExecuted;

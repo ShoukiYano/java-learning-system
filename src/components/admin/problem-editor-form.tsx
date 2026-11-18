@@ -3,8 +3,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { runJavaCode, compareOutputs } from "@/lib/java";
-import { SEED_CHAPTERS, SeedProblem, SeedTestCase } from "@/lib/seed-data";
-import { Difficulty } from "@/types/database";
+import { runSqlCode } from "@/lib/sql";
+import { SEED_CHAPTERS, SeedProblem, SeedTestCase, detectProblemLanguage } from "@/lib/seed-data";
+import { Difficulty, ProblemLanguage } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,8 +33,11 @@ export function ProblemEditorForm({
   initialProblem,
   mode,
 }: ProblemEditorFormProps) {
+  const [problemLanguage, setProblemLanguage] = useState<ProblemLanguage>(
+    initialProblem ? detectProblemLanguage(initialProblem) : "java"
+  );
   const [title, setTitle] = useState(
-    initialProblem?.title ?? "新規Java演習問題"
+    initialProblem?.title ?? "新規演習問題"
   );
   const [chapterId, setChapterId] = useState(
     initialProblem?.chapter_id ?? SEED_CHAPTERS[0].id
@@ -115,11 +119,14 @@ export function ProblemEditorForm({
 
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  // ★「期待出力を自動生成」ボタン：模範解答を自作インタプリタで実行して各テストケースの期待出力を自動入力する
+  // ★「期待出力を自動生成」ボタン：模範解答を自作インタプリタ（JavaまたはSQL）で実行して各テストケースの期待出力を自動入力する
   const handleAutoGenerateExpectedOutputs = () => {
     const updated: SeedTestCase[] = [];
     for (const tc of testCases) {
-      const res = runJavaCode(solutionCode, { stdin: tc.input });
+      const res =
+        problemLanguage === "sql"
+          ? runSqlCode(solutionCode, { setupSql: tc.input })
+          : runJavaCode(solutionCode, { stdin: tc.input });
       if (res.status !== "success") {
         setVerifyReport({
           allPassed: false,
@@ -151,7 +158,10 @@ export function ProblemEditorForm({
     let allPassed = true;
 
     for (const tc of testCases) {
-      const res = runJavaCode(solutionCode, { stdin: tc.input });
+      const res =
+        problemLanguage === "sql"
+          ? runSqlCode(solutionCode, { setupSql: tc.input })
+          : runJavaCode(solutionCode, { stdin: tc.input });
       const passed =
         res.status === "success" &&
         compareOutputs(res.stdout, tc.expected_output);
@@ -275,6 +285,26 @@ export function ProblemEditorForm({
             <CardTitle className="text-base">1. 基本設定・メタ情報</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold">演習言語種別（Java / SQL）</label>
+              <select
+                value={problemLanguage}
+                onChange={(e) => {
+                  const lang = e.target.value as ProblemLanguage;
+                  setProblemLanguage(lang);
+                  if (lang === "sql" && starterCode.includes("public class Main")) {
+                    setStarterCode("-- ここにSQLクエリを記述してください\nSELECT * FROM employees;");
+                    setSolutionCode("SELECT name, salary FROM employees WHERE department = 'Engineering';");
+                    setTagsInput("SQL抽出, 基礎構文");
+                  }
+                }}
+                className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm font-semibold"
+              >
+                <option value="java">Java（オブジェクト指向・アルゴリズム演習）</option>
+                <option value="sql">SQL（データベース抽出・集計・JOIN演習）</option>
+              </select>
+            </div>
+
             <div className="space-y-1.5">
               <label className="text-xs font-semibold">問題タイトル</label>
               <Input

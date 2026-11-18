@@ -3,10 +3,12 @@
 import React, { useEffect, useState } from "react";
 import Editor, { loader, OnMount } from "@monaco-editor/react";
 import { JavaDiagnostic } from "@/lib/java";
+import { ProblemLanguage } from "@/types/database";
 
 interface LocalMonacoEditorProps {
   value: string;
   onChange: (value: string) => void;
+  language?: ProblemLanguage;
   theme: "vs-dark" | "light";
   fontSize: number;
   diagnostics: JavaDiagnostic[];
@@ -17,6 +19,7 @@ interface LocalMonacoEditorProps {
 export function LocalMonacoEditor({
   value,
   onChange,
+  language = "java",
   theme,
   fontSize,
   diagnostics,
@@ -110,8 +113,8 @@ export function LocalMonacoEditor({
   return (
     <Editor
       height="100%"
-      defaultLanguage="java"
-      language="java"
+      defaultLanguage={language}
+      language={language}
       theme={theme}
       value={value}
       onChange={(val) => onChange(val ?? "")}

@@ -4,6 +4,7 @@
 
 export type UserRole = "admin" | "student" | "company";
 export type Difficulty = "easy" | "medium" | "hard";
+export type ProblemLanguage = "java" | "sql";
 export type ProgressStatus = "not_started" | "in_progress" | "completed";
 export type SubmissionStatus =
   | "passed"
@@ -67,6 +68,7 @@ export interface Lesson {
 export interface Problem {
   id: string;
   lesson_id: string;
+  language?: ProblemLanguage; // "java" | "sql"（省略時はタグまたはコードから自動判定）
   title: string;
   description_md: string;
   difficulty: Difficulty;

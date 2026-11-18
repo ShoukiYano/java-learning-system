@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Javaラーニングシステム | 実践型カリキュラム・スキル可視化プラットフォーム",
+  title:
+    "DevSkillStudio | Java・SQLカリキュラム管理・マルチテナントエンジニア育成基盤",
   description:
-    "受講生も企業担当者も、Javaの学習進捗とスキル習得状況が一目で分かるカリキュラム管理・学習Webアプリ",
+    "受講生も企業担当者も管理者も、Java・SQLの学習進捗とスキル習得状況が一目で分かるマルチテナント対応学習プラットフォーム",
 };
 
 export default function RootLayout({

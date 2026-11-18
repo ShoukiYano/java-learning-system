@@ -7,6 +7,8 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { LocalMonacoEditor } from "./local-monaco-editor";
 import { runJavaInBrowserWithTimeout } from "@/lib/java/worker-client";
 import { compareOutputs, JavaDiagnostic } from "@/lib/java";
+import { runSqlCode } from "@/lib/sql";
+import { detectProblemLanguage } from "@/lib/seed-data";
 import { difficultyLabel, formatDuration } from "@/lib/utils";
 import { Hint, Problem, Progress, TestCase } from "@/types/database";
 import { Button } from "@/components/ui/button";
@@ -50,7 +52,8 @@ export function ProblemWorkspaceClient({
   nextProblemId,
   courseId,
 }: ProblemWorkspaceClientProps) {
-  const storageKey = `java_draft_${problem.id}`;
+  const storageKey = `code_draft_${problem.id}`;
+  const problemLanguage = detectProblemLanguage(problem);
 
   const [code, setCode] = useState<string>(problem.starter_code);
   const [editorTheme, setEditorTheme] = useState<"vs-dark" | "light">("vs-dark");
@@ -132,17 +135,20 @@ export function ProblemWorkspaceClient({
     return () => window.clearInterval(interval);
   }, []);
 
-  // 1. 「実行」（Ctrl+Enter）：ブラウザ内で任意の標準入力を与えて実行
+  // 1. 「実行」（Ctrl+Enter）：ブラウザ内で任意の標準入力（またはセットアップSQL）を与えて実行
   const handleRun = useCallback(async () => {
     if (runningMode !== "idle") return;
     setRunningMode("run");
     setBottomTab("console");
     setSubmitBanner(null);
 
-    const res = await runJavaInBrowserWithTimeout(code, {
-      stdin: customStdin,
-      maxSteps: 3_000_000,
-    });
+    const res =
+      problemLanguage === "sql"
+        ? runSqlCode(code, { setupSql: customStdin })
+        : await runJavaInBrowserWithTimeout(code, {
+            stdin: customStdin,
+            maxSteps: 3_000_000,
+          });
 
     setConsoleStdout(res.stdout);
     setConsoleStderr(res.stderr);
@@ -152,7 +158,7 @@ export function ProblemWorkspaceClient({
       steps: res.stepsExecuted,
     });
     setRunningMode("idle");
-  }, [code, customStdin, runningMode]);
+  }, [code, customStdin, problemLanguage, runningMode]);
 
   // 2. 「テスト」：ブラウザ内で公開テストを実行し、✅/❌と期待値・実際の出力の差分を表示
   const handlePublicTest = useCallback(async () => {
@@ -167,10 +173,13 @@ export function ProblemWorkspaceClient({
     let foundDiagnostics: JavaDiagnostic[] = [];
 
     for (const tc of publicTestCases) {
-      const res = await runJavaInBrowserWithTimeout(code, {
-        stdin: tc.input,
-        maxSteps: 3_000_000,
-      });
+      const res =
+        problemLanguage === "sql"
+          ? runSqlCode(code, { setupSql: tc.input })
+          : await runJavaInBrowserWithTimeout(code, {
+              stdin: tc.input,
+              maxSteps: 3_000_000,
+            });
 
       totalTime += res.executionTimeMs;
       totalSteps += res.stepsExecuted;
@@ -199,11 +208,11 @@ export function ProblemWorkspaceClient({
       });
     }
 
-    setDiagnostics(foundDiagnostics);
+      setDiagnostics(foundDiagnostics);
     setTestResults(results);
     setExecMeta({ timeMs: totalTime, steps: totalSteps });
     setRunningMode("idle");
-  }, [code, publicTestCases, runningMode]);
+  }, [code, problemLanguage, publicTestCases, runningMode]);
 
   // 3. 「提出」（Ctrl+Shift+Enter）：サーバー側（Route Handler）で公開＋非公開テストの両方を判定
   const handleSubmit = useCallback(async () => {
@@ -305,13 +314,16 @@ export function ProblemWorkspaceClient({
       <div className="h-12 bg-white border-b px-4 flex items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <Link
-            href={`/app/courses/${courseId}`}
+            href={`/student/courses/${courseId}`}
             className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-slate-900 shrink-0"
           >
             <ArrowLeft className="h-4 w-4" />
             章一覧へ
           </Link>
           <span className="text-slate-300">|</span>
+          <Badge variant={problemLanguage === "sql" ? "warning" : "default"}>
+            {problemLanguage === "sql" ? "SQL" : "Java"}
+          </Badge>
           <h1 className="font-bold text-sm text-slate-900 truncate">
             {problem.title}
           </h1>
@@ -379,7 +391,7 @@ export function ProblemWorkspaceClient({
 
           {isCleared && nextProblemId && (
             <Link
-              href={`/app/problems/${nextProblemId}`}
+              href={`/student/problems/${nextProblemId}`}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow animate-pulse"
             >
               次の問題へ
@@ -413,7 +425,7 @@ export function ProblemWorkspaceClient({
               </div>
               {nextProblemId && (
                 <Link
-                  href={`/app/problems/${nextProblemId}`}
+                  href={`/student/problems/${nextProblemId}`}
                   className="px-3 py-1 rounded bg-white text-emerald-800 font-bold hover:bg-emerald-50 inline-flex items-center gap-1"
                 >
                   次の問題へ進む
@@ -559,7 +571,7 @@ export function ProblemWorkspaceClient({
               <div className="h-9 bg-slate-800 text-slate-200 px-3 flex items-center justify-between text-xs border-b border-slate-700">
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-semibold text-blue-400">
-                    Main.java
+                    {problemLanguage === "sql" ? "query.sql" : "Main.java"}
                   </span>
                   <span className="text-[11px] text-slate-400">
                     （下書きはブラウザに自動保存されます）
@@ -623,6 +635,7 @@ export function ProblemWorkspaceClient({
                 <LocalMonacoEditor
                   value={code}
                   onChange={handleCodeChange}
+                  language={problemLanguage}
                   theme={editorTheme}
                   fontSize={fontSize}
                   diagnostics={diagnostics}
@@ -690,7 +703,9 @@ export function ProblemWorkspaceClient({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
                     <div className="space-y-1.5">
                       <label className="text-[11px] font-semibold text-slate-400 block">
-                        任意の標準入力 (Scanner 用 stdin)
+                        {problemLanguage === "sql"
+                          ? "テスト用初期テーブル・データSQL (CREATE / INSERT)"
+                          : "任意の標準入力 (Scanner 用 stdin)"}
                       </label>
                       <Textarea
                         value={customStdin}
