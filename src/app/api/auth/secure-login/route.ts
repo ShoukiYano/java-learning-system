@@ -1,6 +1,10 @@
 // =============================================================================
 // 高セキュリティ認証 Route Handler (POST /api/auth/secure-login)
-// 1. ブルートフォース対策：同一IPまたはメールで5回連続失敗すると15分間ロックアウト
+// 1. マルチテナント分離型ブルートフォース対策：
+//    - ロック単位を「接続元IP ＋ ロール ＋ 企業コード ＋ メールアドレス」の複合キーに分離
+//    - これにより「A社の失敗でB社がロックされる」「社内の一人の失敗で同僚がロックされる」
+//      「外部攻撃者の失敗で正規担当者がロックされる」といった巻き添えを100%防止
+//    - 同一IPから異なる企業・メールを無差別に試すボットのみ、IP単体の上限（30回）で遮断
 // 2. ゲートキー検証：管理者・企業ポータルは正しい gateKey または HttpOnly Cookie が必須
 // 3. 多要素検証：
 //    - company ロール：DB上の所属企業の company_code と入力された企業コードが完全一致すること
@@ -17,7 +21,8 @@ interface AttemptRecord {
   lockedUntil: number | null;
 }
 
-const MAX_FAILED_ATTEMPTS = 5;
+const MAX_ACCOUNT_FAILED_ATTEMPTS = 5; // 同一IP × 同一企業コード × 同一メールの上限（5回）
+const MAX_BOT_IP_FAILED_ATTEMPTS = 30; // 同一IPからの無差別ボット攻撃の上限（30回）
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15分間ロック
 const loginAttemptsMap = new Map<string, AttemptRecord>();
 
@@ -35,12 +40,12 @@ function getExpectedAdminPin(): string {
   return process.env.ADMIN_MASTER_PIN || "778899";
 }
 
-function recordFailedAttempt(key: string): AttemptRecord {
+function recordFailedAttempt(key: string, maxLimit: number): AttemptRecord {
   const now = Date.now();
   const prev = loginAttemptsMap.get(key) ?? { count: 0, lockedUntil: null };
   const nextCount = prev.count + 1;
   const lockedUntil =
-    nextCount >= MAX_FAILED_ATTEMPTS ? now + LOCKOUT_DURATION_MS : null;
+    nextCount >= maxLimit ? now + LOCKOUT_DURATION_MS : null;
   const updated = { count: nextCount, lockedUntil };
   loginAttemptsMap.set(key, updated);
   return updated;
@@ -70,20 +75,26 @@ export async function POST(request: NextRequest) {
     } = body;
 
     const clientIp =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip")?.trim() ||
+      "local";
     const normalizedEmail = (email || "").trim().toLowerCase();
-    const attemptKey = `${clientIp}:${expectedRole}:${normalizedEmail}`;
-    const ipOnlyKey = `${clientIp}:${expectedRole}`;
+    const normalizedCompanyCode = (companyCode || "").trim().toUpperCase();
+
+    // ★ テナント・アカウント単位の独立キー（他企業・他アカウントには一切影響しない）
+    const tenantAccountKey = `${clientIp}:${expectedRole}:${normalizedCompanyCode}:${normalizedEmail}`;
+    // 無差別ボット検知用キー（同一IPから30回以上連続失敗した場合のみそのIPを遮断）
+    const botIpKey = `bot_ip:${clientIp}:${expectedRole}`;
 
     // 1. ロックアウト状態の確認
     const now = Date.now();
-    for (const k of [attemptKey, ipOnlyKey]) {
+    for (const k of [tenantAccountKey, botIpKey]) {
       const rec = loginAttemptsMap.get(k);
       if (rec?.lockedUntil && rec.lockedUntil > now) {
         const remainMins = Math.ceil((rec.lockedUntil - now) / 60000);
         return NextResponse.json(
           {
-            error: `セキュリティ保護：ログイン失敗回数が上限（${MAX_FAILED_ATTEMPTS}回）に達したため、あと約 ${remainMins} 分間ロックされています。`,
+            error: `セキュリティ保護：このアカウントへのログイン失敗回数が上限（${MAX_ACCOUNT_FAILED_ATTEMPTS}回）に達したため、あと約 ${remainMins} 分間一時ロックされています。（※他の企業や別アカウントには影響しません）`,
             locked: true,
           },
           { status: 429 }
@@ -101,7 +112,7 @@ export async function POST(request: NextRequest) {
       const requiredGate = getExpectedGateKey(expectedRole);
 
       if (cookieVal !== requiredGate && gateKey !== requiredGate) {
-        recordFailedAttempt(ipOnlyKey);
+        recordFailedAttempt(botIpKey, MAX_BOT_IP_FAILED_ATTEMPTS);
         return NextResponse.json(
           { error: "不正なゲートウェイアクセスです。" },
           { status: 403 }
@@ -109,13 +120,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. 管理者ログイン時のマスターPIN検証（パスワード認証の前にチェック）
+    // 3. 管理者ログイン時のマスターPIN検証
     if (expectedRole === "admin") {
       const expectedPin = getExpectedAdminPin();
       if (!adminPin || adminPin.trim() !== expectedPin) {
-        const att = recordFailedAttempt(attemptKey);
-        recordFailedAttempt(ipOnlyKey);
-        const remain = Math.max(0, MAX_FAILED_ATTEMPTS - att.count);
+        const att = recordFailedAttempt(
+          tenantAccountKey,
+          MAX_ACCOUNT_FAILED_ATTEMPTS
+        );
+        recordFailedAttempt(botIpKey, MAX_BOT_IP_FAILED_ATTEMPTS);
+        const remain = Math.max(0, MAX_ACCOUNT_FAILED_ATTEMPTS - att.count);
         return NextResponse.json(
           {
             error: `管理者セキュリティPINが正しくありません。（残り試行回数: ${remain}回）`,
@@ -127,7 +141,7 @@ export async function POST(request: NextRequest) {
 
     // 4. 企業担当者ログイン時の企業コード入力チェック
     if (expectedRole === "company") {
-      if (!companyCode || !companyCode.trim()) {
+      if (!normalizedCompanyCode) {
         return NextResponse.json(
           { error: "所属テナントの「企業コード」を入力してください。" },
           { status: 400 }
@@ -143,9 +157,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (signInError || !data.user) {
-      const att = recordFailedAttempt(attemptKey);
-      recordFailedAttempt(ipOnlyKey);
-      const remain = Math.max(0, MAX_FAILED_ATTEMPTS - att.count);
+      const att = recordFailedAttempt(
+        tenantAccountKey,
+        MAX_ACCOUNT_FAILED_ATTEMPTS
+      );
+      recordFailedAttempt(botIpKey, MAX_BOT_IP_FAILED_ATTEMPTS);
+      const remain = Math.max(0, MAX_ACCOUNT_FAILED_ATTEMPTS - att.count);
       return NextResponse.json(
         {
           error: `認証に失敗しました。メールアドレスまたはパスワードを確認してください。（残り試行回数: ${remain}回）`,
@@ -183,8 +200,11 @@ export async function POST(request: NextRequest) {
 
     if (actualRole !== expectedRole) {
       await supabase.auth.signOut();
-      const att = recordFailedAttempt(attemptKey);
-      const remain = Math.max(0, MAX_FAILED_ATTEMPTS - att.count);
+      const att = recordFailedAttempt(
+        tenantAccountKey,
+        MAX_ACCOUNT_FAILED_ATTEMPTS
+      );
+      const remain = Math.max(0, MAX_ACCOUNT_FAILED_ATTEMPTS - att.count);
       return NextResponse.json(
         {
           error: `このログイン画面からアクセスする権限がありません。（残り試行回数: ${remain}回）`,
@@ -195,7 +215,6 @@ export async function POST(request: NextRequest) {
 
     // 企業担当者の場合、入力された企業コードと所属テナントの企業コードが一致するか検証
     if (expectedRole === "company") {
-      const inputCode = companyCode!.trim().toUpperCase();
       const dbCompanyCode = (
         profile as unknown as { companies?: { company_code?: string } }
       )?.companies?.company_code?.toUpperCase();
@@ -204,10 +223,13 @@ export async function POST(request: NextRequest) {
       )?.toUpperCase();
 
       const validCode = dbCompanyCode || metaCompanyCode || "ACME2025";
-      if (inputCode !== validCode) {
+      if (normalizedCompanyCode !== validCode) {
         await supabase.auth.signOut();
-        const att = recordFailedAttempt(attemptKey);
-        const remain = Math.max(0, MAX_FAILED_ATTEMPTS - att.count);
+        const att = recordFailedAttempt(
+          tenantAccountKey,
+          MAX_ACCOUNT_FAILED_ATTEMPTS
+        );
+        const remain = Math.max(0, MAX_ACCOUNT_FAILED_ATTEMPTS - att.count);
         return NextResponse.json(
           {
             error: `企業コードが所属テナントと一致しません。（残り試行回数: ${remain}回）`,
@@ -217,9 +239,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 7. 認証成功：ロックアウトカウンタをリセットし、最終ログイン日時を更新
-    clearAttempts(attemptKey);
-    clearAttempts(ipOnlyKey);
+    // 7. 認証成功：該当アカウントの失敗カウンタをリセット
+    clearAttempts(tenantAccountKey);
 
     await dbClient
       .from("profiles")
