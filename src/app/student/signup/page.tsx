@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -21,20 +21,27 @@ import {
   KeyRound,
   AlertCircle,
   CheckCircle2,
+  Loader2,
+  ArrowLeft,
 } from "lucide-react";
 
 export default function StudentSignupPage() {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [companyCode, setCompanyCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  const isBusy = loading || redirecting || isPending;
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isBusy) return;
     setLoading(true);
     setError(null);
     setSuccessMsg(null);
@@ -60,25 +67,58 @@ export default function StudentSignupPage() {
       }
 
       if (data.session) {
-        router.push("/student");
-        router.refresh();
+        setRedirecting(true);
+        startTransition(() => {
+          router.push("/student");
+          router.refresh();
+        });
       } else {
         setSuccessMsg(
           "確認メールを送信しました。メール内のリンクをクリックして登録を完了してください。"
         );
+        setLoading(false);
       }
     } catch {
       setError(
         "登録処理中にエラーが発生しました。環境変数設定を確認してください。"
       );
-    } finally {
       setLoading(false);
+      setRedirecting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 py-12">
+    <div className="relative min-h-screen flex items-center justify-center bg-slate-950 px-4 py-12">
+      {/* ★ 登録・画面遷移中のフルスクリーン・フィードバックオーバーレイ */}
+      {isBusy && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 animate-in fade-in duration-150">
+          <div className="h-12 w-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-xl">
+            <Loader2 className="h-6 w-6 animate-spin text-white" />
+          </div>
+          <div className="text-center space-y-1">
+            <p className="text-sm font-bold text-white">
+              {redirecting
+                ? "アカウント作成完了！学習ダッシュボードを準備しています..."
+                : "受講生アカウントを作成しています..."}
+            </p>
+            <p className="text-xs text-slate-400">
+              そのまま少々お待ちください
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-md space-y-6">
+        <div>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition px-3 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-800"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            トップページに戻る
+          </Link>
+        </div>
+
         <div className="flex flex-col items-center text-center">
           <Link href="/" className="flex items-center gap-2.5 mb-3">
             <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center">
@@ -89,15 +129,15 @@ export default function StudentSignupPage() {
             </span>
           </Link>
           <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/30">
-            受講生アカウント新規登録 (/student/signup)
+            新規受講生アカウント作成
           </span>
         </div>
 
         <Card className="border-slate-800 bg-slate-900/90 text-slate-100 shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-xl">新規受講生登録</CardTitle>
+            <CardTitle className="text-xl">新規受講登録</CardTitle>
             <CardDescription className="text-slate-400">
-              所属企業（テナント）から配布された「企業コード」を入力すると、自動的に企業テナントへ紐付きます。
+              所属企業から配布された「企業コード」をお持ちの場合は入力してください。
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -124,6 +164,7 @@ export default function StudentSignupPage() {
                 <Input
                   type="text"
                   required
+                  disabled={isBusy}
                   placeholder="山田 太郎"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -139,6 +180,7 @@ export default function StudentSignupPage() {
                 <Input
                   type="email"
                   required
+                  disabled={isBusy}
                   placeholder="taro.yamada@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -154,6 +196,7 @@ export default function StudentSignupPage() {
                 <Input
                   type="password"
                   required
+                  disabled={isBusy}
                   minLength={6}
                   placeholder="••••••••"
                   value={password}
@@ -165,36 +208,43 @@ export default function StudentSignupPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
                   <Building2 className="h-3.5 w-3.5 text-emerald-400" />
-                  テナント企業コード（法人研修の方は入力）
+                  企業コード（任意・法人研修の方は入力）
                 </label>
                 <Input
                   type="text"
+                  disabled={isBusy}
                   placeholder="例: ACME2025"
                   value={companyCode}
                   onChange={(e) => setCompanyCode(e.target.value)}
                   className="bg-slate-950 border-slate-700 text-white uppercase"
                 />
-                <p className="text-[11px] text-slate-400">
-                  ※ サンプル企業コード:{" "}
-                  <code className="text-emerald-400">ACME2025</code> または{" "}
-                  <code className="text-emerald-400">TECH2025</code>
-                </p>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading
-                  ? "アカウント作成中..."
-                  : "受講生アカウントを作成して開始"}
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white"
+                disabled={isBusy}
+              >
+                {isBusy ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {redirecting
+                      ? "ダッシュボードへ移動中..."
+                      : "アカウント作成中..."}
+                  </>
+                ) : (
+                  "アカウントを作成して学習開始"
+                )}
               </Button>
             </form>
 
             <div className="mt-6 pt-5 border-t border-slate-800 text-center text-xs text-slate-400">
-              すでにアカウントをお持ちの受講生は{" "}
+              すでにアカウントをお持ちの方は{" "}
               <Link
                 href="/student/login"
                 className="text-blue-400 font-semibold hover:underline"
               >
-                受講生ログイン
+                ログインはこちら
               </Link>
             </div>
           </CardContent>

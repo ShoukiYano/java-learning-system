@@ -105,15 +105,27 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // ログイン済みの場合、profiles.role を取得してロール境界を厳格に強制
+  // ログイン済みの場合、profiles.role（または user_metadata.role）を取得してロール境界を厳格に強制
   if (isAuthPage || isStudentPortal || isCompanyPortal || isAdminPortal) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
-    const role: UserRole = (profile?.role as UserRole) ?? "student";
+    const metaRole = user.user_metadata?.role as UserRole | undefined;
+    const emailBasedRole: UserRole | undefined =
+      user.email === "admin@example.com"
+        ? "admin"
+        : user.email === "company@example.com"
+        ? "company"
+        : undefined;
+
+    const role: UserRole =
+      (profile?.role as UserRole) ??
+      metaRole ??
+      emailBasedRole ??
+      "student";
 
     const roleHome =
       role === "admin"

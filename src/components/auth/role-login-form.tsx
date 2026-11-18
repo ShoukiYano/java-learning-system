@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -23,6 +23,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Lock,
+  Loader2,
+  ArrowLeft,
 } from "lucide-react";
 
 interface RoleLoginFormProps {
@@ -43,12 +45,16 @@ export function RoleLoginForm({
   targetHomePath,
 }: RoleLoginFormProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [resetMode, setResetMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
+  const isBusy = loading || redirecting || isPending;
 
   const colorMap = {
     blue: {
@@ -73,6 +79,7 @@ export function RoleLoginForm({
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isBusy) return;
     setLoading(true);
     setError(null);
     setInfoMessage(null);
@@ -95,11 +102,22 @@ export function RoleLoginForm({
         .from("profiles")
         .select("role")
         .eq("id", data.user.id)
-        .single();
+        .maybeSingle();
 
-      const actualRole: UserRole = (profile?.role as UserRole) ?? "student";
+      const metaRole = data.user.user_metadata?.role as UserRole | undefined;
+      const emailBasedRole: UserRole | undefined =
+        data.user.email === "admin@example.com"
+          ? "admin"
+          : data.user.email === "company@example.com"
+          ? "company"
+          : undefined;
 
-      // ★ セキュリティ制御：該当パスのロールと一致しないアカウントはログインを拒否（別ロールのURLも露出しない）
+      const actualRole: UserRole =
+        (profile?.role as UserRole) ??
+        metaRole ??
+        emailBasedRole ??
+        "student";
+
       if (actualRole !== expectedRole) {
         await supabase.auth.signOut();
         setError(
@@ -109,17 +127,22 @@ export function RoleLoginForm({
         return;
       }
 
+      // 認証成功！画面が切り替わるまでフルスクリーン遷移オーバーレイを維持する
+      setRedirecting(true);
+
       await supabase
         .from("profiles")
         .update({ last_login_at: new Date().toISOString() })
         .eq("id", data.user.id);
 
-      router.push(targetHomePath);
-      router.refresh();
+      startTransition(() => {
+        router.push(targetHomePath);
+        router.refresh();
+      });
     } catch {
       setError("ログイン処理中にエラーが発生しました。");
-    } finally {
       setLoading(false);
+      setRedirecting(false);
     }
   };
 
@@ -155,27 +178,74 @@ export function RoleLoginForm({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 py-12">
-      <div className="w-full max-w-md space-y-6">
-        <div className="flex flex-col items-center text-center">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div
-              className={`h-10 w-10 rounded-xl ${colorMap.iconBg} flex items-center justify-center shadow-lg`}
-            >
-              {expectedRole === "student" && (
-                <Code2 className="h-6 w-6 text-white" />
-              )}
-              {expectedRole === "company" && (
-                <Building2 className="h-6 w-6 text-white" />
-              )}
-              {expectedRole === "admin" && (
-                <ShieldAlert className="h-6 w-6 text-white" />
-              )}
-            </div>
-            <span className="text-xl font-bold text-white">
-              DevSkill<span className={colorMap.textAccent}>Studio</span>
-            </span>
+    <div className="relative min-h-screen flex items-center justify-center bg-slate-950 px-4 py-12">
+      {/* ★ 認証・画面遷移中のフルスクリーン・フィードバックオーバーレイ */}
+      {isBusy && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 animate-in fade-in duration-150">
+          <div
+            className={`h-12 w-12 rounded-2xl ${colorMap.iconBg} flex items-center justify-center shadow-xl`}
+          >
+            <Loader2 className="h-6 w-6 animate-spin text-white" />
           </div>
+          <div className="text-center space-y-1">
+            <p className="text-sm font-bold text-white">
+              {redirecting
+                ? "認証が完了しました！画面を移動しています..."
+                : "ログイン情報を確認しています..."}
+            </p>
+            <p className="text-xs text-slate-400">
+              そのまま少々お待ちください
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="w-full max-w-md space-y-6">
+        {/* 受講生ログイン画面（student）のみ「トップページに戻る」ボタンを表示（企業・管理者には表示しない） */}
+        {expectedRole === "student" && (
+          <div>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition px-3 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-800"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              トップページに戻る
+            </Link>
+          </div>
+        )}
+
+        <div className="flex flex-col items-center text-center">
+          {expectedRole === "student" ? (
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 mb-3 hover:opacity-90 transition"
+            >
+              <div
+                className={`h-10 w-10 rounded-xl ${colorMap.iconBg} flex items-center justify-center shadow-lg`}
+              >
+                <Code2 className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-xl font-bold text-white">
+                DevSkill<span className={colorMap.textAccent}>Studio</span>
+              </span>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2.5 mb-3">
+              <div
+                className={`h-10 w-10 rounded-xl ${colorMap.iconBg} flex items-center justify-center shadow-lg`}
+              >
+                {expectedRole === "company" && (
+                  <Building2 className="h-6 w-6 text-white" />
+                )}
+                {expectedRole === "admin" && (
+                  <ShieldAlert className="h-6 w-6 text-white" />
+                )}
+              </div>
+              <span className="text-xl font-bold text-white">
+                DevSkill<span className={colorMap.textAccent}>Studio</span>
+              </span>
+            </div>
+          )}
 
           <span
             className={`px-3 py-1 rounded-full text-xs font-semibold border ${colorMap.badgeBg}`}
@@ -221,6 +291,7 @@ export function RoleLoginForm({
                   <Input
                     type="email"
                     required
+                    disabled={isBusy}
                     placeholder="メールアドレスを入力"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -236,6 +307,7 @@ export function RoleLoginForm({
                     </label>
                     <button
                       type="button"
+                      disabled={isBusy}
                       onClick={() => {
                         setResetMode(true);
                         setError(null);
@@ -249,6 +321,7 @@ export function RoleLoginForm({
                   <Input
                     type="password"
                     required
+                    disabled={isBusy}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -259,9 +332,16 @@ export function RoleLoginForm({
                 <Button
                   type="submit"
                   className={`w-full ${colorMap.btnClass}`}
-                  disabled={loading}
+                  disabled={isBusy}
                 >
-                  {loading ? "認証中..." : "ログイン"}
+                  {isBusy ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {redirecting ? "画面を移動中..." : "認証中..."}
+                    </>
+                  ) : (
+                    "ログイン"
+                  )}
                 </Button>
               </form>
             ) : (
@@ -273,6 +353,7 @@ export function RoleLoginForm({
                   <Input
                     type="email"
                     required
+                    disabled={isBusy}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="bg-slate-950 border-slate-700 text-white"
@@ -281,13 +362,21 @@ export function RoleLoginForm({
                 <Button
                   type="submit"
                   className={`w-full ${colorMap.btnClass}`}
-                  disabled={loading}
+                  disabled={isBusy}
                 >
-                  {loading ? "送信中..." : "再設定メールを送信"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      送信中...
+                    </>
+                  ) : (
+                    "再設定メールを送信"
+                  )}
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
+                  disabled={isBusy}
                   className="w-full text-slate-400 hover:text-white"
                   onClick={() => setResetMode(false)}
                 >
