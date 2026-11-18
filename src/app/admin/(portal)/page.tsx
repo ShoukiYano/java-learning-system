@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { SEED_PROBLEMS } from "@/lib/seed-data";
+import { getAdminOverviewFromDb } from "@/lib/data-service";
 import {
   Card,
   CardContent,
@@ -22,81 +22,7 @@ import {
 } from "lucide-react";
 
 export default async function AdminDashboardPage() {
-  const stumblingTop5 = [
-    {
-      id: SEED_PROBLEMS[17].id,
-      title: SEED_PROBLEMS[17].title,
-      track: "SQL",
-      avgAttempts: 4.5,
-      failRate: 61,
-      avgMinutes: 22,
-    },
-    {
-      id: SEED_PROBLEMS[11].id,
-      title: SEED_PROBLEMS[11].title,
-      track: "Java",
-      avgAttempts: 4.2,
-      failRate: 58,
-      avgMinutes: 24,
-    },
-    {
-      id: SEED_PROBLEMS[8].id,
-      title: SEED_PROBLEMS[8].title,
-      track: "Java",
-      avgAttempts: 3.6,
-      failRate: 49,
-      avgMinutes: 19,
-    },
-    {
-      id: SEED_PROBLEMS[15].id,
-      title: SEED_PROBLEMS[15].title,
-      track: "SQL",
-      avgAttempts: 3.2,
-      failRate: 44,
-      avgMinutes: 17,
-    },
-    {
-      id: SEED_PROBLEMS[10].id,
-      title: SEED_PROBLEMS[10].title,
-      track: "Java",
-      avgAttempts: 3.1,
-      failRate: 42,
-      avgMinutes: 18,
-    },
-  ];
-
-  const recentSubmissions = [
-    {
-      id: "adm-sub-1",
-      studentId: "demo-student-1",
-      studentName: "山田 太郎",
-      companyName: "株式会社ACMEテクノロジーズ",
-      problemId: SEED_PROBLEMS[12].id,
-      problemTitle: SEED_PROBLEMS[12].title,
-      status: "passed",
-      submittedAt: "10分前",
-    },
-    {
-      id: "adm-sub-2",
-      studentId: "demo-student-2",
-      studentName: "鈴木 花子",
-      companyName: "株式会社ACMEテクノロジーズ",
-      problemId: SEED_PROBLEMS[8].id,
-      problemTitle: SEED_PROBLEMS[8].title,
-      status: "wrong_answer",
-      submittedAt: "25分前",
-    },
-    {
-      id: "adm-sub-3",
-      studentId: "demo-student-4",
-      studentName: "高橋 健太",
-      companyName: "ネクストシステムズ株式会社",
-      problemId: SEED_PROBLEMS[16].id,
-      problemTitle: SEED_PROBLEMS[16].title,
-      status: "passed",
-      submittedAt: "1時間前",
-    },
-  ];
+  const overview = await getAdminOverviewFromDb();
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl space-y-8">
@@ -106,7 +32,7 @@ export default async function AdminDashboardPage() {
             システム管理者統括ダッシュボード（テナント管理・カリキュラム管理）
           </h1>
           <p className="text-sm text-slate-600 mt-1">
-            契約企業テナントの管理と、Java・SQLカリキュラム全体の作成・つまずき分析を一元管理します。
+            契約企業テナントの管理と、Java・SQLカリキュラム全体の作成・つまずき分析をデータベースからリアルタイムに一元管理します。
           </p>
         </div>
 
@@ -137,7 +63,10 @@ export default async function AdminDashboardPage() {
               <Building2 className="h-4 w-4 text-purple-600" />
             </CardDescription>
             <CardTitle className="text-3xl font-extrabold">
-              2 社 <span className="text-base font-medium text-slate-500">（計 28 名）</span>
+              {overview.companyCount} 社{" "}
+              <span className="text-base font-medium text-slate-500">
+                （計 {overview.totalStudents} 名）
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -157,12 +86,12 @@ export default async function AdminDashboardPage() {
               <BookOpen className="h-4 w-4 text-emerald-600" />
             </CardDescription>
             <CardTitle className="text-3xl font-extrabold text-emerald-700">
-              2 コース / 全 18 問
+              {overview.courseCount} コース / 全 {overview.problemCount} 問
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-xs text-slate-500">
-              Java入門コース（4章12問）＋ SQL実践コース（3章6問）
+              Java入門コース ＋ SQL実践コース
             </p>
           </CardContent>
         </Card>
@@ -174,12 +103,17 @@ export default async function AdminDashboardPage() {
               <Users className="h-4 w-4 text-indigo-600" />
             </CardDescription>
             <CardTitle className="text-3xl font-extrabold text-indigo-700">
-              66.5%
+              {overview.avgProgress}%
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1.5">
-            <ProgressBar value={67} indicatorClassName="bg-indigo-600" />
-            <p className="text-xs text-slate-500">週間アクティブ率: 89.3%</p>
+            <ProgressBar
+              value={overview.avgProgress}
+              indicatorClassName="bg-indigo-600"
+            />
+            <p className="text-xs text-slate-500">
+              週間アクティブ率: {overview.activeRate}%
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -197,7 +131,7 @@ export default async function AdminDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {stumblingTop5.map((item, idx) => (
+            {overview.stumblingTop5.map((item, idx) => (
               <div
                 key={item.id}
                 className="p-3 rounded-xl border bg-slate-50/70 flex items-center justify-between gap-3"
@@ -252,7 +186,7 @@ export default async function AdminDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {recentSubmissions.map((sub) => (
+            {overview.recentSubmissions.map((sub) => (
               <div
                 key={sub.id}
                 className="p-3 rounded-xl border bg-white flex items-center justify-between gap-3"

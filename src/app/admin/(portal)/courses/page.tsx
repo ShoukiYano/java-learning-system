@@ -54,30 +54,59 @@ export default function AdminCoursesPage() {
   const [newDesc, setNewDesc] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
-  const handleCreateCourse = (e: React.FormEvent) => {
+  const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const created: AdminCourseItem = {
-      id: `course-${Date.now()}`,
-      title: newTitle.trim(),
-      description: newDesc.trim() || "新規カリキュラムコース",
-      order_index: courses.length + 1,
-      is_published: true,
-      problemCount: 0,
-    };
-
-    setCourses((prev) => [...prev, created]);
-    setNewTitle("");
-    setNewDesc("");
-    setMessage(`コース「${created.title}」を作成しました。`);
+    const nextIndex = courses.length + 1;
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create_course",
+          payload: {
+            title: newTitle.trim(),
+            description: newDesc.trim() || "新規カリキュラムコース",
+            order_index: nextIndex,
+          },
+        }),
+      });
+      const data = await res.json();
+      const created: AdminCourseItem = {
+        id: data.course?.id ?? `course-${Date.now()}`,
+        title: newTitle.trim(),
+        description: newDesc.trim() || "新規カリキュラムコース",
+        order_index: nextIndex,
+        is_published: true,
+        problemCount: 0,
+      };
+      setCourses((prev) => [...prev, created]);
+      setNewTitle("");
+      setNewDesc("");
+      setMessage(`コース「${created.title}」をデータベースに作成しました。`);
+    } catch {
+      setMessage("コース作成中にエラーが発生しました。");
+    }
   };
 
-  const togglePublish = (id: string) => {
+  const togglePublish = async (id: string) => {
+    const target = courses.find((c) => c.id === id);
+    if (!target) return;
+    const nextState = !target.is_published;
     setCourses((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, is_published: !c.is_published } : c
-      )
+      prev.map((c) => (c.id === id ? { ...c, is_published: nextState } : c))
+    );
+    await fetch("/api/admin/actions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "toggle_course_publish",
+        payload: { courseId: id, is_published: nextState },
+      }),
+    });
+    setMessage(
+      `コース「${target.title}」を${nextState ? "公開" : "非公開"}に更新しました。`
     );
   };
 

@@ -284,6 +284,40 @@ export async function POST(request: NextRequest) {
             },
             { onConflict: "user_id,study_date" }
           );
+
+          // 3-4. profiles の連続学習日数（streak_days）と last_study_date を自動更新
+          const { data: prof } = await dbClient
+            .from("profiles")
+            .select("streak_days, last_study_date")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (prof) {
+            const lastDateStr = prof.last_study_date;
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+            let newStreak = prof.streak_days ?? 0;
+            if (lastDateStr === todayStr) {
+              // 今日すでに学習済みの場合は維持（最低1日）
+              newStreak = Math.max(1, newStreak);
+            } else if (lastDateStr === yesterdayStr) {
+              // 昨日学習していた場合はストリーク +1
+              newStreak = newStreak + 1;
+            } else {
+              // 2日以上空いていた、または初回学習の場合は 1 から再スタート
+              newStreak = 1;
+            }
+
+            await dbClient
+              .from("profiles")
+              .update({
+                streak_days: newStreak,
+                last_study_date: todayStr,
+              })
+              .eq("id", user.id);
+          }
         }
       } catch {
         // DB未接続時も採点結果自体は返す

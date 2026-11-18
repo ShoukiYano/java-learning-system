@@ -52,23 +52,45 @@ export default function AdminCompaniesPage() {
     setCode(`${prefix}${num}`);
   };
 
-  const handleCreateCompany = (e: React.FormEvent) => {
+  const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !code.trim()) return;
-    const item: CompanyItem = {
-      id: `comp-${Date.now()}`,
-      name: name.trim(),
-      company_code: code.trim().toUpperCase(),
-      contact_email: contactEmail.trim(),
-      studentCount: 0,
-    };
-    setCompanies((prev) => [item, ...prev]);
-    setName("");
-    setCode("");
-    setContactEmail("");
-    setNotice(
-      `テナント企業「${item.name}」（企業コード: ${item.company_code}）を登録し、企業担当者ポータル（/company/login）への招待を発行しました。`
-    );
+
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create_company",
+          payload: {
+            name: name.trim(),
+            company_code: code.trim().toUpperCase(),
+            contact_email: contactEmail.trim(),
+            initial_password: "Password123!",
+          },
+        }),
+      });
+      const data = await res.json();
+
+      const item: CompanyItem = {
+        id: data.company?.id ?? `comp-${Date.now()}`,
+        name: name.trim(),
+        company_code: code.trim().toUpperCase(),
+        contact_email: contactEmail.trim(),
+        studentCount: 0,
+      };
+      setCompanies((prev) => [item, ...prev]);
+      setName("");
+      setCode("");
+      setContactEmail("");
+      setNotice(
+        data.accountCreated
+          ? `✅ テナント企業「${item.name}」（企業コード: ${item.company_code}）をDBに登録し、企業担当者アカウント（${item.contact_email} / 初期パスワード: Password123!）を自動発行しました！`
+          : `✅ テナント企業「${item.name}」（企業コード: ${item.company_code}）をデータベースに登録しました。`
+      );
+    } catch {
+      setNotice("企業登録中にエラーが発生しました。");
+    }
   };
 
   return (

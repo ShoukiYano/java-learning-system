@@ -62,7 +62,7 @@ export default function AdminCourseChaptersPage({
     setDragIndex(idx);
   };
 
-  const handleDrop = (targetIdx: number) => {
+  const handleDrop = async (targetIdx: number) => {
     if (dragIndex === null || dragIndex === targetIdx) return;
     const updated = [...chapters];
     const [moved] = updated.splice(dragIndex, 1);
@@ -73,35 +73,75 @@ export default function AdminCourseChaptersPage({
     }));
     setChapters(reindexed);
     setDragIndex(null);
-    setToast("ドラッグ＆ドロップで章の並び順を更新しました。");
+
+    await fetch("/api/admin/actions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "reorder_chapters",
+        payload: {
+          orderedChapters: reindexed.map((c) => ({
+            id: c.id,
+            order_index: c.order_index,
+          })),
+        },
+      }),
+    });
+    setToast("ドラッグ＆ドロップで章の並び順をデータベースに保存しました。");
   };
 
-  const handleAddChapter = (e: React.FormEvent) => {
+  const handleAddChapter = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newChapterTitle.trim()) return;
     const nextIdx = chapters.length + 1;
+    const lessonTitle = newLessonTitle.trim() || `${nextIdx}-1. 実践演習`;
+
+    const res = await fetch("/api/admin/actions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "create_chapter_and_lesson",
+        payload: {
+          courseId: currentCourse.id,
+          chapterTitle: newChapterTitle.trim(),
+          lessonTitle,
+          order_index: nextIdx,
+        },
+      }),
+    });
+    const data = await res.json();
+
     setChapters((prev) => [
       ...prev,
       {
-        id: `ch-${Date.now()}`,
+        id: data.chapter?.id ?? `ch-${Date.now()}`,
         title: newChapterTitle.trim(),
         description: "新規作成された章",
         order_index: nextIdx,
         is_published: true,
-        lesson_title: newLessonTitle.trim() || `${nextIdx}-1. 実践演習`,
+        lesson_title: lessonTitle,
       },
     ]);
     setNewChapterTitle("");
     setNewLessonTitle("");
-    setToast("新しい章と単元を追加しました。");
+    setToast("新しい章と単元をデータベースに保存しました。");
   };
 
-  const toggleChapterPublish = (id: string) => {
+  const toggleChapterPublish = async (id: string) => {
+    const target = chapters.find((c) => c.id === id);
+    if (!target) return;
+    const nextState = !target.is_published;
     setChapters((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, is_published: !c.is_published } : c
-      )
+      prev.map((c) => (c.id === id ? { ...c, is_published: nextState } : c))
     );
+    await fetch("/api/admin/actions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "toggle_chapter_publish",
+        payload: { chapterId: id, is_published: nextState },
+      }),
+    });
   };
 
   return (

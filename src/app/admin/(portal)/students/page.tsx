@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { DEMO_STUDENTS_ANALYTICS } from "@/lib/mock-analytics";
+import { getStudentsAnalyticsFromDb } from "@/lib/data-service";
 import {
   Card,
   CardContent,
@@ -12,7 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress";
 import { Users, AlertTriangle, Building2, ArrowRight } from "lucide-react";
 
-export default function AdminStudentsListPage() {
+export default async function AdminStudentsListPage() {
+  const students = await getStudentsAnalyticsFromDb();
+
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl space-y-6">
       <div>
@@ -20,7 +22,7 @@ export default function AdminStudentsListPage() {
           全テナント受講生一覧・進捗監視
         </h1>
         <p className="text-sm text-slate-600 mt-1">
-          全導入企業の受講生の進捗率・学習時間・遅れアラートを確認し、個別フィードバックを入力できます。
+          全導入企業の受講生の進捗率・学習時間・遅れアラートをリアルタイムに確認し、個別フィードバックを入力できます。
         </p>
       </div>
 
@@ -28,14 +30,14 @@ export default function AdminStudentsListPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Users className="h-4 w-4 text-indigo-600" />
-            登録受講生一覧
+            登録受講生一覧（{students.length} 名）
           </CardTitle>
           <CardDescription className="text-xs">
             「詳細・フィードバック」から提出コードのレビューと5段階評価の登録が可能です。
           </CardDescription>
         </CardHeader>
         <CardContent className="divide-y">
-          {DEMO_STUDENTS_ANALYTICS.map((st) => (
+          {students.map((st) => (
             <div
               key={st.id}
               className="py-4 first:pt-0 last:pb-0 flex flex-wrap items-center justify-between gap-4"

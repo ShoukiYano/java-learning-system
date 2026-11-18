@@ -4,14 +4,18 @@
 // =============================================================================
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   SEED_CHAPTERS,
   SEED_COURSE_ID,
   SEED_COURSES,
   SEED_PROBLEMS,
+  detectProblemLanguage,
 } from "@/lib/seed-data";
+import { DEMO_STUDENTS_ANALYTICS, StudentAnalyticsRecord } from "@/lib/mock-analytics";
 import {
   Announcement,
+  Company,
   Course,
   Feedback,
   Hint,
@@ -572,3 +576,663 @@ export async function getStudentDashboardData(userId: string) {
     chapters: allChapters,
   };
 }
+
+// =============================================================================
+// 管理者・企業担当者向け リアルタイムDB集計サービス
+// =============================================================================
+
+function getServerQueryClient() {
+  if (
+    process.env.SUPABASE_SERVICE_ROLE_KEY &&
+    !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+  ) {
+    return createAdminClient();
+  }
+  return null;
+}
+
+/**
+ * 受講生一覧と各受講生の進捗・学習時間・遅れアラート・スキルマップ・評価をDBからリアルタイム集計
+ * companyIdFilter が指定されている場合はその企業の受講生のみを返す
+ */
+export async function getStudentsAnalyticsFromDb(
+  companyIdFilter?: string | null
+): Promise<StudentAnalyticsRecord[]> {
+  if (!isSupabaseConfigured()) {
+    return companyIdFilter
+      ? DEMO_STUDENTS_ANALYTICS.filter((s) => s.companyId === companyIdFilter)
+      : DEMO_STUDENTS_ANALYTICS;
+  }
+
+  try {
+    const adminOrUserClient = getServerQueryClient() ?? (await createClient());
+
+    let query = adminOrUserClient
+      .from("profiles")
+      .select("*, companies(*)")
+      .eq("role", "student")
+      .order("created_at", { ascending: true });
+
+    if (companyIdFilter) {
+      query = query.eq("company_id", companyIdFilter);
+    }
+
+    const { data: students } = await query;
+
+    if (!students || students.length === 0) {
+      return companyIdFilter
+        ? DEMO_STUDENTS_ANALYTICS.filter((s) => s.companyId === companyIdFilter)
+        : DEMO_STUDENTS_ANALYTICS;
+    }
+
+    const studentIds = students.map((s: Profile) => s.id);
+
+    const [
+      { data: allProblemsDb },
+      { data: allChaptersDb },
+      { data: progressesDb },
+      { data: studyLogsDb },
+      { data: feedbacksDb },
+    ] = await Promise.all([
+      adminOrUserClient
+        .from("problems")
+        .select("id, title, tags, lesson_id, lessons(chapter_id)")
+        .eq("is_published", true),
+      adminOrUserClient
+        .from("chapters")
+        .select("id, title, order_index")
+        .eq("is_published", true)
+        .order("order_index", { ascending: true }),
+      adminOrUserClient
+        .from("progress")
+        .select("*")
+        .in("user_id", studentIds),
+      adminOrUserClient
+        .from("study_logs")
+        .select("*")
+        .in("user_id", studentIds),
+      adminOrUserClient
+        .from("feedbacks")
+        .select("*, admin:profiles!feedbacks_admin_id_fkey(id, full_name)")
+        .in("student_id", studentIds)
+        .order("created_at", { ascending: false }),
+    ]);
+
+    const problemsList =
+      allProblemsDb && allProblemsDb.length > 0
+        ? (allProblemsDb as unknown as Array<{
+            id: string;
+            title: string;
+            tags: string[];
+            lessons?: { chapter_id?: string };
+          }>)
+        : SEED_PROBLEMS.map((sp) => ({
+            id: sp.id,
+            title: sp.title,
+            tags: sp.tags,
+            lessons: { chapter_id: sp.chapter_id },
+          }));
+
+    const chaptersList =
+      allChaptersDb && allChaptersDb.length > 0
+        ? (allChaptersDb as Array<{ id: string; title: string; order_index: number }>)
+        : SEED_CHAPTERS.map((sc) => ({
+            id: sc.id,
+            title: sc.title,
+            order_index: sc.order_index,
+          }));
+
+    const totalProblemsCount = problemsList.length || 1;
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysStr = sevenDaysAgo.toISOString().slice(0, 10);
+
+    const skillTags = [
+      "出力と変数",
+      "条件分岐",
+      "ループ",
+      "配列",
+      "オブジェクト指向",
+      "SQL抽出",
+      "SQL集計",
+      "SQL結合",
+    ];
+
+    return students.map((st: Profile) => {
+      const userProgs = ((progressesDb ?? []) as Progress[]).filter(
+        (p) => p.user_id === st.id
+      );
+      const progMap = new Map<string, Progress>();
+      userProgs.forEach((p) => progMap.set(p.problem_id, p));
+
+      const completedProblems = problemsList.filter(
+        (prob) => progMap.get(prob.id)?.status === "completed"
+      ).length;
+      const progressPercent = Math.round(
+        (completedProblems / totalProblemsCount) * 100
+      );
+
+      const userLogs = ((studyLogsDb ?? []) as StudyLog[]).filter(
+        (l) => l.user_id === st.id
+      );
+      const totalMinutes = userLogs.reduce((acc, cur) => acc + cur.minutes, 0);
+      const weeklyMinutes = userLogs
+        .filter((l) => l.study_date >= sevenDaysStr)
+        .reduce((acc, cur) => acc + cur.minutes, 0);
+
+      // 最終ログインからの経過日数による遅れアラート判定
+      const lastLoginDate = st.last_login_at
+        ? new Date(st.last_login_at)
+        : new Date(st.created_at);
+      const daysSinceLogin = Math.floor(
+        (Date.now() - lastLoginDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const isDelayed =
+        daysSinceLogin >= 5 || (progressPercent < 20 && totalMinutes < 30);
+      const delayReason =
+        daysSinceLogin >= 5
+          ? `最終ログインから${daysSinceLogin}日経過`
+          : isDelayed
+          ? "進捗20%未満・学習時間不足"
+          : undefined;
+
+      // 章別進捗
+      const chapterProgress = chaptersList.map((ch) => {
+        const chProbs = problemsList.filter(
+          (p) => p.lessons?.chapter_id === ch.id
+        );
+        const chDone = chProbs.filter(
+          (p) => progMap.get(p.id)?.status === "completed"
+        ).length;
+        return {
+          chapterTitle: ch.title,
+          completed: chDone,
+          total: chProbs.length || 1,
+        };
+      });
+
+      // スキルレーダー
+      const skillScores = skillTags.map((tag) => {
+        const matched = problemsList.filter((p) => p.tags?.includes(tag));
+        if (matched.length === 0) return { tag, score: 0, fullMark: 100 };
+        const solved = matched.filter(
+          (p) => progMap.get(p.id)?.status === "completed"
+        ).length;
+        const inProg = matched.filter(
+          (p) => progMap.get(p.id)?.status === "in_progress"
+        ).length;
+        return {
+          tag,
+          score: Math.min(
+            100,
+            Math.round(((solved + inProg * 0.35) / matched.length) * 100)
+          ),
+          fullMark: 100,
+        };
+      });
+
+      // 講師評価一覧
+      const userFeedbacks = ((feedbacksDb ?? []) as Feedback[]).filter(
+        (f) => f.student_id === st.id
+      );
+      const evaluations = userFeedbacks.map((f) => ({
+        id: f.id,
+        adminName: f.admin?.full_name ?? "システム管理者・講師",
+        rating: f.rating ?? 5,
+        comment: f.comment,
+        createdAt: new Date(f.created_at).toISOString().slice(0, 10),
+      }));
+
+      return {
+        id: st.id,
+        fullName: st.full_name,
+        email: st.email,
+        companyId: st.company_id ?? "",
+        companyName: st.companies?.name ?? "未所属（個人受講）",
+        companyCode: st.companies?.company_code ?? "-",
+        progressPercent,
+        completedProblems,
+        totalProblems: problemsList.length,
+        weeklyMinutes,
+        totalMinutes,
+        streakDays: st.streak_days ?? 0,
+        lastLoginAt: lastLoginDate.toLocaleString("ja-JP", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        isDelayed,
+        delayReason,
+        chapterProgress,
+        skillScores,
+        evaluations,
+      };
+    });
+  } catch {
+    return companyIdFilter
+      ? DEMO_STUDENTS_ANALYTICS.filter((s) => s.companyId === companyIdFilter)
+      : DEMO_STUDENTS_ANALYTICS;
+  }
+}
+
+/**
+ * 管理者統括ダッシュボード用データ（テナント数、受講生数、アクティブ率、平均進捗、つまずきTOP5、直近の提出）
+ */
+export async function getAdminOverviewFromDb() {
+  const students = await getStudentsAnalyticsFromDb();
+
+  let companyCount = 2;
+  let courseCount = SEED_COURSES.length;
+  let problemCount = SEED_PROBLEMS.length;
+  let stumblingTop5 = [
+    {
+      id: SEED_PROBLEMS[17].id,
+      title: SEED_PROBLEMS[17].title,
+      track: "SQL",
+      avgAttempts: 4.5,
+      failRate: 61,
+      avgMinutes: 22,
+    },
+    {
+      id: SEED_PROBLEMS[11].id,
+      title: SEED_PROBLEMS[11].title,
+      track: "Java",
+      avgAttempts: 4.2,
+      failRate: 58,
+      avgMinutes: 24,
+    },
+    {
+      id: SEED_PROBLEMS[8].id,
+      title: SEED_PROBLEMS[8].title,
+      track: "Java",
+      avgAttempts: 3.6,
+      failRate: 49,
+      avgMinutes: 19,
+    },
+    {
+      id: SEED_PROBLEMS[15].id,
+      title: SEED_PROBLEMS[15].title,
+      track: "SQL",
+      avgAttempts: 3.2,
+      failRate: 44,
+      avgMinutes: 17,
+    },
+    {
+      id: SEED_PROBLEMS[10].id,
+      title: SEED_PROBLEMS[10].title,
+      track: "Java",
+      avgAttempts: 3.1,
+      failRate: 42,
+      avgMinutes: 18,
+    },
+  ];
+
+  let recentSubmissions = [
+    {
+      id: "adm-sub-1",
+      studentId: students[0]?.id ?? "demo-student-1",
+      studentName: students[0]?.fullName ?? "山田 太郎",
+      companyName: students[0]?.companyName ?? "株式会社ACMEテクノロジーズ",
+      problemId: SEED_PROBLEMS[12].id,
+      problemTitle: SEED_PROBLEMS[12].title,
+      status: "passed",
+      submittedAt: "直近",
+    },
+  ];
+
+  if (isSupabaseConfigured()) {
+    try {
+      const db = getServerQueryClient() ?? (await createClient());
+
+      const [
+        { count: compCnt },
+        { count: crsCnt },
+        { data: probsData },
+        { data: subsData },
+        { data: progsData },
+      ] = await Promise.all([
+        db.from("companies").select("*", { count: "exact", head: true }),
+        db.from("courses").select("*", { count: "exact", head: true }),
+        db.from("problems").select("id, title, tags, starter_code"),
+        db
+          .from("submissions")
+          .select(
+            "id, user_id, problem_id, status, time_spent_seconds, created_at, problems(id, title), profiles(id, full_name, companies(name))"
+          )
+          .order("created_at", { ascending: false })
+          .limit(30),
+        db.from("progress").select("problem_id, status, attempts_count, total_time_spent_seconds"),
+      ]);
+
+      if (compCnt !== null) companyCount = compCnt;
+      if (crsCnt !== null && crsCnt > 0) courseCount = crsCnt;
+      if (probsData && probsData.length > 0) problemCount = probsData.length;
+
+      // 直近の提出リスト
+      if (subsData && subsData.length > 0) {
+        recentSubmissions = (
+          subsData as unknown as Array<{
+            id: string;
+            user_id: string;
+            problem_id: string;
+            status: string;
+            created_at: string;
+            problems?: { title?: string };
+            profiles?: { full_name?: string; companies?: { name?: string } };
+          }>
+        )
+          .slice(0, 8)
+          .map((s) => ({
+            id: s.id,
+            studentId: s.user_id,
+            studentName: s.profiles?.full_name ?? "受講生",
+            companyName: s.profiles?.companies?.name ?? "個人受講",
+            problemId: s.problem_id,
+            problemTitle: s.problems?.title ?? "演習問題",
+            status: s.status,
+            submittedAt: new Date(s.created_at).toLocaleString("ja-JP", {
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          }));
+      }
+
+      // つまずき問題TOP5のリアル集計（progressテーブルの平均試行回数・未完了率から算出）
+      if (probsData && probsData.length > 0 && progsData && progsData.length > 0) {
+        const statList = probsData.map(
+          (prob: {
+            id: string;
+            title: string;
+            tags: string[];
+            starter_code: string;
+          }) => {
+            const pRows = (
+              progsData as Array<{
+                problem_id: string;
+                status: string;
+                attempts_count: number;
+                total_time_spent_seconds: number;
+              }>
+            ).filter((r) => r.problem_id === prob.id);
+
+            const count = pRows.length;
+            const totalAttempts = pRows.reduce(
+              (a, c) => a + (c.attempts_count || 1),
+              0
+            );
+            const failedOrInProg = pRows.filter(
+              (r) => r.status !== "completed"
+            ).length;
+            const totalSecs = pRows.reduce(
+              (a, c) => a + (c.total_time_spent_seconds || 600),
+              0
+            );
+            const lang = detectProblemLanguage(prob);
+
+            return {
+              id: prob.id,
+              title: prob.title,
+              track: lang === "sql" ? "SQL" : "Java",
+              avgAttempts:
+                count > 0 ? Number((totalAttempts / count).toFixed(1)) : 1.0,
+              failRate:
+                count > 0 ? Math.round((failedOrInProg / count) * 100) : 0,
+              avgMinutes:
+                count > 0 ? Math.max(1, Math.round(totalSecs / count / 60)) : 10,
+              hasData: count > 0,
+            };
+          }
+        );
+
+        const activeStats = statList
+          .filter((x) => x.hasData)
+          .sort(
+            (a, b) => b.failRate - a.failRate || b.avgAttempts - a.avgAttempts
+          );
+        if (activeStats.length > 0) {
+          stumblingTop5 = activeStats.slice(0, 5);
+        }
+      }
+    } catch {
+      // フォールバック維持
+    }
+  }
+
+  const totalStudents = students.length;
+  const avgProgress =
+    totalStudents > 0
+      ? Math.round(
+          students.reduce((a, c) => a + c.progressPercent, 0) / totalStudents
+        )
+      : 0;
+  const activeCount = students.filter((s) => !s.isDelayed).length;
+  const activeRate =
+    totalStudents > 0 ? Math.round((activeCount / totalStudents) * 100) : 100;
+
+  return {
+    companyCount,
+    totalStudents,
+    courseCount,
+    problemCount,
+    avgProgress,
+    activeRate,
+    stumblingTop5,
+    recentSubmissions,
+  };
+}
+
+/**
+ * 管理画面用：特定受講生の詳細＋最新の提出コード一覧をDBから取得
+ */
+export async function getStudentDetailForAdminOrCompany(studentId: string) {
+  const allStudents = await getStudentsAnalyticsFromDb();
+  const student =
+    allStudents.find((s) => s.id === studentId) ?? allStudents[0];
+
+  let submissions: Submission[] = [];
+  if (isSupabaseConfigured()) {
+    try {
+      const db = getServerQueryClient() ?? (await createClient());
+      const { data } = await db
+        .from("submissions")
+        .select("*, problems(id, title, difficulty, tags)")
+        .eq("user_id", student.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (data) submissions = data as Submission[];
+    } catch {
+      // ignore
+    }
+  }
+
+  return {
+    student,
+    submissions,
+  };
+}
+
+/**
+ * 管理画面用：テナント企業一覧と各企業の所属受講生数を取得
+ */
+export async function getAdminCompaniesList() {
+  const defaultCompanies = [
+    {
+      id: "00000000-0000-4000-8000-000000000001",
+      name: "株式会社ACMEテクノロジーズ",
+      company_code: "ACME2025",
+      contact_email: "hr@acme-tech.example.com",
+      studentCount: 18,
+    },
+    {
+      id: "00000000-0000-4000-8000-000000000002",
+      name: "ネクストシステムズ株式会社",
+      company_code: "TECH2025",
+      contact_email: "training@next-sys.example.com",
+      studentCount: 10,
+    },
+  ];
+
+  if (!isSupabaseConfigured()) return defaultCompanies;
+
+  try {
+    const db = getServerQueryClient() ?? (await createClient());
+    const { data: companies } = await db
+      .from("companies")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    const { data: profiles } = await db
+      .from("profiles")
+      .select("company_id")
+      .eq("role", "student");
+
+    if (!companies || companies.length === 0) return defaultCompanies;
+
+    return (companies as Company[]).map((c) => {
+      const cnt = ((profiles ?? []) as { company_id: string | null }[]).filter(
+        (p) => p.company_id === c.id
+      ).length;
+      return {
+        id: c.id,
+        name: c.name,
+        company_code: c.company_code,
+        contact_email: c.contact_email ?? "",
+        studentCount: cnt,
+      };
+    });
+  } catch {
+    return defaultCompanies;
+  }
+}
+
+/**
+ * 管理画面用：お知らせ一覧を取得
+ */
+export async function getAdminAnnouncementsList() {
+  if (!isSupabaseConfigured()) {
+    return {
+      announcements: [
+        {
+          id: "ann-1",
+          title: "Java入門コース・SQL実践コース開講のお知らせ",
+          content_md:
+            "Javaの基礎からオブジェクト指向、およびSQLのデータ抽出・集計・JOIN結合までブラウザ上で学習できます。",
+          company_id: null,
+          targetLabel: "全テナント公開",
+          createdAt: "2025-05-01",
+        },
+      ],
+      companies: await getAdminCompaniesList(),
+    };
+  }
+
+  try {
+    const db = getServerQueryClient() ?? (await createClient());
+    const companies = await getAdminCompaniesList();
+    const compMap = new Map(companies.map((c) => [c.id, c.name]));
+
+    const { data } = await db
+      .from("announcements")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    const list = ((data ?? []) as Announcement[]).map((a) => ({
+      id: a.id,
+      title: a.title,
+      content_md: a.content_md,
+      company_id: a.company_id,
+      targetLabel: a.company_id
+        ? `${compMap.get(a.company_id) ?? "特定企業"} 限定`
+        : "全テナント公開",
+      createdAt: new Date(a.created_at).toISOString().slice(0, 10),
+    }));
+
+    return {
+      announcements: list,
+      companies,
+    };
+  } catch {
+    return {
+      announcements: [],
+      companies: await getAdminCompaniesList(),
+    };
+  }
+}
+
+/**
+ * 管理画面の問題編集用：DBから問題・全テストケース（非公開含む）・全ヒントを取得
+ */
+export async function getProblemForAdminEdit(problemId: string) {
+  const seedFallback =
+    SEED_PROBLEMS.find((p) => p.id === problemId) ?? SEED_PROBLEMS[0];
+
+  if (!isSupabaseConfigured()) return seedFallback;
+
+  try {
+    const db = getServerQueryClient() ?? (await createClient());
+    const { data: prob } = await db
+      .from("problems")
+      .select("*, lessons(chapter_id)")
+      .eq("id", problemId)
+      .maybeSingle();
+
+    if (!prob) return seedFallback;
+
+    const [{ data: tcs }, { data: hints }] = await Promise.all([
+      db
+        .from("test_cases")
+        .select("*")
+        .eq("problem_id", problemId)
+        .order("order_index", { ascending: true }),
+      db
+        .from("hints")
+        .select("*")
+        .eq("problem_id", problemId)
+        .order("step_number", { ascending: true }),
+    ]);
+
+    const chapterId =
+      (prob as unknown as { lessons?: { chapter_id?: string } }).lessons
+        ?.chapter_id ?? seedFallback.chapter_id;
+
+    return {
+      id: prob.id,
+      lesson_id: prob.lesson_id,
+      chapter_id: chapterId,
+      language: detectProblemLanguage(prob),
+      title: prob.title,
+      description_md: prob.description_md,
+      difficulty: prob.difficulty,
+      estimated_minutes: prob.estimated_minutes,
+      tags: prob.tags ?? [],
+      starter_code: prob.starter_code,
+      solution_code: prob.solution_code,
+      explanation_md: prob.explanation_md,
+      order_index: prob.order_index,
+      test_cases:
+        tcs && tcs.length > 0
+          ? (tcs as TestCase[]).map((t) => ({
+              name: t.name,
+              input: t.input,
+              expected_output: t.expected_output,
+              is_hidden: t.is_hidden,
+              order_index: t.order_index,
+            }))
+          : seedFallback.test_cases,
+      hints:
+        hints && hints.length > 0
+          ? (hints as Hint[]).map((h) => ({
+              step_number: h.step_number,
+              content_md: h.content_md,
+            }))
+          : seedFallback.hints,
+    };
+  } catch {
+    return seedFallback;
+  }
+}
+

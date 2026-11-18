@@ -119,6 +119,8 @@ export function ProblemEditorForm({
   } | null>(null);
 
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // ★「期待出力を自動生成」ボタン：模範解答を自作インタプリタ（JavaまたはSQL）で実行して各テストケースの期待出力を自動入力する
   const handleAutoGenerateExpectedOutputs = () => {
@@ -186,11 +188,57 @@ export function ProblemEditorForm({
     });
   };
 
-  const handleSaveProblem = (e: React.FormEvent) => {
+  const handleSaveProblem = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaveMessage(
-      `問題「${title}」（テストケース ${testCases.length}件、ヒント3段階）を保存しました。`
-    );
+    setSaving(true);
+    setSaveMessage(null);
+    setSaveError(null);
+
+    try {
+      const parsedTags = tagsInput
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "save_problem",
+          payload: {
+            problemId: mode === "edit" ? initialProblem?.id : undefined,
+            chapterId,
+            title: title.trim(),
+            description_md: descriptionMd,
+            difficulty,
+            estimated_minutes: estimatedMinutes,
+            tags: parsedTags,
+            starter_code: starterCode,
+            solution_code: solutionCode,
+            explanation_md: explanationMd,
+            test_cases: testCases,
+            hints: [
+              { step_number: 1, content_md: hint1 },
+              { step_number: 2, content_md: hint2 },
+              { step_number: 3, content_md: hint3 },
+            ],
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setSaveError(data.error || "保存に失敗しました。");
+      } else {
+        setSaveMessage(
+          `✅ 問題「${title}」（テストケース ${testCases.length}件、ヒント3段階）をデータベースへ保存しました。`
+        );
+      }
+    } catch {
+      setSaveError("通信エラーが発生しました。");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -237,6 +285,13 @@ export function ProblemEditorForm({
         <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
           <span>{saveMessage}</span>
+        </div>
+      )}
+
+      {saveError && (
+        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs font-semibold flex items-center gap-2">
+          <XCircle className="h-4 w-4 text-rose-600 shrink-0" />
+          <span>{saveError}</span>
         </div>
       )}
 
@@ -633,9 +688,9 @@ export function ProblemEditorForm({
             <FlaskConical className="h-4 w-4 text-amber-600" />
             模範解答でテスト実行
           </Button>
-          <Button type="submit" size="lg">
+          <Button type="submit" size="lg" disabled={saving}>
             <Save className="h-4 w-4" />
-            問題を保存する
+            {saving ? "データベースに保存中..." : "問題を保存する"}
           </Button>
         </div>
       </form>

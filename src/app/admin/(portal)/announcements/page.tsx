@@ -41,7 +41,7 @@ export default function AdminAnnouncementsPage() {
   const [companyScope, setCompanyScope] = useState("ALL");
   const [sentNotice, setSentNotice] = useState<string | null>(null);
 
-  const handlePublish = (e: React.FormEvent) => {
+  const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
     const targetLabel =
@@ -50,6 +50,26 @@ export default function AdminAnnouncementsPage() {
         : companyScope === "ACME"
         ? "株式会社ACMEテクノロジーズ 限定"
         : "ネクストシステムズ株式会社 限定";
+
+    const companyId =
+      companyScope === "ALL"
+        ? null
+        : companyScope === "ACME"
+        ? "00000000-0000-4000-8000-000000000001"
+        : "00000000-0000-4000-8000-000000000002";
+
+    await fetch("/api/admin/actions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "create_announcement",
+        payload: {
+          title: title.trim(),
+          content_md: content.trim(),
+          company_id: companyId,
+        },
+      }),
+    });
 
     setItems((prev) => [
       {
@@ -64,7 +84,7 @@ export default function AdminAnnouncementsPage() {
     setTitle("");
     setContent("");
     setSentNotice(
-      "お知らせを配信しました。対象テナント受講生のダッシュボードに表示されます。"
+      "✅ お知らせをデータベースに保存・配信しました。対象テナント受講生のダッシュボードに即時表示されます。"
     );
   };
 

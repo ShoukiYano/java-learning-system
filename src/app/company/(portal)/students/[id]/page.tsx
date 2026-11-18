@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { DEMO_STUDENTS_ANALYTICS } from "@/lib/mock-analytics";
+import { getStudentDetailForAdminOrCompany } from "@/lib/data-service";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
 import {
   Card,
@@ -27,9 +27,7 @@ export default async function CompanyStudentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const student =
-    DEMO_STUDENTS_ANALYTICS.find((s) => s.id === id) ??
-    DEMO_STUDENTS_ANALYTICS[0];
+  const { student } = await getStudentDetailForAdminOrCompany(id);
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl space-y-6">
@@ -150,28 +148,34 @@ export default async function CompanyStudentDetailPage({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {student.evaluations.map((ev) => (
-                <div
-                  key={ev.id}
-                  className="p-4 rounded-xl bg-amber-50/60 border border-amber-200 space-y-2"
-                >
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-900">
-                      {ev.adminName}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 font-bold text-amber-700">
-                        <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
-                        総合評価 {ev.rating} / 5
+              {student.evaluations.length === 0 ? (
+                <p className="text-xs text-slate-500">
+                  まだ講師からの評価コメントはありません。
+                </p>
+              ) : (
+                student.evaluations.map((ev) => (
+                  <div
+                    key={ev.id}
+                    className="p-4 rounded-xl bg-amber-50/60 border border-amber-200 space-y-2"
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-slate-900">
+                        {ev.adminName}
                       </span>
-                      <span className="text-slate-400">{ev.createdAt}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 font-bold text-amber-700">
+                          <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
+                          総合評価 {ev.rating} / 5
+                        </span>
+                        <span className="text-slate-400">{ev.createdAt}</span>
+                      </div>
                     </div>
+                    <p className="text-xs text-slate-700 leading-relaxed">
+                      {ev.comment}
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-700 leading-relaxed">
-                    {ev.comment}
-                  </p>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
         </div>
