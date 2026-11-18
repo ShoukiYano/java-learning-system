@@ -55,16 +55,19 @@ export function RoleLoginForm({
       iconBg: "bg-blue-600",
       textAccent: "text-blue-400",
       badgeBg: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+      btnClass: "bg-blue-600 hover:bg-blue-500 text-white",
     },
     emerald: {
       iconBg: "bg-emerald-600",
       textAccent: "text-emerald-400",
       badgeBg: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+      btnClass: "bg-emerald-600 hover:bg-emerald-500 text-white",
     },
     indigo: {
       iconBg: "bg-indigo-600",
       textAccent: "text-indigo-400",
       badgeBg: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+      btnClass: "bg-indigo-600 hover:bg-indigo-500 text-white",
     },
   }[accentColor];
 
@@ -96,17 +99,11 @@ export function RoleLoginForm({
 
       const actualRole: UserRole = (profile?.role as UserRole) ?? "student";
 
-      // ★ セキュリティ制御：ログイン窓口のロールと実際のアカウントロールが異なる場合は遮断
-      // （ただしシステム管理者 admin のみ検証目的で全ポータル通過を許可するか、厳格にロール一致を要求）
+      // ★ セキュリティ制御：該当パスのロールと一致しないアカウントはログインを拒否（別ロールのURLも露出しない）
       if (actualRole !== expectedRole) {
         await supabase.auth.signOut();
-        const roleNameMap: Record<UserRole, string> = {
-          student: "受講生（/student/login）",
-          company: "企業担当者（/company/login）",
-          admin: "システム管理者（/admin/login）",
-        };
         setError(
-          `アクセス拒否：このアカウントは「${roleNameMap[actualRole]}」用です。セキュリティ保護のため、正しい専用ログインURLからログインしてください。`
+          "このログイン画面からアクセスする権限がありません。アカウント種別をご確認ください。"
         );
         setLoading(false);
         return;
@@ -120,9 +117,7 @@ export function RoleLoginForm({
       router.push(targetHomePath);
       router.refresh();
     } catch {
-      setError(
-        "ログイン処理中にエラーが発生しました。Supabase接続設定を確認してください。"
-      );
+      setError("ログイン処理中にエラーが発生しました。");
     } finally {
       setLoading(false);
     }
@@ -163,7 +158,7 @@ export function RoleLoginForm({
     <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 py-12">
       <div className="w-full max-w-md space-y-6">
         <div className="flex flex-col items-center text-center">
-          <Link href="/" className="flex items-center gap-2.5 mb-3">
+          <div className="flex items-center gap-2.5 mb-3">
             <div
               className={`h-10 w-10 rounded-xl ${colorMap.iconBg} flex items-center justify-center shadow-lg`}
             >
@@ -180,7 +175,7 @@ export function RoleLoginForm({
             <span className="text-xl font-bold text-white">
               DevSkill<span className={colorMap.textAccent}>Studio</span>
             </span>
-          </Link>
+          </div>
 
           <span
             className={`px-3 py-1 rounded-full text-xs font-semibold border ${colorMap.badgeBg}`}
@@ -226,7 +221,7 @@ export function RoleLoginForm({
                   <Input
                     type="email"
                     required
-                    placeholder={`${expectedRole}@example.com`}
+                    placeholder="メールアドレスを入力"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="bg-slate-950 border-slate-700 text-white"
@@ -261,8 +256,12 @@ export function RoleLoginForm({
                   />
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "認証中..." : `${portalTitle}へログイン`}
+                <Button
+                  type="submit"
+                  className={`w-full ${colorMap.btnClass}`}
+                  disabled={loading}
+                >
+                  {loading ? "認証中..." : "ログイン"}
                 </Button>
               </form>
             ) : (
@@ -279,7 +278,11 @@ export function RoleLoginForm({
                     className="bg-slate-950 border-slate-700 text-white"
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button
+                  type="submit"
+                  className={`w-full ${colorMap.btnClass}`}
+                  disabled={loading}
+                >
                   {loading ? "送信中..." : "再設定メールを送信"}
                 </Button>
                 <Button
@@ -295,36 +298,15 @@ export function RoleLoginForm({
 
             {expectedRole === "student" && (
               <div className="mt-6 pt-5 border-t border-slate-800 text-center text-xs text-slate-400">
-                新規の受講生の方は{" "}
+                アカウントをお持ちでない方は{" "}
                 <Link
                   href="/student/signup"
                   className="text-blue-400 font-semibold hover:underline"
                 >
-                  受講生新規登録（企業コード対応）
+                  新規受講登録（企業コード対応）
                 </Link>
               </div>
             )}
-
-            <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
-              <span>別ロールの専用ログイン窓口:</span>
-              <div className="flex items-center gap-3">
-                {expectedRole !== "student" && (
-                  <Link href="/student/login" className="hover:text-slate-300">
-                    受講生
-                  </Link>
-                )}
-                {expectedRole !== "company" && (
-                  <Link href="/company/login" className="hover:text-slate-300">
-                    企業担当者
-                  </Link>
-                )}
-                {expectedRole !== "admin" && (
-                  <Link href="/admin/login" className="hover:text-slate-300">
-                    管理者
-                  </Link>
-                )}
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

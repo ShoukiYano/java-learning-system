@@ -5,9 +5,9 @@ export default function CompanyLoginPage() {
   return (
     <RoleLoginForm
       expectedRole="company"
-      portalTitle="企業担当者ポータル ログイン"
-      portalSubtitle="自社テナントの受講生一覧・学習進捗・カリキュラム内容を確認する企業担当者専用ゲートウェイです。"
-      badgeText="Company Tenant Portal (/company/login)"
+      portalTitle="企業担当者ログイン"
+      portalSubtitle="貴社受講生の学習進捗・評価・カリキュラム内容を確認するための専用ログイン画面です。"
+      badgeText="企業担当者専用ポータル"
       accentColor="emerald"
       targetHomePath="/company"
     />

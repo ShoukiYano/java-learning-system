@@ -80,13 +80,6 @@ export default function AdminPortalLayout({
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/student"
-            className="text-xs text-slate-300 hover:text-white inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800"
-          >
-            受講生画面プレビュー
-            <ExternalLink className="h-3 w-3" />
-          </Link>
           <SignOutButton redirectPath="/admin/login" />
         </div>
       </header>

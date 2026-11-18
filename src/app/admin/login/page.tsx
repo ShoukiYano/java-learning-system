@@ -5,9 +5,9 @@ export default function AdminLoginPage() {
   return (
     <RoleLoginForm
       expectedRole="admin"
-      portalTitle="システム管理者ポータル ログイン"
-      portalSubtitle="テナント（導入企業）管理およびカリキュラム全体（Java・SQL）の作成・管理を行う管理者専用ゲートウェイです。"
-      badgeText="System Admin Console (/admin/login)"
+      portalTitle="システム管理者ログイン"
+      portalSubtitle="テナント管理およびカリキュラム全体の作成・管理を行う管理者専用コンソールです。"
+      badgeText="管理者専用コンソール"
       accentColor="indigo"
       targetHomePath="/admin"
     />

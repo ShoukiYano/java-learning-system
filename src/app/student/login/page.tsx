@@ -5,9 +5,9 @@ export default function StudentLoginPage() {
   return (
     <RoleLoginForm
       expectedRole="student"
-      portalTitle="受講生ポータル ログイン"
-      portalSubtitle="Java・SQLカリキュラムの受講・コード演習を行う受講生専用ゲートウェイです。"
-      badgeText="Student Portal (/student/login)"
+      portalTitle="受講生ログイン"
+      portalSubtitle="Java・SQLカリキュラムの受講・コード演習を行うためのログイン画面です。"
+      badgeText="受講生ポータル"
       accentColor="blue"
       targetHomePath="/student"
     />
