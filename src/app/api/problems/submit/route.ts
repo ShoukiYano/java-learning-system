@@ -12,8 +12,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runJavaCode, compareOutputs } from "@/lib/java";
 import { runSqlCode } from "@/lib/sql";
-import { SEED_PROBLEMS, detectProblemLanguage } from "@/lib/seed-data";
-import { isSupabaseConfigured } from "@/lib/data-service";
+import {
+  SEED_PROBLEMS,
+  SEED_COURSE_ID,
+  SEED_SQL_COURSE_ID,
+  detectProblemLanguage,
+} from "@/lib/seed-data";
+import { isSupabaseConfigured, getCoursesWithProgress } from "@/lib/data-service";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SubmissionStatus, TestCase } from "@/types/database";
@@ -67,6 +72,36 @@ export async function POST(request: NextRequest) {
       );
     }
     recentSubmitMap.set(`${clientIp}:${problemId}`, now);
+
+    // コース受講制限（ロック）のサーバー側ガード
+    if (isSupabaseConfigured()) {
+      try {
+        const userSupabase = await createClient();
+        const {
+          data: { user },
+        } = await userSupabase.auth.getUser();
+
+        if (user) {
+          const userCourses = await getCoursesWithProgress(user.id);
+          const seedProbRef = SEED_PROBLEMS.find((p) => p.id === problemId);
+          const targetCourseId = seedProbRef?.tags.includes("SQL")
+            ? SEED_SQL_COURSE_ID
+            : SEED_COURSE_ID;
+
+          const matchedCourse = userCourses.find((c) => c.id === targetCourseId);
+          if (matchedCourse?.isLocked) {
+            return NextResponse.json(
+              {
+                error: `この問題が属するコースは現在受講制限（ロック）されています。（${matchedCourse.lockReason}）`,
+              },
+              { status: 403 }
+            );
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
 
     // 1. テストケース一覧（公開＋非公開）の取得
     // サービスロールキーが設定されている場合は特権クライアントで全テストケースを取得し、

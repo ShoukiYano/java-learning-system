@@ -10,18 +10,24 @@ import {
   SEED_COURSE_ID,
   SEED_COURSES,
   SEED_PROBLEMS,
+  SEED_SQL_COURSE_ID,
   detectProblemLanguage,
+  getInMemoryStudentCourseLock,
+  setInMemoryStudentCourseLock,
 } from "@/lib/seed-data";
 import { DEMO_STUDENTS_ANALYTICS, StudentAnalyticsRecord } from "@/lib/mock-analytics";
 import {
   Announcement,
   Company,
   Course,
+  CourseLockStatus,
   Feedback,
   Hint,
   Problem,
   Profile,
   Progress,
+  StudentCourseLock,
+  StudentCourseStatusItem,
   StudyLog,
   Submission,
   TestCase,
@@ -80,24 +86,72 @@ export interface CourseWithStats extends Course {
   completedProblems: number;
   inProgressProblems: number;
   isLocked: boolean;
+  lockStatus?: CourseLockStatus; // 'auto' | 'unlocked' | 'locked'
+  lockReason?: string;
+  prerequisiteCourseTitle?: string | null;
 }
 
 export async function getCoursesWithProgress(
   userId: string,
   companyId?: string | null
 ): Promise<CourseWithStats[]> {
-  const fallbackList: CourseWithStats[] = SEED_COURSES.map((c, idx) => {
-    const chIds = SEED_CHAPTERS.filter((ch) => ch.course_id === c.id).map((ch) => ch.id);
-    const probs = SEED_PROBLEMS.filter((p) => chIds.includes(p.chapter_id));
-    return {
-      ...c,
-      created_at: new Date().toISOString(),
-      totalProblems: probs.length,
-      completedProblems: idx === 0 ? 3 : 1,
-      inProgressProblems: 1,
-      isLocked: false,
-    };
-  });
+  // フォールバック用の計算ロジック
+  const buildFallbackList = (): CourseWithStats[] => {
+    // Javaコースの進捗（デモは3問クリア）
+    const javaCompleted = 3;
+    const javaTotal = 12;
+    const isJavaCompleted = javaCompleted >= javaTotal;
+
+    return SEED_COURSES.map((c, idx) => {
+      const chIds = SEED_CHAPTERS.filter((ch) => ch.course_id === c.id).map((ch) => ch.id);
+      const probs = SEED_PROBLEMS.filter((p) => chIds.includes(p.chapter_id));
+      const totalProblems = probs.length;
+      const completedProblems = idx === 0 ? javaCompleted : 1;
+      const inProgressProblems = 1;
+
+      // 手動オーバーライド状態を取得（デモインメモリ）
+      const lockOverride = getInMemoryStudentCourseLock(userId, c.id);
+
+      let isLocked = false;
+      let lockReason = "受講可能です";
+      let prereqTitle: string | null = null;
+
+      if (c.prerequisite_course_id) {
+        const pre = SEED_COURSES.find((item) => item.id === c.prerequisite_course_id);
+        prereqTitle = pre ? pre.title : "前提コース";
+      }
+
+      if (lockOverride === "unlocked") {
+        isLocked = false;
+        lockReason = "企業担当者により特別解放されています（先行受講可能）";
+      } else if (lockOverride === "locked") {
+        isLocked = true;
+        lockReason = "企業担当者により受講制限されています";
+      } else {
+        // 'auto' または未設定
+        if (c.prerequisite_course_id) {
+          if (!isJavaCompleted) {
+            isLocked = true;
+            lockReason = `前提コース「${prereqTitle}」の全問クリアが必要です`;
+          }
+        }
+      }
+
+      return {
+        ...c,
+        created_at: new Date().toISOString(),
+        totalProblems,
+        completedProblems,
+        inProgressProblems,
+        isLocked,
+        lockStatus: lockOverride,
+        lockReason,
+        prerequisiteCourseTitle: prereqTitle,
+      };
+    });
+  };
+
+  const fallbackList = buildFallbackList();
 
   if (!isSupabaseConfigured()) {
     return fallbackList;
@@ -137,6 +191,25 @@ export async function getCoursesWithProgress(
       .select("*")
       .eq("user_id", userId);
 
+    // 受講生個別のコースロック・解放設定を取得
+    let studentLocksMap = new Map<string, CourseLockStatus>();
+    try {
+      const { data: lockRows } = await supabase
+        .from("student_course_locks")
+        .select("course_id, status")
+        .eq("user_id", userId);
+      if (lockRows) {
+        for (const lr of lockRows as { course_id: string; status: CourseLockStatus }[]) {
+          studentLocksMap.set(lr.course_id, lr.status);
+        }
+      }
+    } catch {
+      // テーブル未マイグレーション時はインメモリフォールバック
+      for (const sc of SEED_COURSES) {
+        studentLocksMap.set(sc.id, getInMemoryStudentCourseLock(userId, sc.id));
+      }
+    }
+
     if (!courses || courses.length === 0) {
       return fallbackList.filter((c) => !hiddenCourseIds.has(c.id));
     }
@@ -144,6 +217,9 @@ export async function getCoursesWithProgress(
     const visibleCourses = (courses as Course[]).filter(
       (c) => !hiddenCourseIds.has(c.id)
     );
+
+    const courseMap = new Map<string, Course>();
+    (courses as Course[]).forEach((c) => courseMap.set(c.id, c));
 
     const progressMap = new Map<string, Progress>();
     (progresses ?? []).forEach((p: Progress) => progressMap.set(p.problem_id, p));
@@ -179,15 +255,40 @@ export async function getCoursesWithProgress(
         else if (st === "in_progress") inProg++;
       }
 
-      // 前提コースが設定されている場合、前提コースが100%完了していなければロック
-      let isLocked = false;
+      // 前提コース情報
+      let prereqTitle: string | null = null;
+      let isPrereqCompleted = true;
       if (course.prerequisite_course_id) {
+        const pre = courseMap.get(course.prerequisite_course_id);
+        prereqTitle = pre ? pre.title : "前提コース";
         const preIds = courseProblemsMap.get(course.prerequisite_course_id) ?? [];
         const preCompleted = preIds.filter(
           (id) => progressMap.get(id)?.status === "completed"
         ).length;
         if (preIds.length > 0 && preCompleted < preIds.length) {
+          isPrereqCompleted = false;
+        }
+      }
+
+      // 個別ロックオーバーライドの判定
+      const lockStatus: CourseLockStatus =
+        studentLocksMap.get(course.id) ??
+        getInMemoryStudentCourseLock(userId, course.id);
+
+      let isLocked = false;
+      let lockReason = "受講可能です";
+
+      if (lockStatus === "unlocked") {
+        isLocked = false;
+        lockReason = "企業担当者により特別解放されています（先行受講可能）";
+      } else if (lockStatus === "locked") {
+        isLocked = true;
+        lockReason = "企業担当者により受講制限されています";
+      } else {
+        // 'auto' または未設定
+        if (course.prerequisite_course_id && !isPrereqCompleted) {
           isLocked = true;
+          lockReason = `前提コース「${prereqTitle}」の全問クリアが必要です`;
         }
       }
 
@@ -197,6 +298,9 @@ export async function getCoursesWithProgress(
         completedProblems: completed,
         inProgressProblems: inProg,
         isLocked,
+        lockStatus,
+        lockReason,
+        prerequisiteCourseTitle: prereqTitle,
       };
     });
   } catch {
@@ -462,6 +566,11 @@ export async function getStudentDashboardData(
   companyId?: string | null
 ) {
   const visibleCourses = await getCoursesWithProgress(userId, companyId);
+  // ロックされていないコースのみから学習再開対象を抽出
+  const accessibleCourses = visibleCourses.filter((c) => !c.isLocked);
+  const targetCoursesForResume =
+    accessibleCourses.length > 0 ? accessibleCourses : visibleCourses;
+
   const trees = await Promise.all(
     visibleCourses.map((c) => getCourseTree(c.id, userId))
   );
@@ -474,11 +583,26 @@ export async function getStudentDashboardData(
   const totalCount = allProblems.length || 1;
   const overallProgressPercent = Math.round((completedCount / totalCount) * 100);
 
+  // アクセス可能なコースの問題一覧
+  const accessibleCourseIds = new Set(targetCoursesForResume.map((c) => c.id));
+  const accessibleProblems = allChapters
+    .filter((ch) => accessibleCourseIds.has(ch.id) || true)
+    .flatMap((c) => c.lessons.flatMap((l) => l.problems))
+    .filter((p) => {
+      // 問題が属するコースがアクセス可能か
+      const isSql = p.tags.includes("SQL");
+      const pCourseId = isSql ? SEED_SQL_COURSE_ID : SEED_COURSE_ID;
+      return accessibleCourseIds.has(pCourseId);
+    });
+
+  const poolForResume =
+    accessibleProblems.length > 0 ? accessibleProblems : allProblems;
+
   // 「続きから再開」で遷移する次の問題（挑戦中 または 最初の未着手問題）
   const resumeProblem =
-    allProblems.find((p) => p.status === "in_progress") ??
-    allProblems.find((p) => p.status === "not_started") ??
-    allProblems[0];
+    poolForResume.find((p) => p.status === "in_progress") ??
+    poolForResume.find((p) => p.status === "not_started") ??
+    poolForResume[0];
 
   // スキルマップ（Java＋SQL問題タグ別のクリア率・正答率）
   const skillTags = [
@@ -1055,12 +1179,53 @@ export async function getAdminOverviewFromDb() {
 }
 
 /**
- * 管理画面用：特定受講生の詳細＋最新の提出コード一覧をDBから取得
+ * 受講生ごとのコース受講制限・個別ロック/解放状態一覧を取得
+ * （企業担当者ポータル・管理者ポータルの受講生詳細画面で使用）
+ */
+export async function getStudentCourseLockStatuses(
+  studentId: string,
+  companyId?: string | null
+): Promise<StudentCourseStatusItem[]> {
+  const coursesWithProg = await getCoursesWithProgress(studentId, companyId);
+
+  return coursesWithProg.map((c) => {
+    const isSql = c.title.toUpperCase().includes("SQL");
+    const pct =
+      c.totalProblems > 0
+        ? Math.round((c.completedProblems / c.totalProblems) * 100)
+        : 0;
+
+    return {
+      courseId: c.id,
+      courseTitle: c.title,
+      courseDescription: c.description,
+      orderIndex: c.order_index,
+      trackLabel: isSql ? "SQL Database Track" : "Java Programming Track",
+      totalProblems: c.totalProblems,
+      completedProblems: c.completedProblems,
+      progressPercent: pct,
+      prerequisiteCourseId: c.prerequisite_course_id,
+      prerequisiteCourseTitle: c.prerequisiteCourseTitle ?? null,
+      isPrerequisiteCompleted: !c.isLocked || c.lockStatus === "unlocked",
+      lockStatus: c.lockStatus ?? "auto",
+      isEffectiveLocked: c.isLocked,
+      lockReason: c.lockReason ?? (c.isLocked ? "受講制限中" : "受講可能"),
+    };
+  });
+}
+
+/**
+ * 管理画面・企業画面用：特定受講生の詳細＋最新の提出コード一覧＋コース別ロック状況をDBから取得
  */
 export async function getStudentDetailForAdminOrCompany(studentId: string) {
   const allStudents = await getStudentsAnalyticsFromDb();
   const student =
     allStudents.find((s) => s.id === studentId) ?? allStudents[0];
+
+  const courseLockStatuses = await getStudentCourseLockStatuses(
+    student.id,
+    student.companyId
+  );
 
   let submissions: Submission[] = [];
   if (isSupabaseConfigured()) {
@@ -1081,6 +1246,7 @@ export async function getStudentDetailForAdminOrCompany(studentId: string) {
   return {
     student,
     submissions,
+    courseLockStatuses,
   };
 }
 

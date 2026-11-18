@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getStudentDetailForAdminOrCompany } from "@/lib/data-service";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
 import { EvaluationCommentManager } from "@/components/dashboard/evaluation-comment-manager";
+import { StudentCourseLockManager } from "@/components/dashboard/student-course-lock-manager";
 import {
   Card,
   CardContent,
@@ -20,7 +21,8 @@ export default async function CompanyStudentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { student, submissions } = await getStudentDetailForAdminOrCompany(id);
+  const { student, submissions, courseLockStatuses } =
+    await getStudentDetailForAdminOrCompany(id);
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl space-y-6">
@@ -80,6 +82,13 @@ export default async function CompanyStudentDetailPage({
           </div>
         </CardContent>
       </Card>
+
+      {/* ★ 企業担当者による教材コースの個別受講制限・特別解放管理 */}
+      <StudentCourseLockManager
+        studentId={student.id}
+        studentName={student.fullName}
+        initialCourseStatuses={courseLockStatuses}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <Card className="lg:col-span-5">

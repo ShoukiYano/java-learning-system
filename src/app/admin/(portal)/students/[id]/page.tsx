@@ -8,9 +8,14 @@ export default async function AdminStudentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { student, submissions } = await getStudentDetailForAdminOrCompany(id);
+  const { student, submissions, courseLockStatuses } =
+    await getStudentDetailForAdminOrCompany(id);
 
   return (
-    <AdminStudentDetailClient student={student} submissions={submissions} />
+    <AdminStudentDetailClient
+      student={student}
+      submissions={submissions}
+      courseLockStatuses={courseLockStatuses}
+    />
   );
 }

@@ -156,3 +156,34 @@ export interface StudyLog {
   minutes: number;
   problems_solved: number;
 }
+
+export type CourseLockStatus = "auto" | "unlocked" | "locked";
+
+export interface StudentCourseLock {
+  id: string;
+  user_id: string;
+  course_id: string;
+  status: CourseLockStatus;
+  note: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StudentCourseStatusItem {
+  courseId: string;
+  courseTitle: string;
+  courseDescription: string;
+  orderIndex: number;
+  trackLabel: string;
+  totalProblems: number;
+  completedProblems: number;
+  progressPercent: number;
+  prerequisiteCourseId: string | null;
+  prerequisiteCourseTitle: string | null;
+  isPrerequisiteCompleted: boolean;
+  lockStatus: CourseLockStatus; // 'auto' | 'unlocked' | 'locked'
+  isEffectiveLocked: boolean; // 実際にロックされているか
+  lockReason: string;
+}
+

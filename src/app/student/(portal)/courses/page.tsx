@@ -15,6 +15,7 @@ import {
   Database,
   Code2,
   Lock,
+  Unlock,
   CheckCircle2,
   ArrowRight,
   Sparkles,
@@ -60,8 +61,21 @@ export default async function StudentCoursesPage() {
                     <Badge variant={isSql ? "warning" : "default"}>
                       {isSql ? "SQL Database Track" : "Java Programming Track"}
                     </Badge>
-                    {course.isLocked ? (
-                      <Badge variant="outline" className="gap-1 text-slate-600">
+                    {course.lockStatus === "unlocked" ? (
+                      <Badge
+                        variant="success"
+                        className="gap-1 bg-emerald-600 text-white font-semibold"
+                      >
+                        <Unlock className="h-3 w-3" />
+                        🔓 企業特別解放中（先行受講可能）
+                      </Badge>
+                    ) : course.lockStatus === "locked" ? (
+                      <Badge variant="destructive" className="gap-1">
+                        <Lock className="h-3 w-3" />
+                        受講制限中（企業設定）
+                      </Badge>
+                    ) : course.isLocked ? (
+                      <Badge variant="outline" className="gap-1 text-slate-700 bg-slate-200 border-slate-300">
                         <Lock className="h-3 w-3" />
                         前提コース未完了（ロック中）
                       </Badge>
@@ -93,6 +107,12 @@ export default async function StudentCoursesPage() {
                 <CardDescription className="text-slate-600 leading-relaxed">
                   {course.description}
                 </CardDescription>
+                {course.isLocked && (
+                  <div className="mt-2 p-2 rounded-lg bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex items-center gap-1.5">
+                    <Lock className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                    <span>{course.lockReason}（企業担当者へご相談いただくことで特別解放が可能です）</span>
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-1.5">
@@ -110,9 +130,9 @@ export default async function StudentCoursesPage() {
 
                 <div className="flex justify-end pt-2">
                   {course.isLocked ? (
-                    <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-200 text-slate-500 text-sm font-medium cursor-not-allowed">
-                      <Lock className="h-4 w-4" />
-                      前のコースを完了すると解放されます
+                    <span className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-200 text-slate-600 text-xs font-medium cursor-not-allowed">
+                      <Lock className="h-4 w-4 text-slate-500" />
+                      受講制限中（前提コース完了または企業による解放が必要です）
                     </span>
                   ) : (
                     <Link

@@ -1,6 +1,10 @@
 import React from "react";
 import Link from "next/link";
-import { getCourseTree, getCurrentProfile } from "@/lib/data-service";
+import {
+  getCourseTree,
+  getCurrentProfile,
+  getCoursesWithProgress,
+} from "@/lib/data-service";
 import { detectProblemLanguage } from "@/lib/seed-data";
 import { difficultyLabel } from "@/lib/utils";
 import {
@@ -21,6 +25,9 @@ import {
   Layers,
   Tag,
   ArrowLeft,
+  Lock,
+  Unlock,
+  AlertTriangle,
 } from "lucide-react";
 
 export default async function StudentCourseDetailTreePage({
@@ -30,7 +37,16 @@ export default async function StudentCourseDetailTreePage({
 }) {
   const { courseId } = await params;
   const profile = await getCurrentProfile();
-  const { course, chapters } = await getCourseTree(courseId, profile.id);
+  const [courseTreeData, coursesWithProgress] = await Promise.all([
+    getCourseTree(courseId, profile.id),
+    getCoursesWithProgress(profile.id, profile.company_id),
+  ]);
+
+  const { course, chapters } = courseTreeData;
+  const currentCourseInfo = coursesWithProgress.find((c) => c.id === courseId);
+  const isLocked = currentCourseInfo?.isLocked ?? false;
+  const lockStatus = currentCourseInfo?.lockStatus ?? "auto";
+  const lockReason = currentCourseInfo?.lockReason ?? "前提条件の完了が必要です";
 
   const allProblems = chapters.flatMap((c) =>
     c.lessons.flatMap((l) => l.problems)
@@ -72,6 +88,25 @@ export default async function StudentCourseDetailTreePage({
 
       <Card className="border-blue-100 bg-gradient-to-r from-blue-50/70 to-indigo-50/40">
         <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+            <div className="flex items-center gap-2">
+              {lockStatus === "unlocked" && (
+                <Badge
+                  variant="success"
+                  className="gap-1 bg-emerald-600 text-white font-semibold"
+                >
+                  <Unlock className="h-3 w-3" />
+                  🔓 企業特別解放中（先行受講可能）
+                </Badge>
+              )}
+              {isLocked && (
+                <Badge variant="destructive" className="gap-1">
+                  <Lock className="h-3 w-3" />
+                  受講制限中
+                </Badge>
+              )}
+            </div>
+          </div>
           <CardTitle className="text-2xl">{course.title}</CardTitle>
           <CardDescription className="text-slate-600">
             {course.description}
@@ -87,6 +122,21 @@ export default async function StudentCourseDetailTreePage({
           </div>
         </CardHeader>
       </Card>
+
+      {isLocked && (
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 flex items-start gap-3 shadow-sm">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="space-y-1 text-sm">
+            <h4 className="font-bold">このコースは現在受講制限（ロック）されています</h4>
+            <p className="text-xs text-amber-800 leading-relaxed">
+              {lockReason}
+            </p>
+            <p className="text-xs text-amber-700">
+              ※企業の研修方針により先行受講が必要な場合は、自社の研修担当者様へロック解除をご相談ください。
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-6">
         {chapters.map((chapter) => {
@@ -136,6 +186,56 @@ export default async function StudentCourseDetailTreePage({
                             : problem.status === "in_progress"
                             ? "border-amber-300 bg-amber-50/70 hover:bg-amber-50"
                             : "border-slate-200 bg-slate-50/70 hover:bg-slate-100/80";
+
+                        if (isLocked) {
+                          return (
+                            <div
+                              key={problem.id}
+                              className={`flex flex-wrap items-center justify-between gap-4 p-3.5 rounded-xl border opacity-60 bg-slate-100 border-slate-200 cursor-not-allowed`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-300 text-slate-600">
+                                  <Lock className="h-4 w-4" />
+                                </span>
+
+                                <div>
+                                  <div className="font-semibold text-sm text-slate-700 flex items-center gap-2">
+                                    <Badge
+                                      variant={
+                                        lang === "sql" ? "warning" : "default"
+                                      }
+                                      className="text-[10px] px-1.5 py-0"
+                                    >
+                                      {lang === "sql" ? "SQL" : "Java"}
+                                    </Badge>
+                                    {problem.title}
+                                    <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-200 text-slate-600">
+                                      ロック中
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                                    {problem.tags.map((tag) => (
+                                      <span
+                                        key={tag}
+                                        className="inline-flex items-center gap-1 text-[11px] text-slate-400"
+                                      >
+                                        <Tag className="h-3 w-3" />
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs px-2.5 py-0.5 rounded-md border font-semibold bg-slate-200 text-slate-600 border-slate-300">
+                                  受講制限
+                                </span>
+                                <Lock className="h-4 w-4 text-slate-400" />
+                              </div>
+                            </div>
+                          );
+                        }
 
                         return (
                           <Link

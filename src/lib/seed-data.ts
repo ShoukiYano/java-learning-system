@@ -67,9 +67,36 @@ export const SEED_COURSES = [
       "SELECT文の基本とWHERE条件指定からスタートし、GROUP BY / HAVING による集計分析、INNER JOIN / LEFT JOIN による複数テーブル結合まで全8問の実践クエリ演習で習得します。",
     order_index: 2,
     is_published: true,
-    prerequisite_course_id: null,
+    prerequisite_course_id: SEED_COURSE_ID,
   },
 ];
+
+// デモ・インメモリ環境用の受講生別コースロック状態保存ストア（key: `${userId}:${courseId}` -> "auto" | "unlocked" | "locked"）
+declare global {
+  // eslint-disable-next-line no-var
+  var __demoStudentCourseLocks: Map<string, "auto" | "unlocked" | "locked"> | undefined;
+}
+
+export function getInMemoryStudentCourseLock(
+  userId: string,
+  courseId: string
+): "auto" | "unlocked" | "locked" {
+  if (!globalThis.__demoStudentCourseLocks) {
+    globalThis.__demoStudentCourseLocks = new Map();
+  }
+  return globalThis.__demoStudentCourseLocks.get(`${userId}:${courseId}`) ?? "auto";
+}
+
+export function setInMemoryStudentCourseLock(
+  userId: string,
+  courseId: string,
+  status: "auto" | "unlocked" | "locked"
+) {
+  if (!globalThis.__demoStudentCourseLocks) {
+    globalThis.__demoStudentCourseLocks = new Map();
+  }
+  globalThis.__demoStudentCourseLocks.set(`${userId}:${courseId}`, status);
+}
 
 export const SEED_CHAPTERS: SeedChapter[] = [
   {

@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/data-service";
+import { setInMemoryStudentCourseLock } from "@/lib/seed-data";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +20,13 @@ export async function POST(request: NextRequest) {
     const { action, payload } = body;
 
     if (!isSupabaseConfigured()) {
+      if (action === "set_student_course_lock") {
+        setInMemoryStudentCourseLock(
+          payload.userId,
+          payload.courseId,
+          payload.status ?? "auto"
+        );
+      }
       return NextResponse.json({
         ok: true,
         demo: true,
@@ -65,7 +73,12 @@ export async function POST(request: NextRequest) {
         action === "update_feedback" ||
         action === "delete_feedback";
 
-      if (callerRole !== "admin" && !(callerRole === "company" && isFeedbackAction)) {
+      const isLockAction = action === "set_student_course_lock";
+
+      if (
+        callerRole !== "admin" &&
+        !(callerRole === "company" && (isFeedbackAction || isLockAction))
+      ) {
         return NextResponse.json(
           { error: "この操作を行う権限がありません。" },
           { status: 403 }
@@ -569,6 +582,64 @@ export async function POST(request: NextRequest) {
           .eq("id", companyId);
         if (delErr) throw delErr;
         return NextResponse.json({ ok: true });
+      }
+
+      // 13. 受講生ごとの教材コース受講制限・個別ロック/解放設定
+      case "set_student_course_lock": {
+        const { userId, courseId, status, note } = payload;
+        // status は "auto" | "unlocked" | "locked"
+        const validStatus =
+          status === "unlocked" || status === "locked" ? status : "auto";
+
+        // 企業担当者の場合は自社受講生か確認
+        if (callerRole === "company") {
+          const { data: studentProfile } = await db
+            .from("profiles")
+            .select("company_id")
+            .eq("id", userId)
+            .maybeSingle();
+
+          if (
+            !studentProfile ||
+            studentProfile.company_id !== callerCompanyId
+          ) {
+            return NextResponse.json(
+              { error: "自社所属以外の受講生の設定を変更することはできません。" },
+              { status: 403 }
+            );
+          }
+        }
+
+        // インメモリにも保存
+        setInMemoryStudentCourseLock(userId, courseId, validStatus);
+
+        try {
+          const { error: lockErr } = await db
+            .from("student_course_locks")
+            .upsert(
+              {
+                user_id: userId,
+                course_id: courseId,
+                status: validStatus,
+                note: note ?? null,
+                updated_by: user?.id ?? null,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "user_id,course_id" }
+            );
+          if (lockErr) {
+            console.warn("student_course_locks upsert warning:", lockErr.message);
+          }
+        } catch (dbErr) {
+          console.warn("student_course_locks table might not exist yet:", dbErr);
+        }
+
+        return NextResponse.json({
+          ok: true,
+          userId,
+          courseId,
+          status: validStatus,
+        });
       }
 
       default:

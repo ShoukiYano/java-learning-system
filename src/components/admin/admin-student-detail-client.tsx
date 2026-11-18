@@ -3,10 +3,11 @@
 import React from "react";
 import Link from "next/link";
 import { StudentAnalyticsRecord } from "@/lib/mock-analytics";
-import { Submission } from "@/types/database";
+import { Submission, StudentCourseStatusItem } from "@/types/database";
 import { SEED_PROBLEMS } from "@/lib/seed-data";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
 import { EvaluationCommentManager } from "@/components/dashboard/evaluation-comment-manager";
+import { StudentCourseLockManager } from "@/components/dashboard/student-course-lock-manager";
 import {
   Card,
   CardContent,
@@ -20,9 +21,11 @@ import { ArrowLeft, Code2 } from "lucide-react";
 export function AdminStudentDetailClient({
   student,
   submissions,
+  courseLockStatuses = [],
 }: {
   student: StudentAnalyticsRecord;
   submissions: Submission[];
+  courseLockStatuses?: StudentCourseStatusItem[];
 }) {
   const latestCode =
     submissions[0]?.code ?? SEED_PROBLEMS[4].solution_code;
@@ -53,6 +56,13 @@ export function AdminStudentDetailClient({
           {student.totalProblems}問)
         </Badge>
       </div>
+
+      {/* ★ 管理者による教材コースの個別受講制限・特別解放管理 */}
+      <StudentCourseLockManager
+        studentId={student.id}
+        studentName={student.fullName}
+        initialCourseStatuses={courseLockStatuses}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-5 space-y-6">
