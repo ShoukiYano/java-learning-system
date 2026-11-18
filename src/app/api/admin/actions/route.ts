@@ -401,6 +401,101 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
+      // 11. テナント企業情報の編集・更新（企業名・企業コード・担当者メール・担当者招待/PW更新）
+      case "update_company": {
+        const {
+          companyId,
+          name,
+          company_code,
+          contact_email,
+          new_manager_password,
+        } = payload;
+        const cleanCode = String(company_code).trim().toUpperCase();
+        const cleanEmail = contact_email ? String(contact_email).trim() : null;
+
+        const { data: updatedCompany, error: upErr } = await db
+          .from("companies")
+          .update({
+            name: String(name).trim(),
+            company_code: cleanCode,
+            contact_email: cleanEmail,
+          })
+          .eq("id", companyId)
+          .select("*")
+          .single();
+
+        if (upErr) throw upErr;
+
+        // もし新しいパスワードが指定されており、サービスロールキーがある場合は企業担当者アカウントを作成またはPW更新
+        let managerUpdated = false;
+        if (
+          cleanEmail &&
+          new_manager_password &&
+          process.env.SUPABASE_SERVICE_ROLE_KEY &&
+          !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+        ) {
+          const adminClient = createAdminClient();
+          const { data: existingProf } = await adminClient
+            .from("profiles")
+            .select("id")
+            .eq("email", cleanEmail)
+            .maybeSingle();
+
+          if (existingProf?.id) {
+            const { error: pwErr } =
+              await adminClient.auth.admin.updateUserById(existingProf.id, {
+                password: String(new_manager_password),
+                user_metadata: {
+                  full_name: `${name} 研修担当者`,
+                  role: "company",
+                  company_code: cleanCode,
+                },
+              });
+            await adminClient
+              .from("profiles")
+              .update({ role: "company", company_id: companyId })
+              .eq("id", existingProf.id);
+            if (!pwErr) managerUpdated = true;
+          } else {
+            const { data: createdAuth, error: createErr } =
+              await adminClient.auth.admin.createUser({
+                email: cleanEmail,
+                password: String(new_manager_password),
+                email_confirm: true,
+                user_metadata: {
+                  full_name: `${name} 研修担当者`,
+                  role: "company",
+                  company_code: cleanCode,
+                },
+              });
+            if (!createErr && createdAuth.user) {
+              await adminClient
+                .from("profiles")
+                .update({ role: "company", company_id: companyId })
+                .eq("id", createdAuth.user.id);
+              managerUpdated = true;
+            }
+          }
+        }
+
+        return NextResponse.json({
+          ok: true,
+          company: updatedCompany,
+          managerUpdated,
+        });
+      }
+
+      // 12. テナント企業の削除
+      case "delete_company": {
+        const { companyId } = payload;
+        const { error: delErr } = await db
+          .from("companies")
+          .delete()
+          .eq("id", companyId);
+        if (delErr) throw delErr;
+        return NextResponse.json({ ok: true });
+      }
+
       default:
         return NextResponse.json(
           { error: `未知のアクション: ${action}` },

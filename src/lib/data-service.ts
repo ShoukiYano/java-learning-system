@@ -1284,6 +1284,33 @@ export async function getAdminCoursesAndCompanyMatrix() {
   }
 }
 
+/**
+ * 管理画面用：特定テナント企業の詳細・所属受講生一覧・担当者一覧・コース公開設定を取得
+ */
+export async function getAdminCompanyDetail(companyId: string) {
+  const { courses, companies, visibilityMap } =
+    await getAdminCoursesAndCompanyMatrix();
+
+  const targetCompany =
+    companies.find((c) => c.id === companyId) ?? companies[0];
+
+  const students = await getStudentsAnalyticsFromDb(targetCompany.id);
+
+  // この企業の各コースの表示設定（courseId -> boolean）
+  const courseVisibility: Record<string, boolean> = {};
+  for (const crs of courses) {
+    courseVisibility[crs.id] =
+      visibilityMap[crs.id]?.[targetCompany.id] ?? true;
+  }
+
+  return {
+    company: targetCompany,
+    students,
+    courses,
+    courseVisibility,
+  };
+}
+
 export async function getProblemForAdminEdit(problemId: string) {
   const seedFallback =
     SEED_PROBLEMS.find((p) => p.id === problemId) ?? SEED_PROBLEMS[0];
