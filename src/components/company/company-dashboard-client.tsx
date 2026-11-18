@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { StudentAnalyticsRecord } from "@/lib/mock-analytics";
+import { exportStudentsProgressToCsv } from "@/lib/csv-export";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -41,53 +42,12 @@ export function CompanyDashboardClient({
       (companyStudents.length || 1)
   );
 
-  // CSVエクスポート（Excelで文字化けしないBOM付きUTF-8）
+  // CSVエクスポート（章別進捗・スキル分野別スコア・講師評価コメントを含む完全版BOM付きUTF-8）
   const handleExportCsv = () => {
-    const headers = [
-      "受講生氏名",
-      "メールアドレス",
-      "所属企業",
-      "全体進捗率(%)",
-      "クリア問題数",
-      "全問題数",
-      "今週の学習時間(分)",
-      "累計学習時間(分)",
-      "最終ログイン日時",
-      "ステータス",
-      "直近の講師評価(5段階)",
-    ];
-
-    const rows = companyStudents.map((s) => [
-      s.fullName,
-      s.email,
-      s.companyName,
-      String(s.progressPercent),
-      String(s.completedProblems),
-      String(s.totalProblems),
-      String(s.weeklyMinutes),
-      String(s.totalMinutes),
-      s.lastLoginAt,
-      s.isDelayed ? `要フォロー（${s.delayReason ?? "遅れ"}）` : "順調",
-      String(s.evaluations[0]?.rating ?? "-"),
-    ]);
-
-    const csvContent =
-      "\uFEFF" +
-      [headers, ...rows]
-        .map((row) =>
-          row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-        )
-        .join("\r\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `devskill_training_report_${new Date()
-      .toISOString()
-      .slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    exportStudentsProgressToCsv(
+      companyStudents,
+      `company_students_report_${companyName}`
+    );
   };
 
   return (

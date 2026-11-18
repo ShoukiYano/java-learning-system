@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { StudentAnalyticsRecord } from "@/lib/mock-analytics";
+import { exportStudentsProgressToCsv } from "@/lib/csv-export";
 import { AdminCourseItem, AdminCompanyBasic } from "./admin-courses-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ import {
   Mail,
   ArrowRight,
   Loader2,
+  Download,
 } from "lucide-react";
 
 export function AdminCompanyDetailClient({
@@ -175,6 +177,20 @@ export function AdminCompanyDetailClient({
         <div className="flex items-center gap-2">
           <Badge variant="outline">所属受講生: {students.length} 名</Badge>
           <Badge variant="default">平均進捗: {avgProgress}%</Badge>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() =>
+              exportStudentsProgressToCsv(
+                students,
+                `tenant_report_${companyCode}`
+              )
+            }
+            className="bg-emerald-700 hover:bg-emerald-600 text-white"
+          >
+            <Download className="h-3.5 w-3.5" />
+            この企業の受講生進捗をCSV出力
+          </Button>
         </div>
       </div>
 
