@@ -380,54 +380,6 @@ export function RoleLoginForm({
                     🔒 セキュリティ保護：5回連続で認証に失敗すると15分間ロックされます
                   </p>
                 )}
-
-                {/* デモ・開発環境用クイック入力アシスト */}
-                {expectedRole === "company" && (
-                  <div className="mt-3 p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-[11px] text-emerald-300 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-emerald-200">💡 デモ・初期アカウント情報</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCompanyCode("ACME2025");
-                          setEmail("hr@acme-tech.example.com");
-                          setPassword("Password123!");
-                        }}
-                        className="text-xs text-emerald-400 hover:text-emerald-200 underline font-semibold cursor-pointer"
-                      >
-                        初期値を自動入力
-                      </button>
-                    </div>
-                    <div className="text-slate-400 text-[10px]">
-                      企業コード: <span className="text-emerald-300 font-mono">ACME2025</span> / メール: <span className="text-emerald-300 font-mono">hr@acme-tech.example.com</span> / 初期パスワード: <span className="text-emerald-300 font-mono">Password123!</span>
-                    </div>
-                    <div className="text-slate-400 text-[10px]">
-                      ※ 管理者画面でパスワードを変更した場合は、変更後のパスワードを入力してください。
-                    </div>
-                  </div>
-                )}
-
-                {expectedRole === "admin" && (
-                  <div className="mt-3 p-2.5 rounded-lg bg-indigo-950/40 border border-indigo-800/40 text-[11px] text-indigo-300 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-indigo-200">💡 デモ・管理者アカウント情報</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEmail("admin@example.com");
-                          setPassword("AdminPass2025!");
-                          setAdminPin("778899");
-                        }}
-                        className="text-xs text-indigo-400 hover:text-indigo-200 underline font-semibold cursor-pointer"
-                      >
-                        初期値を自動入力
-                      </button>
-                    </div>
-                    <div className="text-slate-400 text-[10px]">
-                      メール: <span className="text-indigo-300 font-mono">admin@example.com</span> / PW: <span className="text-indigo-300 font-mono">AdminPass2025!</span> / PIN: <span className="text-indigo-300 font-mono">778899</span>
-                    </div>
-                  </div>
-                )}
               </form>
             ) : (
               <form onSubmit={handlePasswordReset} className="space-y-4">
