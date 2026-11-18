@@ -385,6 +385,22 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true, announcement: ann });
       }
 
+      // 10. テナント企業ごとのコース表示／非表示トグル切替
+      case "toggle_company_course_visibility": {
+        const { companyId, courseId, is_visible } = payload;
+        const { error: ccErr } = await db.from("company_courses").upsert(
+          {
+            company_id: companyId,
+            course_id: courseId,
+            is_visible: Boolean(is_visible),
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "company_id,course_id" }
+        );
+        if (ccErr) throw ccErr;
+        return NextResponse.json({ ok: true });
+      }
+
       default:
         return NextResponse.json(
           { error: `未知のアクション: ${action}` },

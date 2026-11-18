@@ -22,13 +22,13 @@ import {
 
 export default async function StudentCoursesPage() {
   const profile = await getCurrentProfile();
-  const courses = await getCoursesWithProgress(profile.id);
+  const courses = await getCoursesWithProgress(profile.id, profile.company_id);
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-5xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          カリキュラム一覧（Java / SQL）
+          カリキュラム一覧
         </h1>
         <p className="text-sm text-slate-600 mt-1">
           受講するコースを選択し、章・単元・実践コーディング演習へ進みましょう。

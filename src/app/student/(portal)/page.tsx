@@ -28,7 +28,10 @@ import {
 
 export default async function StudentDashboardPage() {
   const profile = await getCurrentProfile();
-  const dashboard = await getStudentDashboardData(profile.id);
+  const dashboard = await getStudentDashboardData(
+    profile.id,
+    profile.company_id
+  );
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl space-y-8">
@@ -39,7 +42,7 @@ export default async function StudentDashboardPage() {
             <span>👋 おかえりなさい、{profile.full_name} さん</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-            Java・SQLカリキュラムで実践スキルを習得しましょう
+            実践カリキュラムで開発スキルを習得しましょう
           </h1>
           <p className="text-blue-100 text-sm">
             次に解くべき問題：
@@ -65,7 +68,7 @@ export default async function StudentDashboardPage() {
             className="inline-flex items-center gap-2 px-4 py-3.5 rounded-xl bg-blue-800/70 hover:bg-blue-800 text-white font-semibold text-sm border border-blue-400/30 transition"
           >
             <BookOpen className="h-4 w-4" />
-            コース一覧（Java / SQL）
+            カリキュラム一覧
           </Link>
         </div>
       </div>
@@ -75,7 +78,7 @@ export default async function StudentDashboardPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center justify-between">
-              <span>全カリキュラム進捗率（Java＋SQL）</span>
+              <span>全カリキュラム進捗率</span>
               <Trophy className="h-4 w-4 text-blue-600" />
             </CardDescription>
             <CardTitle className="text-3xl font-extrabold text-slate-900">
@@ -133,10 +136,10 @@ export default async function StudentDashboardPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Target className="h-4 w-4 text-blue-600" />
-              エンジニアスキルマップ（Java & SQL タグ別習得率）
+              エンジニアスキルマップ（タグ別習得率）
             </CardTitle>
             <CardDescription className="text-xs">
-              Java（変数・分岐・ループ・配列・OOP）とSQL（抽出・集計・結合）の正答率を可視化
+              各カリキュラム分野の正答率・習得度をリアルタイム可視化
             </CardDescription>
           </CardHeader>
           <CardContent>

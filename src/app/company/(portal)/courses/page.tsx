@@ -1,6 +1,12 @@
 import React from "react";
 import Link from "next/link";
-import { SEED_CHAPTERS, SEED_COURSES, SEED_PROBLEMS, detectProblemLanguage } from "@/lib/seed-data";
+import { getCurrentProfile, getCoursesWithProgress } from "@/lib/data-service";
+import {
+  SEED_CHAPTERS,
+  SEED_COURSES,
+  SEED_PROBLEMS,
+  detectProblemLanguage,
+} from "@/lib/seed-data";
 import { difficultyLabel } from "@/lib/utils";
 import {
   Card,
@@ -21,7 +27,15 @@ import {
   Lock,
 } from "lucide-react";
 
-export default function CompanyCurriculumViewPage() {
+export default async function CompanyCurriculumViewPage() {
+  const profile = await getCurrentProfile();
+  const visibleCourseList = await getCoursesWithProgress(
+    profile.id,
+    profile.company_id ?? "00000000-0000-4000-8000-000000000001"
+  );
+  const visibleIds = new Set(visibleCourseList.map((c) => c.id));
+  const targetCourses = SEED_COURSES.filter((c) => visibleIds.has(c.id));
+
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -30,7 +44,7 @@ export default function CompanyCurriculumViewPage() {
             提供カリキュラム・演習問題一覧（企業担当者向け確認ビュー）
           </h1>
           <p className="text-sm text-slate-600 mt-1">
-            貴社の受講生が取り組んでいる「Java入門コース」および「SQL実践コース」の全章・全演習問題・到達目標を確認できます。
+            貴社の受講生に公開されているカリキュラムコースの全章・全演習問題・到達目標を確認できます。
           </p>
         </div>
         <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 bg-slate-200/80 px-3 py-1 rounded-full">
@@ -40,7 +54,7 @@ export default function CompanyCurriculumViewPage() {
       </div>
 
       <div className="space-y-8">
-        {SEED_COURSES.map((course) => {
+        {targetCourses.map((course) => {
           const isSql = course.title.toUpperCase().includes("SQL");
           const chapters = SEED_CHAPTERS.filter(
             (ch) => ch.course_id === course.id

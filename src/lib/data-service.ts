@@ -82,7 +82,10 @@ export interface CourseWithStats extends Course {
   isLocked: boolean;
 }
 
-export async function getCoursesWithProgress(userId: string): Promise<CourseWithStats[]> {
+export async function getCoursesWithProgress(
+  userId: string,
+  companyId?: string | null
+): Promise<CourseWithStats[]> {
   const fallbackList: CourseWithStats[] = SEED_COURSES.map((c, idx) => {
     const chIds = SEED_CHAPTERS.filter((ch) => ch.course_id === c.id).map((ch) => ch.id);
     const probs = SEED_PROBLEMS.filter((p) => chIds.includes(p.chapter_id));
@@ -105,7 +108,24 @@ export async function getCoursesWithProgress(userId: string): Promise<CourseWith
     const { data: courses } = await supabase
       .from("courses")
       .select("*")
+      .eq("is_published", true)
       .order("order_index", { ascending: true });
+
+    // 所属企業（companyId）がある場合、company_courses で非表示（is_visible = false）に設定されたコースを除外する
+    let hiddenCourseIds = new Set<string>();
+    if (companyId) {
+      const { data: visRows } = await supabase
+        .from("company_courses")
+        .select("course_id, is_visible")
+        .eq("company_id", companyId);
+      if (visRows) {
+        for (const r of visRows as { course_id: string; is_visible: boolean }[]) {
+          if (r.is_visible === false) {
+            hiddenCourseIds.add(r.course_id);
+          }
+        }
+      }
+    }
 
     const { data: problems } = await supabase
       .from("problems")
@@ -118,8 +138,12 @@ export async function getCoursesWithProgress(userId: string): Promise<CourseWith
       .eq("user_id", userId);
 
     if (!courses || courses.length === 0) {
-      return fallbackList;
+      return fallbackList.filter((c) => !hiddenCourseIds.has(c.id));
     }
+
+    const visibleCourses = (courses as Course[]).filter(
+      (c) => !hiddenCourseIds.has(c.id)
+    );
 
     const progressMap = new Map<string, Progress>();
     (progresses ?? []).forEach((p: Progress) => progressMap.set(p.problem_id, p));
@@ -145,7 +169,7 @@ export async function getCoursesWithProgress(userId: string): Promise<CourseWith
       );
     }
 
-    return courses.map((course: Course) => {
+    return visibleCourses.map((course: Course) => {
       const pIds = courseProblemsMap.get(course.id) ?? [];
       let completed = 0;
       let inProg = 0;
@@ -433,10 +457,15 @@ export async function getProblemDetailForStudent(
   }
 }
 
-export async function getStudentDashboardData(userId: string) {
-  const javaTree = await getCourseTree(SEED_COURSE_ID, userId);
-  const sqlTree = await getCourseTree("11111111-1111-4111-8111-111111111102", userId);
-  const allChapters = [...javaTree.chapters, ...sqlTree.chapters];
+export async function getStudentDashboardData(
+  userId: string,
+  companyId?: string | null
+) {
+  const visibleCourses = await getCoursesWithProgress(userId, companyId);
+  const trees = await Promise.all(
+    visibleCourses.map((c) => getCourseTree(c.id, userId))
+  );
+  const allChapters = trees.flatMap((t) => t.chapters);
   const allProblems = allChapters.flatMap((c) =>
     c.lessons.flatMap((l) => l.problems)
   );
@@ -1166,6 +1195,95 @@ export async function getAdminAnnouncementsList() {
 /**
  * 管理画面の問題編集用：DBから問題・全テストケース（非公開含む）・全ヒントを取得
  */
+/**
+ * 管理画面のカリキュラム管理用：コース一覧・企業一覧・企業別の表示設定マトリクスを取得
+ */
+export async function getAdminCoursesAndCompanyMatrix() {
+  const companies = await getAdminCompaniesList();
+  const defaultCourses = SEED_COURSES.map((c) => {
+    const chIds = SEED_CHAPTERS.filter((ch) => ch.course_id === c.id).map(
+      (ch) => ch.id
+    );
+    const count = SEED_PROBLEMS.filter((p) =>
+      chIds.includes(p.chapter_id)
+    ).length;
+    return {
+      ...c,
+      problemCount: count,
+    };
+  });
+
+  // visibilityMap[courseId][companyId] = boolean (default true)
+  const visibilityMap: Record<string, Record<string, boolean>> = {};
+  for (const crs of defaultCourses) {
+    visibilityMap[crs.id] = {};
+    for (const comp of companies) {
+      visibilityMap[crs.id][comp.id] = true;
+    }
+  }
+
+  if (!isSupabaseConfigured()) {
+    return { courses: defaultCourses, companies, visibilityMap };
+  }
+
+  try {
+    const db = getServerQueryClient() ?? (await createClient());
+    const [{ data: dbCourses }, { data: dbProblems }, { data: visRows }] =
+      await Promise.all([
+        db.from("courses").select("*").order("order_index", { ascending: true }),
+        db
+          .from("problems")
+          .select("id, lessons!inner(chapters!inner(course_id))"),
+        db.from("company_courses").select("company_id, course_id, is_visible"),
+      ]);
+
+    const coursesList =
+      dbCourses && dbCourses.length > 0
+        ? (dbCourses as Course[]).map((c) => {
+            const cnt = (
+              (dbProblems ?? []) as unknown as Array<{
+                lessons?: { chapters?: { course_id?: string } };
+              }>
+            ).filter((p) => p.lessons?.chapters?.course_id === c.id).length;
+            return {
+              id: c.id,
+              title: c.title,
+              description: c.description,
+              order_index: c.order_index,
+              is_published: c.is_published,
+              prerequisite_course_id: c.prerequisite_course_id,
+              problemCount:
+                cnt ||
+                defaultCourses.find((dc) => dc.id === c.id)?.problemCount ||
+                0,
+            };
+          })
+        : defaultCourses;
+
+    for (const crs of coursesList) {
+      if (!visibilityMap[crs.id]) visibilityMap[crs.id] = {};
+      for (const comp of companies) {
+        visibilityMap[crs.id][comp.id] = true;
+      }
+    }
+
+    if (visRows) {
+      for (const row of visRows as {
+        company_id: string;
+        course_id: string;
+        is_visible: boolean;
+      }[]) {
+        if (!visibilityMap[row.course_id]) visibilityMap[row.course_id] = {};
+        visibilityMap[row.course_id][row.company_id] = row.is_visible;
+      }
+    }
+
+    return { courses: coursesList, companies, visibilityMap };
+  } catch {
+    return { courses: defaultCourses, companies, visibilityMap };
+  }
+}
+
 export async function getProblemForAdminEdit(problemId: string) {
   const seedFallback =
     SEED_PROBLEMS.find((p) => p.id === problemId) ?? SEED_PROBLEMS[0];

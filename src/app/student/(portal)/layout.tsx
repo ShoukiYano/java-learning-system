@@ -51,7 +51,7 @@ export default async function StudentPortalLayout({
               className="px-3 py-1.5 rounded-md hover:bg-slate-100 hover:text-slate-900 flex items-center gap-1.5 transition"
             >
               <BookOpen className="h-4 w-4 text-emerald-600" />
-              カリキュラム受講（Java / SQL）
+              カリキュラム受講
             </Link>
             <Link
               href="/student/submissions"

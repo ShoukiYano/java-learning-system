@@ -53,14 +53,14 @@ export default function AdminPortalLayout({
               className="px-3 py-1.5 rounded-md hover:bg-slate-800 hover:text-white flex items-center gap-1.5 transition"
             >
               <BookOpen className="h-3.5 w-3.5 text-emerald-400" />
-              カリキュラム全体管理（Java / SQL）
+              カリキュラム全体管理
             </Link>
             <Link
               href="/admin/problems/new"
               className="px-3 py-1.5 rounded-md hover:bg-slate-800 hover:text-white flex items-center gap-1.5 transition"
             >
               <FilePlus2 className="h-3.5 w-3.5 text-amber-400" />
-              問題作成（Java / SQL）
+              問題作成
             </Link>
             <Link
               href="/admin/students"
