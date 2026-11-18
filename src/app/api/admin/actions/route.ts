@@ -12,7 +12,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/data-service";
-import { setInMemoryStudentCourseLock } from "@/lib/seed-data";
+import {
+  setInMemoryStudentCourseLock,
+  addInMemoryCompanyManager,
+  updateInMemoryCompanyManagerPassword,
+  updateInMemoryCompanyManagerInfo,
+  deleteInMemoryCompanyManager,
+} from "@/lib/seed-data";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +32,32 @@ export async function POST(request: NextRequest) {
           payload.courseId,
           payload.status ?? "auto"
         );
+      } else if (action === "create_company_manager") {
+        const newMgr = addInMemoryCompanyManager({
+          company_id: payload.companyId,
+          full_name: payload.fullName,
+          email: payload.email,
+          password: payload.password,
+        });
+        return NextResponse.json({ ok: true, demo: true, manager: newMgr });
+      } else if (action === "reset_company_manager_password") {
+        updateInMemoryCompanyManagerPassword(
+          payload.managerId || payload.email,
+          payload.newPassword
+        );
+        return NextResponse.json({ ok: true, demo: true });
+      } else if (action === "update_company_manager") {
+        updateInMemoryCompanyManagerInfo(
+          payload.managerId,
+          payload.fullName,
+          payload.email
+        );
+        return NextResponse.json({ ok: true, demo: true });
+      } else if (action === "delete_company_manager") {
+        deleteInMemoryCompanyManager(payload.managerId);
+        return NextResponse.json({ ok: true, demo: true });
       }
+
       return NextResponse.json({
         ok: true,
         demo: true,
@@ -640,6 +671,186 @@ export async function POST(request: NextRequest) {
           courseId,
           status: validStatus,
         });
+      }
+
+      // 14. 企業担当者（マネージャー）アカウントの新規作成
+      case "create_company_manager": {
+        const { companyId, fullName, email, password } = payload;
+        const cleanEmail = String(email).trim().toLowerCase();
+        const cleanName = String(fullName || "企業担当者").trim();
+        const cleanPass = String(password).trim();
+
+        if (!cleanEmail || !cleanPass) {
+          return NextResponse.json(
+            { error: "メールアドレスとパスワードを入力してください。" },
+            { status: 400 }
+          );
+        }
+
+        // 企業の企業コードを取得
+        const { data: comp } = await db
+          .from("companies")
+          .select("company_code")
+          .eq("id", companyId)
+          .maybeSingle();
+
+        const compCode = comp?.company_code ?? "CORP";
+
+        // インメモリストアに同期登録
+        const localMgr = addInMemoryCompanyManager({
+          company_id: companyId,
+          full_name: cleanName,
+          email: cleanEmail,
+          password: cleanPass,
+        });
+
+        if (
+          process.env.SUPABASE_SERVICE_ROLE_KEY &&
+          !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+        ) {
+          const adminClient = createAdminClient();
+          const { data: authUser, error: authErr } =
+            await adminClient.auth.admin.createUser({
+              email: cleanEmail,
+              password: cleanPass,
+              email_confirm: true,
+              user_metadata: {
+                full_name: cleanName,
+                role: "company",
+                company_code: compCode,
+              },
+            });
+
+          if (authErr) {
+            // すでに存在している場合は update
+            const { data: existUser } = await adminClient
+              .from("profiles")
+              .select("id")
+              .eq("email", cleanEmail)
+              .maybeSingle();
+
+            if (existUser?.id) {
+              await adminClient.auth.admin.updateUserById(existUser.id, {
+                password: cleanPass,
+                user_metadata: {
+                  full_name: cleanName,
+                  role: "company",
+                  company_code: compCode,
+                },
+              });
+              await adminClient
+                .from("profiles")
+                .update({
+                  full_name: cleanName,
+                  role: "company",
+                  company_id: companyId,
+                })
+                .eq("id", existUser.id);
+            } else {
+              throw authErr;
+            }
+          } else if (authUser?.user) {
+            await adminClient.from("profiles").upsert(
+              {
+                id: authUser.user.id,
+                email: cleanEmail,
+                full_name: cleanName,
+                role: "company",
+                company_id: companyId,
+              },
+              { onConflict: "id" }
+            );
+          }
+        }
+
+        return NextResponse.json({ ok: true, manager: localMgr });
+      }
+
+      // 15. 企業担当者（マネージャー）のパスワード再設定
+      case "reset_company_manager_password": {
+        const { managerId, email, newPassword } = payload;
+        const cleanPass = String(newPassword).trim();
+        if (!cleanPass || cleanPass.length < 6) {
+          return NextResponse.json(
+            { error: "パスワードは6文字以上で入力してください。" },
+            { status: 400 }
+          );
+        }
+
+        updateInMemoryCompanyManagerPassword(managerId || email, cleanPass);
+
+        if (
+          process.env.SUPABASE_SERVICE_ROLE_KEY &&
+          !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+        ) {
+          const adminClient = createAdminClient();
+          let targetUid = managerId;
+          if (!targetUid && email) {
+            const { data: p } = await adminClient
+              .from("profiles")
+              .select("id")
+              .eq("email", email)
+              .maybeSingle();
+            targetUid = p?.id;
+          }
+
+          if (targetUid) {
+            const { error: pwErr } =
+              await adminClient.auth.admin.updateUserById(targetUid, {
+                password: cleanPass,
+              });
+            if (pwErr) throw pwErr;
+          }
+        }
+
+        return NextResponse.json({ ok: true });
+      }
+
+      // 16. 企業担当者（マネージャー）の氏名・メールアドレス更新
+      case "update_company_manager": {
+        const { managerId, fullName, email } = payload;
+        const cleanName = String(fullName || "").trim();
+        const cleanEmail = String(email || "").trim().toLowerCase();
+
+        updateInMemoryCompanyManagerInfo(managerId, cleanName, cleanEmail);
+
+        if (
+          process.env.SUPABASE_SERVICE_ROLE_KEY &&
+          !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+        ) {
+          const adminClient = createAdminClient();
+          await adminClient.auth.admin.updateUserById(managerId, {
+            email: cleanEmail,
+            user_metadata: { full_name: cleanName },
+          });
+          await adminClient
+            .from("profiles")
+            .update({ email: cleanEmail, full_name: cleanName })
+            .eq("id", managerId);
+        }
+
+        return NextResponse.json({ ok: true });
+      }
+
+      // 17. 企業担当者（マネージャー）アカウントの削除
+      case "delete_company_manager": {
+        const { managerId } = payload;
+        deleteInMemoryCompanyManager(managerId);
+
+        if (
+          process.env.SUPABASE_SERVICE_ROLE_KEY &&
+          !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+        ) {
+          const adminClient = createAdminClient();
+          try {
+            await adminClient.auth.admin.deleteUser(managerId);
+          } catch {
+            // ignore
+          }
+          await adminClient.from("profiles").delete().eq("id", managerId);
+        }
+
+        return NextResponse.json({ ok: true });
       }
 
       default:

@@ -4,7 +4,7 @@
 //   およびDBフォールバック表示で共通利用するマスターデータ
 // =============================================================================
 
-import { Difficulty, ProblemLanguage } from "@/types/database";
+import { Difficulty, ProblemLanguage, CompanyManager } from "@/types/database";
 
 export interface SeedTestCase {
   name: string;
@@ -72,9 +72,155 @@ export const SEED_COURSES = [
 ];
 
 // デモ・インメモリ環境用の受講生別コースロック状態保存ストア（key: `${userId}:${courseId}` -> "auto" | "unlocked" | "locked"）
+// デモ・インメモリ環境用の企業担当者アカウントストア
+export interface DemoManagerWithPassword extends CompanyManager {
+  password?: string;
+}
+
+const INITIAL_DEMO_MANAGERS: DemoManagerWithPassword[] = [
+  {
+    id: "a0000000-0000-4000-8000-000000000004",
+    email: "hr@acme-tech.example.com",
+    full_name: "ACMEテクノロジーズ 研修担当",
+    role: "company",
+    company_id: "00000000-0000-4000-8000-000000000001", // ACME
+    created_at: "2025-01-01T00:00:00.000Z",
+    last_login_at: "2025-05-12T09:30:00.000Z",
+    password: "Password123!",
+  },
+  {
+    id: "a0000000-0000-4000-8000-000000000002",
+    email: "company@example.com",
+    full_name: "ACME人事 担当者",
+    role: "company",
+    company_id: "00000000-0000-4000-8000-000000000001", // ACME
+    created_at: "2025-01-01T00:00:00.000Z",
+    last_login_at: "2025-05-11T16:00:00.000Z",
+    password: "Password123!",
+  },
+  {
+    id: "a0000000-0000-4000-8000-000000000005",
+    email: "training@next-sys.example.com",
+    full_name: "ネクストシステムズ 研修部",
+    role: "company",
+    company_id: "00000000-0000-4000-8000-000000000002", // NEXT
+    created_at: "2025-01-01T00:00:00.000Z",
+    last_login_at: "2025-05-10T11:20:00.000Z",
+    password: "Password123!",
+  },
+];
+
 declare global {
   // eslint-disable-next-line no-var
   var __demoStudentCourseLocks: Map<string, "auto" | "unlocked" | "locked"> | undefined;
+  // eslint-disable-next-line no-var
+  var __demoCompanyManagers: DemoManagerWithPassword[] | undefined;
+}
+
+export function getInMemoryCompanyManagers(companyId: string): CompanyManager[] {
+  if (!globalThis.__demoCompanyManagers) {
+    globalThis.__demoCompanyManagers = [...INITIAL_DEMO_MANAGERS];
+  }
+  return globalThis.__demoCompanyManagers
+    .filter((m) => m.company_id === companyId)
+    .map(({ password: _, ...rest }) => rest);
+}
+
+export function addInMemoryCompanyManager(
+  manager: Omit<DemoManagerWithPassword, "id" | "created_at" | "last_login_at" | "role"> & {
+    id?: string;
+    role?: "company";
+  }
+): CompanyManager {
+  if (!globalThis.__demoCompanyManagers) {
+    globalThis.__demoCompanyManagers = [...INITIAL_DEMO_MANAGERS];
+  }
+  const newRecord: DemoManagerWithPassword = {
+    id: manager.id ?? `demo-mgr-${Date.now()}`,
+    email: manager.email.trim().toLowerCase(),
+    full_name: manager.full_name.trim(),
+    role: "company",
+    company_id: manager.company_id,
+    created_at: new Date().toISOString(),
+    last_login_at: null,
+    password: manager.password || "Password123!",
+  };
+  // 既存の同メールがあれば更新、なければ追加
+  const existingIdx = globalThis.__demoCompanyManagers.findIndex(
+    (m) => m.email === newRecord.email
+  );
+  if (existingIdx >= 0) {
+    globalThis.__demoCompanyManagers[existingIdx] = {
+      ...globalThis.__demoCompanyManagers[existingIdx],
+      ...newRecord,
+    };
+  } else {
+    globalThis.__demoCompanyManagers.push(newRecord);
+  }
+  const { password: _, ...clean } = newRecord;
+  return clean;
+}
+
+export function updateInMemoryCompanyManagerPassword(
+  emailOrId: string,
+  newPassword: string
+): boolean {
+  if (!globalThis.__demoCompanyManagers) {
+    globalThis.__demoCompanyManagers = [...INITIAL_DEMO_MANAGERS];
+  }
+  const target = globalThis.__demoCompanyManagers.find(
+    (m) => m.id === emailOrId || m.email.toLowerCase() === emailOrId.toLowerCase()
+  );
+  if (target) {
+    target.password = newPassword;
+    return true;
+  }
+  return false;
+}
+
+export function updateInMemoryCompanyManagerInfo(
+  id: string,
+  fullName: string,
+  email: string
+): boolean {
+  if (!globalThis.__demoCompanyManagers) {
+    globalThis.__demoCompanyManagers = [...INITIAL_DEMO_MANAGERS];
+  }
+  const target = globalThis.__demoCompanyManagers.find((m) => m.id === id);
+  if (target) {
+    target.full_name = fullName.trim();
+    target.email = email.trim().toLowerCase();
+    return true;
+  }
+  return false;
+}
+
+export function deleteInMemoryCompanyManager(id: string): boolean {
+  if (!globalThis.__demoCompanyManagers) {
+    globalThis.__demoCompanyManagers = [...INITIAL_DEMO_MANAGERS];
+  }
+  const len = globalThis.__demoCompanyManagers.length;
+  globalThis.__demoCompanyManagers = globalThis.__demoCompanyManagers.filter(
+    (m) => m.id !== id
+  );
+  return globalThis.__demoCompanyManagers.length < len;
+}
+
+export function verifyInMemoryCompanyManagerLogin(
+  email: string,
+  pass: string
+): DemoManagerWithPassword | null {
+  if (!globalThis.__demoCompanyManagers) {
+    globalThis.__demoCompanyManagers = [...INITIAL_DEMO_MANAGERS];
+  }
+  const found = globalThis.__demoCompanyManagers.find(
+    (m) => m.email.toLowerCase() === email.trim().toLowerCase()
+  );
+  if (!found) return null;
+  if (!found.password || found.password === pass) {
+    return found;
+  }
+  return null;
 }
 
 export function getInMemoryStudentCourseLock(

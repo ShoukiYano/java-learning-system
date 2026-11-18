@@ -187,3 +187,14 @@ export interface StudentCourseStatusItem {
   lockReason: string;
 }
 
+export interface CompanyManager {
+  id: string;
+  email: string;
+  full_name: string;
+  role: "company";
+  company_id: string;
+  created_at: string;
+  last_login_at: string | null;
+}
+
+

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { StudentAnalyticsRecord } from "@/lib/mock-analytics";
 import { exportStudentsProgressToCsv } from "@/lib/csv-export";
 import { AdminCourseItem, AdminCompanyBasic } from "./admin-courses-client";
+import { CompanyManager } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,6 +32,12 @@ import {
   ArrowRight,
   Loader2,
   Download,
+  UserCheck,
+  Plus,
+  Lock,
+  Edit2,
+  X,
+  ShieldCheck,
 } from "lucide-react";
 
 export function AdminCompanyDetailClient({
@@ -38,11 +45,13 @@ export function AdminCompanyDetailClient({
   students,
   courses,
   initialCourseVisibility,
+  initialManagers = [],
 }: {
   company: AdminCompanyBasic;
   students: StudentAnalyticsRecord[];
   courses: AdminCourseItem[];
   initialCourseVisibility: Record<string, boolean>;
+  initialManagers?: CompanyManager[];
 }) {
   const router = useRouter();
   const [name, setName] = useState(company.name);
@@ -53,11 +62,201 @@ export function AdminCompanyDetailClient({
     Record<string, boolean>
   >(initialCourseVisibility);
 
+  // 企業担当者（マネージャー）アカウント管理用の state
+  const [managers, setManagers] = useState<CompanyManager[]>(initialManagers);
+  const [isAddingManager, setIsAddingManager] = useState(false);
+  const [newMgrName, setNewMgrName] = useState("");
+  const [newMgrEmail, setNewMgrEmail] = useState("");
+  const [newMgrPassword, setNewMgrPassword] = useState("");
+  const [mgrSubmitting, setMgrSubmitting] = useState(false);
+
+  // パスワード再設定用 state
+  const [resettingMgrId, setResettingMgrId] = useState<string | null>(null);
+  const [resetPasswordInput, setResetPasswordInput] = useState("");
+
+  // 編集用 state
+  const [editingMgrId, setEditingMgrId] = useState<string | null>(null);
+  const [editMgrName, setEditMgrName] = useState("");
+  const [editMgrEmail, setEditMgrEmail] = useState("");
+
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // 1. 担当者の新規追加
+  const handleCreateManager = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMgrEmail.trim() || !newMgrPassword.trim() || mgrSubmitting) return;
+    setMgrSubmitting(true);
+    setNotice(null);
+    setErrorMsg(null);
+
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create_company_manager",
+          payload: {
+            companyId: company.id,
+            fullName: newMgrName.trim() || `${name} 研修担当者`,
+            email: newMgrEmail.trim(),
+            password: newMgrPassword.trim(),
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "担当者アカウントの作成に失敗しました。");
+      }
+
+      const created: CompanyManager = data.manager ?? {
+        id: `mgr-${Date.now()}`,
+        email: newMgrEmail.trim(),
+        full_name: newMgrName.trim() || `${name} 研修担当者`,
+        role: "company",
+        company_id: company.id,
+        created_at: new Date().toISOString(),
+        last_login_at: null,
+      };
+
+      setManagers((prev) => [...prev.filter((m) => m.email !== created.email), created]);
+      setNewMgrName("");
+      setNewMgrEmail("");
+      setNewMgrPassword("");
+      setIsAddingManager(false);
+      setNotice(
+        `✅ 企業担当者「${created.full_name} (${created.email})」のアカウントを発行しました。企業コード「${companyCode}」と設定したパスワードで企業ポータル（/company/login）にログインできます。`
+      );
+      router.refresh();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "作成エラーが発生しました。");
+    } finally {
+      setMgrSubmitting(false);
+    }
+  };
+
+  // 2. 担当者のパスワード再設定
+  const handleResetPassword = async (managerId: string, email: string) => {
+    if (!resetPasswordInput.trim() || resetPasswordInput.trim().length < 6) {
+      setErrorMsg("パスワードは6文字以上で入力してください。");
+      return;
+    }
+    setMgrSubmitting(true);
+    setNotice(null);
+    setErrorMsg(null);
+
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "reset_company_manager_password",
+          payload: {
+            managerId,
+            email,
+            newPassword: resetPasswordInput.trim(),
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "パスワードの再設定に失敗しました。");
+      }
+
+      setResettingMgrId(null);
+      setResetPasswordInput("");
+      setNotice(
+        `✅ 担当者（${email}）のログインパスワードを再設定しました。企業コード「${companyCode}」と新パスワードで企業ポータル（/company/login）へログイン可能です。`
+      );
+      router.refresh();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "更新エラーが発生しました。");
+    } finally {
+      setMgrSubmitting(false);
+    }
+  };
+
+  // 3. 担当者の氏名・メールアドレス更新
+  const handleUpdateManager = async (managerId: string) => {
+    if (!editMgrEmail.trim() || !editMgrName.trim()) return;
+    setMgrSubmitting(true);
+    setNotice(null);
+    setErrorMsg(null);
+
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_company_manager",
+          payload: {
+            managerId,
+            fullName: editMgrName.trim(),
+            email: editMgrEmail.trim(),
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "更新に失敗しました。");
+      }
+
+      setManagers((prev) =>
+        prev.map((m) =>
+          m.id === managerId
+            ? { ...m, full_name: editMgrName.trim(), email: editMgrEmail.trim() }
+            : m
+        )
+      );
+      setEditingMgrId(null);
+      setNotice(`✅ 担当者情報を更新しました。`);
+      router.refresh();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "更新エラーが発生しました。");
+    } finally {
+      setMgrSubmitting(false);
+    }
+  };
+
+  // 4. 担当者アカウントの削除
+  const handleDeleteManager = async (managerId: string, email: string) => {
+    if (!confirm(`担当者アカウント「${email}」を削除してもよろしいですか？\n削除すると企業ポータルにログインできなくなります。`)) {
+      return;
+    }
+    setMgrSubmitting(true);
+    setNotice(null);
+    setErrorMsg(null);
+
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete_company_manager",
+          payload: { managerId },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "削除に失敗しました。");
+      }
+
+      setManagers((prev) => prev.filter((m) => m.id !== managerId));
+      setNotice(`✅ 担当者アカウント（${email}）を削除しました。`);
+      router.refresh();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "削除エラーが発生しました。");
+    } finally {
+      setMgrSubmitting(false);
+    }
+  };
 
   const handleSaveCompany = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -402,8 +601,344 @@ export function AdminCompanyDetailClient({
           </Card>
         </div>
 
-        {/* 右カラム：このテナントに所属する受講生一覧 */}
-        <div className="lg:col-span-7">
+        {/* 右カラム：企業担当者ユーザー管理 ＆ 所属受講生一覧 */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* ★ 2. 企業担当者（マネージャー）ユーザー管理（新規作成・PW再設定） */}
+          <Card className="border-indigo-100 shadow-sm">
+            <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50/70 via-white to-slate-50 border-b">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="text-base flex items-center gap-2 text-indigo-950 font-bold">
+                    <UserCheck className="h-4 w-4 text-indigo-600" />
+                    2. 企業担当者（マネージャー）ユーザー管理（{managers.length} 名）
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-600 mt-1">
+                    企業ポータル（/company/login）へログインできる担当者アカウントです。メールアドレスやパスワードの設定・再設定が可能です。
+                  </CardDescription>
+                </div>
+
+                {!isAddingManager && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setIsAddingManager(true);
+                      setNewMgrName(`${name} 研修担当`);
+                      setNewMgrEmail("");
+                      setNewMgrPassword("");
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white gap-1 text-xs"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    担当者アカウントを追加
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+
+            <CardContent className="pt-4 space-y-4">
+              {/* 新規担当者アカウント追加フォーム */}
+              {isAddingManager && (
+                <form
+                  onSubmit={handleCreateManager}
+                  className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/40 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                      <Plus className="h-3.5 w-3.5 text-indigo-600" />
+                      新規企業担当者の登録・アカウント発行
+                    </h4>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsAddingManager(false)}
+                      className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700">
+                        担当者氏名・部署名
+                      </label>
+                      <Input
+                        required
+                        value={newMgrName}
+                        onChange={(e) => setNewMgrName(e.target.value)}
+                        placeholder="例: 人事部 研修担当 山田"
+                        className="bg-white text-xs h-9"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700">
+                        ログイン用メールアドレス
+                      </label>
+                      <Input
+                        required
+                        type="email"
+                        value={newMgrEmail}
+                        onChange={(e) => setNewMgrEmail(e.target.value)}
+                        placeholder="hr@example.com"
+                        className="bg-white text-xs h-9"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-slate-700">
+                      初期パスワード（6文字以上）
+                    </label>
+                    <Input
+                      required
+                      type="password"
+                      minLength={6}
+                      value={newMgrPassword}
+                      onChange={(e) => setNewMgrPassword(e.target.value)}
+                      placeholder="6文字以上の強固なパスワード"
+                      className="bg-white text-xs h-9 font-mono"
+                    />
+                    <p className="text-[10px] text-slate-500">
+                      ※ 企業側ログイン画面（/company/login）で、企業コード「<strong>{companyCode}</strong>」と上記メール・パスワードを入力してログインします。
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsAddingManager(false)}
+                      className="text-xs h-8"
+                    >
+                      キャンセル
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={mgrSubmitting}
+                      size="sm"
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs h-8 gap-1.5"
+                    >
+                      {mgrSubmitting ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                      )}
+                      アカウントを発行する
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {/* 担当者一覧 */}
+              {managers.length === 0 ? (
+                <div className="py-6 text-center text-xs text-slate-500">
+                  担当者アカウントがまだ登録されていません。「担当者アカウントを追加」ボタンから発行してください。
+                </div>
+              ) : (
+                <div className="divide-y border rounded-xl overflow-hidden bg-white">
+                  {managers.map((mgr) => {
+                    const isResetting = resettingMgrId === mgr.id;
+                    const isEditing = editingMgrId === mgr.id;
+
+                    return (
+                      <div key={mgr.id} className="p-3.5 space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-slate-900">
+                                {mgr.full_name}
+                              </span>
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] bg-slate-50 text-indigo-700 border-indigo-200"
+                              >
+                                企業担当者
+                              </Badge>
+                            </div>
+                            <div className="text-xs text-slate-500 flex items-center gap-2">
+                              <span>{mgr.email}</span>
+                              <span className="text-slate-300">・</span>
+                              <span>
+                                最終ログイン:{" "}
+                                {mgr.last_login_at
+                                  ? mgr.last_login_at.slice(0, 16).replace("T", " ")
+                                  : "未ログイン"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={mgrSubmitting}
+                              onClick={() => {
+                                setResettingMgrId(isResetting ? null : mgr.id);
+                                setResetPasswordInput("");
+                                setEditingMgrId(null);
+                              }}
+                              className="h-7 text-xs gap-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                            >
+                              <KeyRound className="h-3 w-3 text-indigo-600" />
+                              パスワード再設定
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={mgrSubmitting}
+                              onClick={() => {
+                                setEditingMgrId(isEditing ? null : mgr.id);
+                                setEditMgrName(mgr.full_name);
+                                setEditMgrEmail(mgr.email);
+                                setResettingMgrId(null);
+                              }}
+                              className="h-7 w-7 p-0 text-slate-500 hover:text-slate-800"
+                              title="編集"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={mgrSubmitting}
+                              onClick={() => handleDeleteManager(mgr.id, mgr.email)}
+                              className="h-7 w-7 p-0 text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                              title="削除"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* パスワード再設定フォーム（インライン） */}
+                        {isResetting && (
+                          <div className="p-3 rounded-lg bg-amber-50/70 border border-amber-200 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-amber-900 flex items-center gap-1">
+                                <KeyRound className="h-3.5 w-3.5 text-amber-600" />
+                                {mgr.email} のパスワード再設定
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setResettingMgrId(null)}
+                                className="h-5 w-5 p-0 text-slate-400"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                              <Input
+                                type="password"
+                                minLength={6}
+                                value={resetPasswordInput}
+                                onChange={(e) =>
+                                  setResetPasswordInput(e.target.value)
+                                }
+                                placeholder="新しいパスワード（6文字以上）"
+                                className="bg-white text-xs h-8 flex-1 font-mono"
+                              />
+                              <Button
+                                type="button"
+                                disabled={
+                                  mgrSubmitting || resetPasswordInput.length < 6
+                                }
+                                size="sm"
+                                onClick={() =>
+                                  handleResetPassword(mgr.id, mgr.email)
+                                }
+                                className="bg-amber-600 hover:bg-amber-500 text-white text-xs h-8 whitespace-nowrap"
+                              >
+                                {mgrSubmitting ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Save className="h-3.5 w-3.5" />
+                                )}
+                                パスワードを更新
+                              </Button>
+                            </div>
+                            <p className="text-[10px] text-amber-800">
+                              ※保存すると即座に認証情報が更新され、新パスワードで企業ポータルにログイン可能になります。
+                            </p>
+                          </div>
+                        )}
+
+                        {/* 氏名・メールアドレス編集フォーム（インライン） */}
+                        {isEditing && (
+                          <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                                <Edit2 className="h-3.5 w-3.5 text-indigo-600" />
+                                担当者情報の編集
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditingMgrId(null)}
+                                className="h-5 w-5 p-0 text-slate-400"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <Input
+                                value={editMgrName}
+                                onChange={(e) => setEditMgrName(e.target.value)}
+                                placeholder="担当者氏名"
+                                className="bg-white text-xs h-8"
+                              />
+                              <Input
+                                type="email"
+                                value={editMgrEmail}
+                                onChange={(e) => setEditMgrEmail(e.target.value)}
+                                placeholder="メールアドレス"
+                                className="bg-white text-xs h-8"
+                              />
+                            </div>
+
+                            <div className="flex justify-end gap-1.5 pt-1">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEditingMgrId(null)}
+                                className="text-xs h-7"
+                              >
+                                キャンセル
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled={mgrSubmitting}
+                                onClick={() => handleUpdateManager(mgr.id)}
+                                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs h-7"
+                              >
+                                変更を保存
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 3. 所属受講生一覧 */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">

@@ -14,11 +14,13 @@ import {
   detectProblemLanguage,
   getInMemoryStudentCourseLock,
   setInMemoryStudentCourseLock,
+  getInMemoryCompanyManagers,
 } from "@/lib/seed-data";
 import { DEMO_STUDENTS_ANALYTICS, StudentAnalyticsRecord } from "@/lib/mock-analytics";
 import {
   Announcement,
   Company,
+  CompanyManager,
   Course,
   CourseLockStatus,
   Feedback,
@@ -1469,11 +1471,35 @@ export async function getAdminCompanyDetail(companyId: string) {
       visibilityMap[crs.id]?.[targetCompany.id] ?? true;
   }
 
+  // この企業の企業担当者（マネージャー）アカウント一覧を取得
+  let managers: CompanyManager[] = [];
+  if (isSupabaseConfigured()) {
+    try {
+      const db = getServerQueryClient() ?? (await createClient());
+      const { data: profs } = await db
+        .from("profiles")
+        .select("id, email, full_name, role, company_id, created_at, last_login_at")
+        .eq("role", "company")
+        .eq("company_id", targetCompany.id)
+        .order("created_at", { ascending: true });
+      if (profs && profs.length > 0) {
+        managers = profs as CompanyManager[];
+      } else {
+        managers = getInMemoryCompanyManagers(targetCompany.id);
+      }
+    } catch {
+      managers = getInMemoryCompanyManagers(targetCompany.id);
+    }
+  } else {
+    managers = getInMemoryCompanyManagers(targetCompany.id);
+  }
+
   return {
     company: targetCompany,
     students,
     courses,
     courseVisibility,
+    managers,
   };
 }
 

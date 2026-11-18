@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { UserRole } from "@/types/database";
+import { verifyInMemoryCompanyManagerLogin } from "@/lib/seed-data";
 
 interface AttemptRecord {
   count: number;
@@ -157,6 +158,22 @@ export async function POST(request: NextRequest) {
     });
 
     if (signInError || !data.user) {
+      // 企業担当者の場合、管理者画面でローカル登録・パスワード再設定されたアカウントとの一致を確認
+      if (expectedRole === "company") {
+        const verifiedLocalManager = verifyInMemoryCompanyManagerLogin(
+          normalizedEmail,
+          password
+        );
+        if (verifiedLocalManager) {
+          clearAttempts(tenantAccountKey);
+          return NextResponse.json({
+            ok: true,
+            role: "company",
+            demo: true,
+          });
+        }
+      }
+
       const att = recordFailedAttempt(
         tenantAccountKey,
         MAX_ACCOUNT_FAILED_ATTEMPTS

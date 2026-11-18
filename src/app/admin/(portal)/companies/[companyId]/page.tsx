@@ -16,6 +16,7 @@ export default async function AdminCompanyDetailPage({
       students={detail.students}
       courses={detail.courses}
       initialCourseVisibility={detail.courseVisibility}
+      initialManagers={detail.managers}
     />
   );
 }
