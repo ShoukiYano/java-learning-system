@@ -25,6 +25,7 @@ import {
   Lock,
   Loader2,
   ArrowLeft,
+  ShieldCheck,
 } from "lucide-react";
 
 interface RoleLoginFormProps {
@@ -48,6 +49,8 @@ export function RoleLoginForm({
   const [isPending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [companyCode, setCompanyCode] = useState("");
+  const [adminPin, setAdminPin] = useState("");
   const [resetMode, setResetMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
@@ -85,62 +88,34 @@ export function RoleLoginForm({
     setInfoMessage(null);
 
     try {
-      const supabase = createClient();
-      const { data, error: signInError } =
-        await supabase.auth.signInWithPassword({
+      // サーバーサイドの高セキュリティ認証API（ブルートフォースロック＋多要素チェック＋Cookieセッション確立）を呼び出す
+      const res = await fetch("/api/auth/secure-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           email,
           password,
-        });
+          expectedRole,
+          companyCode: expectedRole === "company" ? companyCode : undefined,
+          adminPin: expectedRole === "admin" ? adminPin : undefined,
+        }),
+      });
 
-      if (signInError || !data.user) {
-        setError("メールアドレスまたはパスワードが正しくありません。");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "認証に失敗しました。");
         setLoading(false);
         return;
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", data.user.id)
-        .maybeSingle();
-
-      const metaRole = data.user.user_metadata?.role as UserRole | undefined;
-      const emailBasedRole: UserRole | undefined =
-        data.user.email === "admin@example.com"
-          ? "admin"
-          : data.user.email === "company@example.com"
-          ? "company"
-          : undefined;
-
-      const actualRole: UserRole =
-        (profile?.role as UserRole) ??
-        metaRole ??
-        emailBasedRole ??
-        "student";
-
-      if (actualRole !== expectedRole) {
-        await supabase.auth.signOut();
-        setError(
-          "このログイン画面からアクセスする権限がありません。アカウント種別をご確認ください。"
-        );
-        setLoading(false);
-        return;
-      }
-
-      // 認証成功！画面が切り替わるまでフルスクリーン遷移オーバーレイを維持する
       setRedirecting(true);
-
-      await supabase
-        .from("profiles")
-        .update({ last_login_at: new Date().toISOString() })
-        .eq("id", data.user.id);
-
       startTransition(() => {
         router.push(targetHomePath);
         router.refresh();
       });
     } catch {
-      setError("ログイン処理中にエラーが発生しました。");
+      setError("ログイン処理中に通信エラーが発生しました。");
       setLoading(false);
       setRedirecting(false);
     }
@@ -179,7 +154,7 @@ export function RoleLoginForm({
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-slate-950 px-4 py-12">
-      {/* ★ 認証・画面遷移中のフルスクリーン・フィードバックオーバーレイ */}
+      {/* 認証・画面遷移中のフルスクリーン・フィードバックオーバーレイ */}
       {isBusy && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 animate-in fade-in duration-150">
           <div
@@ -190,8 +165,8 @@ export function RoleLoginForm({
           <div className="text-center space-y-1">
             <p className="text-sm font-bold text-white">
               {redirecting
-                ? "認証が完了しました！画面を移動しています..."
-                : "ログイン情報を確認しています..."}
+                ? "セキュリティ認証完了！画面を移動しています..."
+                : "セキュリティ検証・ログイン確認を行っています..."}
             </p>
             <p className="text-xs text-slate-400">
               そのまま少々お待ちください
@@ -201,7 +176,7 @@ export function RoleLoginForm({
       )}
 
       <div className="w-full max-w-md space-y-6">
-        {/* 受講生ログイン画面（student）のみ「トップページに戻る」ボタンを表示（企業・管理者には表示しない） */}
+        {/* 受講生ログイン画面（student）のみ「トップページに戻る」ボタンを表示 */}
         {expectedRole === "student" && (
           <div>
             <Link
@@ -283,6 +258,27 @@ export function RoleLoginForm({
 
             {!resetMode ? (
               <form onSubmit={handleLogin} className="space-y-4">
+                {/* ★ 企業担当者専用：自社テナント企業コードの必須入力 */}
+                {expectedRole === "company" && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-emerald-300 flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5 text-emerald-400" />
+                      テナント企業コード（必須）
+                    </label>
+                    <Input
+                      type="text"
+                      required
+                      disabled={isBusy}
+                      placeholder="例: ACME2025"
+                      value={companyCode}
+                      onChange={(e) =>
+                        setCompanyCode(e.target.value.toUpperCase())
+                      }
+                      className="bg-slate-950 border-slate-700 text-white uppercase font-mono"
+                    />
+                  </div>
+                )}
+
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
                     <Mail className="h-3.5 w-3.5 text-slate-400" />
@@ -329,6 +325,25 @@ export function RoleLoginForm({
                   />
                 </div>
 
+                {/* ★ システム管理者専用：管理者マスターセキュリティPINの必須入力 */}
+                {expectedRole === "admin" && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-indigo-300 flex items-center gap-1.5">
+                      <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" />
+                      管理者セキュリティPIN（必須）
+                    </label>
+                    <Input
+                      type="password"
+                      required
+                      disabled={isBusy}
+                      placeholder="セキュリティPINコードを入力"
+                      value={adminPin}
+                      onChange={(e) => setAdminPin(e.target.value)}
+                      className="bg-slate-950 border-indigo-500/50 text-white font-mono tracking-widest"
+                    />
+                  </div>
+                )}
+
                 <Button
                   type="submit"
                   className={`w-full ${colorMap.btnClass}`}
@@ -343,6 +358,12 @@ export function RoleLoginForm({
                     "ログイン"
                   )}
                 </Button>
+
+                {(expectedRole === "admin" || expectedRole === "company") && (
+                  <p className="text-[11px] text-slate-500 text-center pt-1">
+                    🔒 セキュリティ保護：5回連続で認証に失敗すると15分間ロックされます
+                  </p>
+                )}
               </form>
             ) : (
               <form onSubmit={handlePasswordReset} className="space-y-4">

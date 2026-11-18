@@ -3,13 +3,29 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { UserRole } from "@/types/database";
 
 // =============================================================================
-// ロールベース画面・パス分離アクセス制御（Middleware）
-// 仕様：
-// - 受講生（student）：/student/login, /student/signup, /student/...
-// - 企業担当者（company）：/company/login, /company/...
-// - 管理者（admin）：/admin/login, /admin/...
-// - 旧パス（/app, /login, /signup）は /student 側の対応パスへ安全にリダイレクト
+// ロールベース画面・パス分離 ＋ ステルス404保護（Middleware）
+// 1. /admin/login および /company/login は、正しいゲートキー (?gate=...) または
+//    承認済み HttpOnly Cookie がない限り /not-found へ Rewrite（404偽装）する
+// 2. /admin/... と /company/... には X-Robots-Tag: noindex, nofollow, noarchive を強制付与
+// 3. ロール境界の厳格チェック
 // =============================================================================
+
+function applySecurityHeaders(
+  res: NextResponse,
+  isSensitivePortal: boolean
+): NextResponse {
+  res.headers.set("X-Frame-Options", "DENY");
+  res.headers.set("X-Content-Type-Options", "nosniff");
+  res.headers.set("Referrer-Policy", "same-origin");
+  if (isSensitivePortal) {
+    res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
+    res.headers.set(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+  }
+  return res;
+}
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -31,6 +47,72 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  const isAdminPath = pathname.startsWith("/admin");
+  const isCompanyPath = pathname.startsWith("/company");
+  const isSensitivePortal = isAdminPath || isCompanyPath;
+
+  // ★ ステルス・ゲートキー検証（/admin/login と /company/login）
+  const expectedAdminGate =
+    process.env.ADMIN_GATE_KEY || "dss-admin-gate-2025";
+  const expectedCompanyGate =
+    process.env.COMPANY_GATE_KEY || "dss-corp-gate-2025";
+
+  if (pathname === "/admin/login") {
+    const queryGate = request.nextUrl.searchParams.get("gate");
+    const cookieGate = request.cookies.get("dss_admin_gate")?.value;
+
+    if (queryGate === expectedAdminGate) {
+      // クエリパラメータに正しいキーがある場合は HttpOnly Cookie に保存してクエリ無しの綺麗で安全なURLへ遷移
+      const cleanUrl = request.nextUrl.clone();
+      cleanUrl.searchParams.delete("gate");
+      const redirectRes = NextResponse.redirect(cleanUrl);
+      redirectRes.cookies.set("dss_admin_gate", expectedAdminGate, {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30, // 30日間有効
+      });
+      return applySecurityHeaders(redirectRes, true);
+    }
+
+    if (cookieGate !== expectedAdminGate) {
+      // ゲートキーがない直接アクセスは 404 Not Found として偽装（管理画面の存在を隠蔽）
+      const notFoundUrl = request.nextUrl.clone();
+      notFoundUrl.pathname = "/_not-found";
+      return applySecurityHeaders(
+        NextResponse.rewrite(notFoundUrl, { status: 404 }),
+        true
+      );
+    }
+  }
+
+  if (pathname === "/company/login") {
+    const queryGate = request.nextUrl.searchParams.get("gate");
+    const cookieGate = request.cookies.get("dss_company_gate")?.value;
+
+    if (queryGate === expectedCompanyGate) {
+      const cleanUrl = request.nextUrl.clone();
+      cleanUrl.searchParams.delete("gate");
+      const redirectRes = NextResponse.redirect(cleanUrl);
+      redirectRes.cookies.set("dss_company_gate", expectedCompanyGate, {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+      });
+      return applySecurityHeaders(redirectRes, true);
+    }
+
+    if (cookieGate !== expectedCompanyGate) {
+      const notFoundUrl = request.nextUrl.clone();
+      notFoundUrl.pathname = "/_not-found";
+      return applySecurityHeaders(
+        NextResponse.rewrite(notFoundUrl, { status: 404 }),
+        true
+      );
+    }
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -43,7 +125,7 @@ export async function middleware(request: NextRequest) {
     !supabaseAnonKey ||
     supabaseUrl.includes("your-project-id")
   ) {
-    return supabaseResponse;
+    return applySecurityHeaders(supabaseResponse, isSensitivePortal);
   }
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -85,24 +167,44 @@ export async function middleware(request: NextRequest) {
   const isCompanyPortal = pathname.startsWith("/company") && !isAuthPage;
   const isAdminPortal = pathname.startsWith("/admin") && !isAuthPage;
 
-  // 未ログイン時は該当ロール専用のログインURLへリダイレクト
+  // 未ログイン時の保護
   if (!user) {
     if (isStudentPortal) {
       const url = request.nextUrl.clone();
       url.pathname = "/student/login";
-      return NextResponse.redirect(url);
+      return applySecurityHeaders(NextResponse.redirect(url), false);
     }
     if (isCompanyPortal) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/company/login";
-      return NextResponse.redirect(url);
+      const cookieGate = request.cookies.get("dss_company_gate")?.value;
+      if (cookieGate === expectedCompanyGate) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/company/login";
+        return applySecurityHeaders(NextResponse.redirect(url), true);
+      }
+      // ゲートCookieもない状態で /company にアクセスされた場合は 404 Not Found に偽装
+      const notFoundUrl = request.nextUrl.clone();
+      notFoundUrl.pathname = "/_not-found";
+      return applySecurityHeaders(
+        NextResponse.rewrite(notFoundUrl, { status: 404 }),
+        true
+      );
     }
     if (isAdminPortal) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/admin/login";
-      return NextResponse.redirect(url);
+      const cookieGate = request.cookies.get("dss_admin_gate")?.value;
+      if (cookieGate === expectedAdminGate) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/admin/login";
+        return applySecurityHeaders(NextResponse.redirect(url), true);
+      }
+      // ゲートCookieもない状態で /admin にアクセスされた場合は 404 Not Found に偽装
+      const notFoundUrl = request.nextUrl.clone();
+      notFoundUrl.pathname = "/_not-found";
+      return applySecurityHeaders(
+        NextResponse.rewrite(notFoundUrl, { status: 404 }),
+        true
+      );
     }
-    return supabaseResponse;
+    return applySecurityHeaders(supabaseResponse, isSensitivePortal);
   }
 
   // ログイン済みの場合、profiles.role（または user_metadata.role）を取得してロール境界を厳格に強制
@@ -137,32 +239,32 @@ export async function middleware(request: NextRequest) {
     if (isAuthPage) {
       const url = request.nextUrl.clone();
       url.pathname = roleHome;
-      return NextResponse.redirect(url);
+      return applySecurityHeaders(
+        NextResponse.redirect(url),
+        isSensitivePortal
+      );
     }
 
-    // 管理者ポータルは admin のみ
     if (isAdminPortal && role !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = roleHome;
-      return NextResponse.redirect(url);
+      return applySecurityHeaders(NextResponse.redirect(url), true);
     }
 
-    // 企業ポータルは company（または確認用のadmin）のみ
     if (isCompanyPortal && role !== "company" && role !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = roleHome;
-      return NextResponse.redirect(url);
+      return applySecurityHeaders(NextResponse.redirect(url), true);
     }
 
-    // 受講生ポータルは student（またはプレビュー用のadmin）のみ
     if (isStudentPortal && role !== "student" && role !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = roleHome;
-      return NextResponse.redirect(url);
+      return applySecurityHeaders(NextResponse.redirect(url), false);
     }
   }
 
-  return supabaseResponse;
+  return applySecurityHeaders(supabaseResponse, isSensitivePortal);
 }
 
 export const config = {
