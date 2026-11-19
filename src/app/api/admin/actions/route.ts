@@ -18,7 +18,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isSupabaseConfigured } from "@/lib/data-service";
+import { isSupabaseConfigured, getStudentsAnalyticsFromDb } from "@/lib/data-service";
 import { resetLoginAttemptsForEmail } from "@/lib/login-attempts";
 import {
   setInMemoryStudentCourseLock,
@@ -26,7 +26,12 @@ import {
   updateInMemoryCompanyManagerPassword,
   updateInMemoryCompanyManagerInfo,
   deleteInMemoryCompanyManager,
+  updateInMemoryCompanySlackSettings,
+  getInMemoryMilestones,
+  saveInMemoryMilestone,
+  deleteInMemoryMilestone,
 } from "@/lib/seed-data";
+import { sendSlackTestMessage, sendCompanyDigestMessage } from "@/lib/slack";
 
 /**
  * 処理概要：
@@ -41,7 +46,36 @@ export async function POST(request: NextRequest) {
     const { action, payload } = body;
 
     if (!isSupabaseConfigured()) {
-      if (action === "set_student_course_lock") {
+      if (action === "test_slack_notification") {
+        const { webhookUrl, companyName, channelName } = payload;
+        const result = await sendSlackTestMessage(webhookUrl, companyName, channelName);
+        if (!result.ok) {
+          return NextResponse.json({ ok: false, error: result.error || "Slack送信に失敗しました。" }, { status: 400 });
+        }
+        return NextResponse.json({ ok: true, result });
+      } else if (action === "send_slack_digest") {
+        const { webhookUrl, companyName, companyId, channelName } = payload;
+        const students = await getStudentsAnalyticsFromDb(companyId);
+        const milestones = getInMemoryMilestones(companyId);
+        const result = await sendCompanyDigestMessage(webhookUrl, companyName, students, milestones, channelName);
+        if (!result.ok) {
+          return NextResponse.json({ ok: false, error: result.error || "Slack送信に失敗しました。" }, { status: 400 });
+        }
+        return NextResponse.json({ ok: true, result });
+      } else if (action === "save_milestone") {
+        const saved = saveInMemoryMilestone({
+          id: payload.id,
+          company_id: payload.companyId,
+          title: payload.title,
+          target_date: payload.targetDate,
+          target_problem_count: payload.targetProblemCount,
+          order_index: payload.orderIndex,
+        });
+        return NextResponse.json({ ok: true, milestone: saved });
+      } else if (action === "delete_milestone") {
+        deleteInMemoryMilestone(payload.id);
+        return NextResponse.json({ ok: true });
+      } else if (action === "set_student_course_lock") {
         setInMemoryStudentCourseLock(
           payload.userId,
           payload.courseId,
@@ -80,6 +114,13 @@ export async function POST(request: NextRequest) {
           ? String(payload.contact_email).trim()
           : null;
         let managerUpdated = false;
+        if (payload.slack_webhook_url !== undefined || payload.slack_channel_name !== undefined) {
+          updateInMemoryCompanySlackSettings(
+            payload.companyId,
+            payload.slack_webhook_url,
+            payload.slack_channel_name
+          );
+        }
         if (cleanEmail && payload.new_manager_password) {
           const pass = String(payload.new_manager_password).trim();
           const updated = updateInMemoryCompanyManagerPassword(cleanEmail, pass);
@@ -149,10 +190,11 @@ export async function POST(request: NextRequest) {
         action === "delete_feedback";
 
       const isLockAction = action === "set_student_course_lock";
+      const isSlackDigestAction = action === "send_slack_digest";
 
       if (
         callerRole !== "admin" &&
-        !(callerRole === "company" && (isFeedbackAction || isLockAction))
+        !(callerRole === "company" && (isFeedbackAction || isLockAction || isSlackDigestAction))
       ) {
         return NextResponse.json(
           { error: "この操作を行う権限がありません。" },
@@ -576,13 +618,29 @@ export async function POST(request: NextRequest) {
         const cleanCode = String(company_code).trim().toUpperCase();
         const cleanEmail = contact_email ? String(contact_email).trim() : null;
 
+        if (payload.slack_webhook_url !== undefined || payload.slack_channel_name !== undefined) {
+          updateInMemoryCompanySlackSettings(
+            companyId,
+            payload.slack_webhook_url,
+            payload.slack_channel_name
+          );
+        }
+
+        const compUpdateData: Record<string, unknown> = {
+          name: String(name).trim(),
+          company_code: cleanCode,
+          contact_email: cleanEmail,
+        };
+        if (payload.slack_webhook_url !== undefined) {
+          compUpdateData.slack_webhook_url = payload.slack_webhook_url;
+        }
+        if (payload.slack_channel_name !== undefined) {
+          compUpdateData.slack_channel_name = payload.slack_channel_name;
+        }
+
         const { data: updatedCompany, error: upErr } = await db
           .from("companies")
-          .update({
-            name: String(name).trim(),
-            company_code: cleanCode,
-            contact_email: cleanEmail,
-          })
+          .update(compUpdateData)
           .eq("id", companyId)
           .select("*")
           .single();
@@ -904,6 +962,47 @@ export async function POST(request: NextRequest) {
           await adminClient.from("profiles").delete().eq("id", managerId);
         }
 
+        return NextResponse.json({ ok: true });
+      }
+
+      // 18. Slackテスト通知送信
+      case "test_slack_notification": {
+        const { webhookUrl, companyName, channelName } = payload;
+        const result = await sendSlackTestMessage(webhookUrl, companyName, channelName);
+        if (!result.ok) {
+          return NextResponse.json({ ok: false, error: result.error || "Slack送信に失敗しました。" }, { status: 400 });
+        }
+        return NextResponse.json({ ok: true, result });
+      }
+
+      // 19. 研修進捗ダイジェストSlack送信
+      case "send_slack_digest": {
+        const { webhookUrl, companyName, companyId, channelName } = payload;
+        const students = await getStudentsAnalyticsFromDb(companyId);
+        const milestones = getInMemoryMilestones(companyId);
+        const result = await sendCompanyDigestMessage(webhookUrl, companyName, students, milestones, channelName);
+        if (!result.ok) {
+          return NextResponse.json({ ok: false, error: result.error || "Slack送信に失敗しました。" }, { status: 400 });
+        }
+        return NextResponse.json({ ok: true, result });
+      }
+
+      // 20. 研修スケジュール（目標マイルストーン）保存
+      case "save_milestone": {
+        const saved = saveInMemoryMilestone({
+          id: payload.id,
+          company_id: payload.companyId,
+          title: payload.title,
+          target_date: payload.targetDate,
+          target_problem_count: payload.targetProblemCount,
+          order_index: payload.orderIndex,
+        });
+        return NextResponse.json({ ok: true, milestone: saved });
+      }
+
+      // 21. 研修スケジュール（目標マイルストーン）削除
+      case "delete_milestone": {
+        deleteInMemoryMilestone(payload.id);
         return NextResponse.json({ ok: true });
       }
 
