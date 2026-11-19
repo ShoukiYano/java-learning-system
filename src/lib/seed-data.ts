@@ -5,6 +5,19 @@
 // =============================================================================
 
 import { Difficulty, ProblemLanguage, CompanyManager, TrainingMilestone } from "@/types/database";
+import {
+  SEED_JAVA_BEGINNER_COURSE_ID,
+  SEED_JAVA_INTERMEDIATE_COURSE_ID,
+  SEED_JAVA_ADVANCED_COURSE_ID,
+  EXTRA_JAVA_CHAPTERS,
+  EXTRA_JAVA_PROBLEMS,
+} from "@/lib/java-curriculum-problems";
+
+export {
+  SEED_JAVA_BEGINNER_COURSE_ID,
+  SEED_JAVA_INTERMEDIATE_COURSE_ID,
+  SEED_JAVA_ADVANCED_COURSE_ID,
+};
 
 export interface SeedTestCase {
   name: string;
@@ -54,10 +67,37 @@ export const SEED_GIT_COURSE_ID = "11111111-1111-4111-8111-111111111103";
 export const SEED_COURSES = [
   {
     id: SEED_COURSE_ID,
-    title: "Java入門コース：ゼロから学ぶオブジェクト指向実践",
+    title: "Java入門コース：ゼロから学ぶ基礎文法とオブジェクト指向入門",
     description:
-      "標準出力・変数・四則演算からスタートし、条件分岐とループ、配列とメソッド、クラス設計と継承・ポリモーフィズムまで全12問のコーディング演習で体系的に習得します。",
+      "標準出力・変数・データ型・四則演算・Scanner入力・条件分岐（if/switch）・ループ・配列・メソッド・クラス設計の基礎まで全16問のコーディング演習で体系的に習得します。",
     order_index: 1,
+    is_published: true,
+    prerequisite_course_id: null,
+  },
+  {
+    id: SEED_JAVA_BEGINNER_COURSE_ID,
+    title: "Java初級コース：二次元配列・メソッド設計・オブジェクト指向応用",
+    description:
+      "店舗売上の二次元配列集計、オーバーロード設計、staticによる自動採番、決済インターフェースとポリモーフィズムなど実務基礎へ直結するオブジェクト指向応用を習得します。",
+    order_index: 2,
+    is_published: true,
+    prerequisite_course_id: null,
+  },
+  {
+    id: SEED_JAVA_INTERMEDIATE_COURSE_ID,
+    title: "Java中級コース：コレクション・標準API・CSV処理・例外ハンドリング",
+    description:
+      "実務で毎日使う ArrayList / HashMap による顧客検索・売上集計、CSVデータのパース処理、try-catch / throw を使った安全な在庫引当・例外制御を習得します。",
+    order_index: 3,
+    is_published: true,
+    prerequisite_course_id: null,
+  },
+  {
+    id: SEED_JAVA_ADVANCED_COURSE_ID,
+    title: "Java上級コース：DAO設計・APIバリデーション・顧客案件管理実践",
+    description:
+      "DAOリポジトリ設計、REST API入力バリデーション＆ステータス判定、顧客・案件管理システムのService層集計、境界値単体テスト検証など案件参画レベルの実践力を養います。",
+    order_index: 4,
     is_published: true,
     prerequisite_course_id: null,
   },
@@ -65,8 +105,8 @@ export const SEED_COURSES = [
     id: SEED_SQL_COURSE_ID,
     title: "SQL実践コース：データ抽出・集計・テーブル結合マスター",
     description:
-      "SELECT文の基本とWHERE条件指定からスタートし、GROUP BY / HAVING による集計分析、INNER JOIN / LEFT JOIN による複数テーブル結合まで全8問の実践クエリ演習で習得します。",
-    order_index: 2,
+      "SELECT文の基本とWHERE条件指定からスタートし、GROUP BY / HAVING による集計分析、INNER JOIN / LEFT JOIN による複数テーブル結合まで実践クエリ演習で習得します。",
+    order_index: 5,
     is_published: true,
     prerequisite_course_id: SEED_COURSE_ID,
   },
@@ -75,7 +115,7 @@ export const SEED_COURSES = [
     title: "Git実践マスター：ビジュアル分岐・マージ演習",
     description:
       "ブラウザ上でコミットやブランチの分岐・マージをリアルタイムに視覚化しながら学ぶ、実践的Gitトレーニング。コマンドライン操作とツリー構造の直感的理解を深めます。",
-    order_index: 3,
+    order_index: 6,
     is_published: true,
     prerequisite_course_id: null,
   },
@@ -464,6 +504,7 @@ export const SEED_CHAPTERS: SeedChapter[] = [
     lesson_id: "33333333-3333-4333-8333-333333333322",
     lesson_title: "2-1. マージとRebaseの実践",
   },
+  ...EXTRA_JAVA_CHAPTERS,
 ];
 
 export const SEED_PROBLEMS: SeedProblem[] = [
@@ -2212,6 +2253,7 @@ Gitの最も基本的な操作であるコミット（\`git commit\`）を作成
       },
     ],
   },
+  ...EXTRA_JAVA_PROBLEMS,
 ];
 
 export function detectProblemLanguage(problem: {

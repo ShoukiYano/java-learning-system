@@ -10,6 +10,7 @@
  */
 
 import { CurriculumDay, CurriculumPhase } from "@/types/curriculum";
+import { DAY_ENRICHMENTS } from "@/lib/curriculum/days-enrichment";
 
 export const CURRICULUM_PHASES: Array<{
   phase: CurriculumPhase;
@@ -58,7 +59,7 @@ export const CURRICULUM_PHASES: Array<{
   },
 ];
 
-export const CURRICULUM_DAYS: CurriculumDay[] = [
+const RAW_CURRICULUM_DAYS: CurriculumDay[] = [
   // ===========================================================================
   // 第1フェーズ：Javaの基礎習得（Day 1〜30）
   // ===========================================================================
@@ -1420,6 +1421,20 @@ Java研修
     problemIds: [],
   },
 ];
+
+export const CURRICULUM_DAYS: CurriculumDay[] = RAW_CURRICULUM_DAYS.map((d) => {
+  const extra = DAY_ENRICHMENTS[d.day];
+  if (!extra) return d;
+  return {
+    ...d,
+    status: extra.status ?? d.status,
+    problemIds: extra.problemIds
+      ? Array.from(new Set([...d.problemIds, ...extra.problemIds]))
+      : d.problemIds,
+    lessonContentMd: extra.lessonContentMd ?? d.lessonContentMd,
+    quizzes: extra.quizzes ?? d.quizzes,
+  };
+});
 
 export function getCurriculumDay(dayNum: number): CurriculumDay | undefined {
   return CURRICULUM_DAYS.find((d) => d.day === dayNum);

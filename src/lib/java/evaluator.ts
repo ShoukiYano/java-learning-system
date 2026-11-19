@@ -1833,6 +1833,13 @@ export function evaluateProgram(
       if (mName === "toString") return String(Number(args[0]));
     }
 
+    if (className === "Boolean") {
+      if (mName === "parseBoolean" || mName === "valueOf") {
+        return String(args[0]).trim().toLowerCase() === "true";
+      }
+      if (mName === "toString") return String(Boolean(args[0]));
+    }
+
     if (className === "Character") {
       const c = String(args[0])[0] || "\0";
       if (mName === "isDigit") return /[0-9]/.test(c);

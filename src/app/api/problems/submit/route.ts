@@ -24,6 +24,7 @@ import { runJavaCode, compareOutputs } from "@/lib/java";
 import { runSqlCode } from "@/lib/sql";
 import { createInitialGitState, executeGitScript, compareGitStates } from "@/lib/git/git-engine";
 import {
+  SEED_CHAPTERS,
   SEED_PROBLEMS,
   SEED_COURSE_ID,
   SEED_SQL_COURSE_ID,
@@ -128,16 +129,21 @@ export async function POST(request: NextRequest) {
         if (user) {
           const userCourses = await getCoursesWithProgress(user.id);
           const seedProbRef = SEED_PROBLEMS.find((p) => p.id === problemId);
+          const seedChRef = seedProbRef
+            ? SEED_CHAPTERS.find((ch) => ch.id === seedProbRef.chapter_id)
+            : undefined;
           const isGit =
             seedProbRef?.language === "git" ||
             seedProbRef?.tags.some((t) => t.toUpperCase().includes("GIT"));
           const isSql =
             seedProbRef?.language === "sql" || seedProbRef?.tags.includes("SQL");
-          const targetCourseId = isGit
-            ? SEED_GIT_COURSE_ID
-            : isSql
-            ? SEED_SQL_COURSE_ID
-            : SEED_COURSE_ID;
+          const targetCourseId =
+            seedChRef?.course_id ??
+            (isGit
+              ? SEED_GIT_COURSE_ID
+              : isSql
+              ? SEED_SQL_COURSE_ID
+              : SEED_COURSE_ID);
 
           const matchedCourse = userCourses.find((c) => c.id === targetCourseId);
           if (matchedCourse?.isLocked) {

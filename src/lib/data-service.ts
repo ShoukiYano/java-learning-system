@@ -698,14 +698,18 @@ export async function getStudentDashboardData(
     .filter((ch) => accessibleCourseIds.has(ch.id) || true)
     .flatMap((c) => c.lessons.flatMap((l) => l.problems))
     .filter((p) => {
-      // 問題が属するコースがアクセス可能か
-      const isGit = p.tags.some((t) => t.toUpperCase().includes("GIT"));
-      const isSql = p.tags.some((t) => t.toUpperCase().includes("SQL"));
-      const pCourseId = isGit
-        ? SEED_GIT_COURSE_ID
-        : isSql
-        ? SEED_SQL_COURSE_ID
-        : SEED_COURSE_ID;
+      // 問題が属するコースがアクセス可能か（SEED_CHAPTERSから動的に解決）
+      const seedProbRef = SEED_PROBLEMS.find((sp) => sp.id === p.id);
+      const seedChRef = seedProbRef
+        ? SEED_CHAPTERS.find((ch) => ch.id === seedProbRef.chapter_id)
+        : undefined;
+      const pCourseId =
+        seedChRef?.course_id ??
+        (p.tags.some((t) => t.toUpperCase().includes("GIT"))
+          ? SEED_GIT_COURSE_ID
+          : p.tags.some((t) => t.toUpperCase().includes("SQL"))
+          ? SEED_SQL_COURSE_ID
+          : SEED_COURSE_ID);
       return accessibleCourseIds.has(pCourseId);
     });
 

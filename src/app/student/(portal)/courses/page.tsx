@@ -67,6 +67,12 @@ export default async function StudentCoursesPage() {
                       className={
                         isGit
                           ? "bg-purple-100 text-purple-700 border-purple-300"
+                          : course.title.includes("上級")
+                          ? "bg-rose-600 text-white"
+                          : course.title.includes("中級")
+                          ? "bg-indigo-600 text-white"
+                          : course.title.includes("初級")
+                          ? "bg-sky-600 text-white"
                           : ""
                       }
                     >
@@ -74,7 +80,13 @@ export default async function StudentCoursesPage() {
                         ? "Git Version Control Track"
                         : isSql
                         ? "SQL Database Track"
-                        : "Java Programming Track"}
+                        : course.title.includes("上級")
+                        ? "Java上級 Track"
+                        : course.title.includes("中級")
+                        ? "Java中級 Track"
+                        : course.title.includes("初級")
+                        ? "Java初級 Track"
+                        : "Java入門 Track"}
                     </Badge>
                     {course.lockStatus === "unlocked" ? (
                       <Badge
