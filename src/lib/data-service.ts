@@ -262,23 +262,36 @@ export async function getCoursesWithProgress(
       }
     }
 
-    if (!courses || courses.length === 0) {
+    const dbCourses = (courses as Course[]) ?? [];
+    const dbCourseIds = new Set(dbCourses.map((c) => c.id));
+    const allAvailableCourses = [...dbCourses];
+    for (const sc of SEED_COURSES) {
+      if (!dbCourseIds.has(sc.id)) {
+        allAvailableCourses.push({
+          ...sc,
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
+    allAvailableCourses.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+
+    if (allAvailableCourses.length === 0) {
       return fallbackList.filter((c) => !hiddenCourseIds.has(c.id));
     }
 
-    const visibleCourses = (courses as Course[]).filter(
+    const visibleCourses = allAvailableCourses.filter(
       (c) => !hiddenCourseIds.has(c.id)
     );
 
     const courseMap = new Map<string, Course>();
-    (courses as Course[]).forEach((c) => courseMap.set(c.id, c));
+    allAvailableCourses.forEach((c) => courseMap.set(c.id, c));
 
     const progressMap = new Map<string, Progress>();
     (progresses ?? []).forEach((p: Progress) => progressMap.set(p.problem_id, p));
 
     // コースごとの問題ID集計
     const courseProblemsMap = new Map<string, string[]>();
-    for (const c of courses) courseProblemsMap.set(c.id, []);
+    for (const c of allAvailableCourses) courseProblemsMap.set(c.id, []);
 
     if (problems && problems.length > 0) {
       for (const p of problems as unknown as Array<{
@@ -290,11 +303,16 @@ export async function getCoursesWithProgress(
           courseProblemsMap.get(cId)!.push(p.id);
         }
       }
-    } else {
-      courseProblemsMap.set(
-        SEED_COURSE_ID,
-        SEED_PROBLEMS.map((sp) => sp.id)
-      );
+    }
+
+    // DBに問題がまだ存在しないコース（Git新設コース等）はSEED_PROBLEMSからマッピング
+    for (const sc of SEED_COURSES) {
+      const pList = courseProblemsMap.get(sc.id) ?? [];
+      if (pList.length === 0) {
+        const chIds = SEED_CHAPTERS.filter((ch) => ch.course_id === sc.id).map((ch) => ch.id);
+        const seedProblemIds = SEED_PROBLEMS.filter((p) => chIds.includes(p.chapter_id)).map((p) => p.id);
+        courseProblemsMap.set(sc.id, seedProblemIds);
+      }
     }
 
     return visibleCourses.map((course: Course) => {
@@ -1502,28 +1520,38 @@ export async function getAdminCoursesAndCompanyMatrix() {
         db.from("company_courses").select("company_id, course_id, is_visible"),
       ]);
 
-    const coursesList =
-      dbCourses && dbCourses.length > 0
-        ? (dbCourses as Course[]).map((c) => {
-            const cnt = (
-              (dbProblems ?? []) as unknown as Array<{
-                lessons?: { chapters?: { course_id?: string } };
-              }>
-            ).filter((p) => p.lessons?.chapters?.course_id === c.id).length;
-            return {
-              id: c.id,
-              title: c.title,
-              description: c.description,
-              order_index: c.order_index,
-              is_published: c.is_published,
-              prerequisite_course_id: c.prerequisite_course_id,
-              problemCount:
-                cnt ||
-                defaultCourses.find((dc) => dc.id === c.id)?.problemCount ||
-                0,
-            };
-          })
-        : defaultCourses;
+    const coursesList = (() => {
+      const dbList =
+        dbCourses && dbCourses.length > 0
+          ? (dbCourses as Course[]).map((c) => {
+              const cnt = (
+                (dbProblems ?? []) as unknown as Array<{
+                  lessons?: { chapters?: { course_id?: string } };
+                }>
+              ).filter((p) => p.lessons?.chapters?.course_id === c.id).length;
+              return {
+                id: c.id,
+                title: c.title,
+                description: c.description,
+                order_index: c.order_index,
+                is_published: c.is_published,
+                prerequisite_course_id: c.prerequisite_course_id,
+                problemCount:
+                  cnt ||
+                  defaultCourses.find((dc) => dc.id === c.id)?.problemCount ||
+                  0,
+              };
+            })
+          : [];
+      const dbIds = new Set(dbList.map((c) => c.id));
+      for (const dc of defaultCourses) {
+        if (!dbIds.has(dc.id)) {
+          dbList.push(dc);
+        }
+      }
+      dbList.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+      return dbList.length > 0 ? dbList : defaultCourses;
+    })();
 
     for (const crs of coursesList) {
       if (!visibilityMap[crs.id]) visibilityMap[crs.id] = {};

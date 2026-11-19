@@ -44,6 +44,7 @@ export default async function StudentCoursesPage() {
                   (course.completedProblems / course.totalProblems) * 100
                 )
               : 0;
+          const isGit = course.title.toUpperCase().includes("GIT");
           const isSql = course.title.toUpperCase().includes("SQL");
 
           return (
