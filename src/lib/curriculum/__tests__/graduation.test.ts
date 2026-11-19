@@ -7,10 +7,12 @@ import {
 } from "../graduation";
 
 describe("90-Day Java Curriculum & Graduation Evaluation", () => {
-  it("Day 1〜Day 90 まで欠番・重複なく90日分の学習計画が定義されていること", () => {
+  it("Day 1〜Day 90 まで欠番・重複なく90日分の学習計画が定義され、全90日が公開・解説教材付きであること", () => {
     expect(CURRICULUM_DAYS).toHaveLength(90);
     for (let i = 0; i < 90; i++) {
       expect(CURRICULUM_DAYS[i].day).toBe(i + 1);
+      expect(CURRICULUM_DAYS[i].status).toBe("published");
+      expect((CURRICULUM_DAYS[i].lessonContentMd ?? "").trim().length).toBeGreaterThan(20);
     }
   });
 

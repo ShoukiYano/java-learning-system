@@ -11,6 +11,8 @@
 
 import { CurriculumDay, CurriculumPhase } from "@/types/curriculum";
 import { DAY_ENRICHMENTS } from "@/lib/curriculum/days-enrichment";
+import { PHASE2_ENRICHMENTS } from "@/lib/curriculum/phase2-enrichment";
+import { PHASE3_ENRICHMENTS } from "@/lib/curriculum/phase3-enrichment";
 
 export const CURRICULUM_PHASES: Array<{
   phase: CurriculumPhase;
@@ -1423,7 +1425,10 @@ Java研修
 ];
 
 export const CURRICULUM_DAYS: CurriculumDay[] = RAW_CURRICULUM_DAYS.map((d) => {
-  const extra = DAY_ENRICHMENTS[d.day];
+  const extra =
+    PHASE3_ENRICHMENTS[d.day] ??
+    PHASE2_ENRICHMENTS[d.day] ??
+    DAY_ENRICHMENTS[d.day];
   if (!extra) return d;
   return {
     ...d,
@@ -1433,6 +1438,10 @@ export const CURRICULUM_DAYS: CurriculumDay[] = RAW_CURRICULUM_DAYS.map((d) => {
       : d.problemIds,
     lessonContentMd: extra.lessonContentMd ?? d.lessonContentMd,
     quizzes: extra.quizzes ?? d.quizzes,
+    deliverable:
+      "deliverable" in extra && extra.deliverable
+        ? extra.deliverable
+        : d.deliverable,
   };
 });
 
