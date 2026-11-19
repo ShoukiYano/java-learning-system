@@ -2,16 +2,18 @@
 
 /**
  * ファイル概要：
- * インタラクティブGit学習ワークスペースコンポーネント（高視認性ライトUI）
+ * DevSkill Studio オリジナル・インタラクティブGit演習ワークスペース
  *
  * 主な処理：
- * 1. 2ペイン構成（左: 白背景ミッション説明＆見やすいWebターミナル / 右: 明るい方眼キャンバス上のリアルタイムSVG Gitツリーグラフ）
- * 2. 仮想Gitエンジンによるコマンド逐次実行とエラー・ログ出力
- * 3. 到達目標（Goal Tree）とのリアルタイム自動比較と合格判定
- * 4. 紙吹雪アニメーション（canvas-confetti）および進捗提出API連携
+ * 1. 左ペイン：ミッション説明（白カード）＋コマンド入力コンソール（入力補助チップ付き）
+ * 2. 右ペイン：
+ *    - 上段：現在のリポジトリ状態（横型タイムラインコミットカード）
+ *    - 中段：リアルタイム・クリア条件チェックリスト（項目ごとの達成状況を即時反映）
+ *    - 下段：目指すゴール構成（横型タイムライン比較カード・折りたたみ可能）
+ * 3. 全条件達成時の紙吹雪演出（canvas-confetti）＆自動提出API連携
  */
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
 import {
@@ -20,6 +22,7 @@ import {
   executeGitCommand,
   executeGitScript,
   compareGitStates,
+  evaluateGitGoalChecklist,
 } from "@/lib/git/git-engine";
 import { GitGraphVisualizer } from "./git-graph-visualizer";
 import { Problem, Progress } from "@/types/database";
@@ -32,15 +35,17 @@ import {
   RotateCcw,
   Target,
   CheckCircle2,
+  Circle,
   ArrowRight,
   ArrowLeft,
   Lightbulb,
   Clock,
-  Sparkles,
   GitBranch,
   ChevronDown,
   ChevronUp,
   Send,
+  BookOpen,
+  ListChecks,
 } from "lucide-react";
 
 interface GitWorkspaceClientProps {
@@ -63,6 +68,7 @@ const QUICK_COMMANDS = [
   { label: "git branch", cmd: "branch " },
   { label: "git switch", cmd: "switch " },
   { label: "git merge", cmd: "merge " },
+  { label: "git rebase", cmd: "rebase " },
   { label: "git status", cmd: "status" },
 ];
 
@@ -84,19 +90,25 @@ export function GitWorkspaceClient({
     {
       id: "init-1",
       type: "system",
-      output: `DevSkill Git Simulator 起動完了\n下の入力欄に git コマンドを入力して Enter を押してください（例: commit, branch bugfix, help）。`,
+      output: `Git演習コンソール準備完了。コマンドを入力して Enter を押してください（'help' でコマンド一覧）。`,
     },
   ]);
 
   const [isGoalAchieved, setIsGoalAchieved] = useState<boolean>(
     initialProgress?.status === "completed"
   );
-  const [showGoalModal, setShowGoalModal] = useState<boolean>(true);
+  const [showGoalSection, setShowGoalSection] = useState<boolean>(true);
   const [showHint, setShowHint] = useState<boolean>(false);
   const [executedCommands, setExecutedCommands] = useState<string[]>([]);
 
   const terminalBottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // リアルタイム・クリア条件チェックリスト
+  const checklist = useMemo(
+    () => evaluateGitGoalChecklist(gitState, goalTargetState),
+    [gitState, goalTargetState]
+  );
 
   useEffect(() => {
     terminalBottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -127,7 +139,8 @@ export function GitWorkspaceClient({
           {
             id: `success-${Date.now()}`,
             type: "success",
-            output: "🎉 CLEAR! 目標のGitツリーと完全一致しました！合格記録を保存しました。",
+            output:
+              "CLEAR! すべてのクリア条件を達成しました。学習進捗を記録しました。",
           },
         ]);
       }
@@ -217,11 +230,13 @@ export function GitWorkspaceClient({
     inputRef.current?.focus();
   };
 
+  const passedCheckCount = checklist.filter((c) => c.passed).length;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-50 text-slate-900 overflow-hidden">
-      {/* 1. トップナビゲーションバー（清潔なライトテーマ） */}
-      <header className="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5 bg-white border-b border-slate-200 shadow-xs text-sm">
-        <div className="flex items-center space-x-3">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-100/70 text-slate-900 overflow-hidden">
+      {/* 1. トップヘッダー */}
+      <header className="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5 bg-white border-b border-slate-200 text-sm shrink-0">
+        <div className="flex items-center gap-3">
           <Link
             href={`/student/courses/${courseId}`}
             className="inline-flex items-center gap-1.5 text-slate-600 hover:text-blue-600 font-medium transition-colors"
@@ -252,26 +267,12 @@ export function GitWorkspaceClient({
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            variant={showGoalModal ? "default" : "outline"}
-            className={
-              showGoalModal
-                ? "bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
-                : "bg-white border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold"
-            }
-            onClick={() => setShowGoalModal(!showGoalModal)}
-          >
-            <Target className="w-4 h-4 mr-1.5" />
-            {showGoalModal ? "到達目標を隠す" : "到達目標を表示"}
-          </Button>
-
-          <Button
-            size="sm"
             variant="outline"
             className="bg-white border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold"
             onClick={handleReset}
           >
             <RotateCcw className="w-4 h-4 mr-1.5" />
-            リセット
+            やり直す
           </Button>
 
           {isGoalAchieved && nextProblemId && (
@@ -288,16 +289,16 @@ export function GitWorkspaceClient({
         </div>
       </header>
 
-      {/* 2. メイン 2ペインレイアウト */}
+      {/* 2. メイン 2カラムワークスペース */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
-        {/* 左側ペイン (lg:col-span-5): ミッション指示（白背景） & Webターミナル（高コントラスト） */}
+        {/* 左カラム (lg:col-span-5): 問題説明 + コマンドコンソール */}
         <div className="lg:col-span-5 flex flex-col border-r border-slate-200 bg-white overflow-hidden">
-          {/* 上部: ミッション説明カード（白背景でくっきり可読） */}
-          <div className="p-5 border-b border-slate-200 bg-white overflow-y-auto max-h-[46%]">
+          {/* 上部: 問題文 */}
+          <div className="p-5 border-b border-slate-200 overflow-y-auto max-h-[45%]">
             <div className="flex items-center justify-between mb-3">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">
-                <Sparkles className="w-3.5 h-3.5" />
-                ミッション内容
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
+                <BookOpen className="w-3.5 h-3.5" />
+                課題の説明
               </span>
               <div className="flex items-center text-xs font-medium text-slate-500 gap-1">
                 <Clock className="w-3.5 h-3.5" />
@@ -309,7 +310,6 @@ export function GitWorkspaceClient({
               <MarkdownRenderer content={problem.description_md} />
             </div>
 
-            {/* ヒントアコーディオン */}
             {problem.explanation_md && (
               <div className="mt-4 pt-3 border-t border-slate-100">
                 <button
@@ -319,7 +319,7 @@ export function GitWorkspaceClient({
                 >
                   <span className="flex items-center gap-1.5">
                     <Lightbulb className="w-4 h-4 text-amber-600" />
-                    解法のヒントを見る
+                    解法のヒントを開く
                   </span>
                   {showHint ? (
                     <ChevronUp className="w-4 h-4 text-amber-700" />
@@ -336,32 +336,24 @@ export function GitWorkspaceClient({
             )}
           </div>
 
-          {/* 下部: Webターミナル（高コントラスト・大きめ文字） */}
+          {/* 下部: オリジナル コマンド入力コンソール */}
           <div className="flex-1 flex flex-col bg-slate-900 text-slate-100 font-mono text-sm overflow-hidden">
-            {/* ターミナルヘッダー */}
             <div className="flex items-center justify-between px-4 py-2 bg-slate-800 border-b border-slate-700 select-none">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                </div>
-                <span className="ml-1 text-slate-200 text-xs font-sans font-semibold flex items-center gap-1.5">
-                  <TerminalIcon className="w-3.5 h-3.5 text-sky-400" />
-                  Git コマンドターミナル
-                </span>
-              </div>
-              <div className="text-xs text-slate-300 font-sans">
-                現在のブランチ:{" "}
-                <span className="font-mono font-bold text-emerald-400">
+              <span className="text-slate-100 text-xs font-sans font-bold flex items-center gap-2">
+                <TerminalIcon className="w-4 h-4 text-blue-400" />
+                コマンド入力コンソール
+              </span>
+              <span className="text-xs font-sans text-slate-300 bg-slate-700/80 px-2 py-0.5 rounded">
+                作業ブランチ:{" "}
+                <strong className="font-mono text-emerald-400">
                   {gitState.head.isDetached
                     ? `(detached: ${gitState.head.target})`
                     : gitState.head.target}
-                </span>
-              </div>
+                </strong>
+              </span>
             </div>
 
-            {/* ログ出力領域 */}
+            {/* 実行ログ */}
             <div
               className="flex-1 p-4 overflow-y-auto space-y-2.5 select-text"
               onClick={() => inputRef.current?.focus()}
@@ -382,7 +374,7 @@ export function GitWorkspaceClient({
                         log.type === "success"
                           ? "text-emerald-200 font-bold bg-emerald-900/60 p-3 rounded-lg border border-emerald-500/50"
                           : log.isError
-                          ? "text-rose-300 bg-rose-950/50 p-2 rounded border border-rose-500/30"
+                          ? "text-rose-300 bg-rose-950/60 p-2 rounded border border-rose-500/30"
                           : log.type === "system"
                           ? "text-slate-300"
                           : "text-slate-200"
@@ -396,8 +388,8 @@ export function GitWorkspaceClient({
               <div ref={terminalBottomRef} />
             </div>
 
-            {/* クイックコマンド補助チップ */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/80 border-t border-slate-700 overflow-x-auto">
+            {/* ワンクリック入力補助バー */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/90 border-t border-slate-700 overflow-x-auto">
               <span className="text-[11px] font-sans text-slate-400 shrink-0 mr-1">
                 入力補助:
               </span>
@@ -406,14 +398,14 @@ export function GitWorkspaceClient({
                   key={q.label}
                   type="button"
                   onClick={() => handleQuickInsert(q.cmd)}
-                  className="px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-mono shrink-0 transition-colors"
+                  className="px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-mono shrink-0 transition-colors"
                 >
                   {q.label}
                 </button>
               ))}
             </div>
 
-            {/* コマンド入力フォーム */}
+            {/* コマンド入力欄 */}
             <form
               onSubmit={handleExecute}
               className="flex items-center gap-2 px-4 py-3 bg-slate-800 border-t-2 border-blue-500"
@@ -427,7 +419,7 @@ export function GitWorkspaceClient({
                 value={inputVal}
                 onChange={(e) => setInputVal(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="commit / branch bugfix / switch bugfix / merge feature ..."
+                placeholder="commit / branch bugfix / switch bugfix ..."
                 className="flex-1 bg-transparent text-white outline-none placeholder:text-slate-400 font-mono text-sm"
                 autoFocus
                 spellCheck={false}
@@ -445,86 +437,134 @@ export function GitWorkspaceClient({
           </div>
         </div>
 
-        {/* 右側ペイン (lg:col-span-7): 明るく見やすいビジュアルGitツリーグラフ */}
-        <div className="lg:col-span-7 relative flex flex-col bg-slate-50 overflow-hidden">
-          {/* グラフステータスバー */}
-          <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5 bg-white border-b border-slate-200">
-            <div className="flex items-center gap-2.5 text-xs">
-              <span className="font-bold text-slate-700">現在のリポジトリ:</span>
-              <span className="font-mono font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
-                コミット数: {Object.keys(gitState.commits).length}
-              </span>
-              <span className="font-mono font-semibold px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
-                HEAD →{" "}
-                {gitState.head.isDetached
-                  ? `(${gitState.head.target})`
-                  : gitState.head.target}
+        {/* 右カラム (lg:col-span-7): 構造化された3段ビジュアルパネル */}
+        <div className="lg:col-span-7 flex flex-col overflow-y-auto p-4 md:p-5 gap-4">
+          {/* クリア時のお祝いバナー */}
+          {isGoalAchieved && (
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-emerald-600 text-white shadow-md">
+              <div className="flex items-center gap-2.5 text-sm font-bold">
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
+                <span>
+                  ミッションクリア！すべてのクリア条件を達成しました。
+                </span>
+              </div>
+              {nextProblemId && (
+                <Link href={`/student/problems/${nextProblemId}`}>
+                  <Button
+                    size="sm"
+                    className="bg-white text-emerald-700 hover:bg-emerald-50 font-bold"
+                  >
+                    次の問題へ進む
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </Link>
+              )}
+            </div>
+          )}
+
+          {/* パネル1: 現在のリポジトリ状態（横型コミットタイムライン） */}
+          <section className="rounded-xl bg-white border border-slate-200 shadow-xs overflow-hidden flex flex-col">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <GitBranch className="w-4 h-4 text-blue-600" />
+                <h2 className="text-sm font-bold text-slate-900">
+                  現在のリポジトリ履歴（左 → 右へ進行）
+                </h2>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="font-mono font-semibold px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700">
+                  コミット: {Object.keys(gitState.commits).length}件
+                </span>
+                <span className="font-mono font-semibold px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800">
+                  HEAD →{" "}
+                  {gitState.head.isDetached
+                    ? gitState.head.target
+                    : gitState.head.target}
+                </span>
+              </div>
+            </div>
+            <div className="p-4 min-h-[190px] flex items-center bg-white">
+              <GitGraphVisualizer state={gitState} />
+            </div>
+          </section>
+
+          {/* パネル2: リアルタイム・クリア条件チェックリスト */}
+          <section className="rounded-xl bg-white border border-slate-200 shadow-xs overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <ListChecks className="w-4 h-4 text-indigo-600" />
+                <h2 className="text-sm font-bold text-slate-900">
+                  クリア条件チェックリスト
+                </h2>
+              </div>
+              <span
+                className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                  passedCheckCount === checklist.length
+                    ? "bg-emerald-100 text-emerald-800"
+                    : "bg-slate-200 text-slate-700"
+                }`}
+              >
+                {passedCheckCount} / {checklist.length} 達成
               </span>
             </div>
-
-            {isGoalAchieved ? (
-              <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-bold bg-emerald-50 px-3 py-1 rounded-full border border-emerald-300">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>ミッション達成！CLEAR</span>
-              </div>
-            ) : (
-              <span className="text-xs font-medium text-slate-500">
-                コマンドを実行すると下のツリーがリアルタイムに変化します
-              </span>
-            )}
-          </div>
-
-          {/* 明るい方眼ドット背景上のSVG Gitツリーグラフ */}
-          <div className="flex-1 w-full h-full relative overflow-auto bg-[radial-gradient(#cbd5e1_1.5px,transparent_1.5px)] [background-size:20px_20px]">
-            <GitGraphVisualizer state={gitState} />
-
-            {/* クリア時のお祝いバナー */}
-            {isGoalAchieved && (
-              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-4 px-5 py-3 rounded-xl bg-emerald-600 text-white shadow-xl z-20">
-                <CheckCircle2 className="w-6 h-6 shrink-0" />
-                <div className="text-sm font-bold">
-                  🎉 ミッションクリア！目標のGitツリーと完全一致しました！
-                </div>
-                {nextProblemId && (
-                  <Link href={`/student/problems/${nextProblemId}`}>
-                    <Button
-                      size="sm"
-                      className="bg-white text-emerald-700 hover:bg-emerald-50 font-bold"
-                    >
-                      次の問題へ
-                      <ArrowRight className="w-4 h-4 ml-1" />
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            )}
-
-            {/* フローティング到達目標（Goal Tree）カード（明るい白カード） */}
-            {showGoalModal && (
-              <div className="absolute top-4 right-4 w-72 md:w-80 rounded-xl bg-white/95 border-2 border-indigo-200 shadow-xl backdrop-blur-sm overflow-hidden z-20">
-                <div className="flex items-center justify-between px-3.5 py-2 bg-indigo-50 border-b border-indigo-200">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900">
-                    <Target className="w-4 h-4 text-indigo-600" />
-                    <span>到達目標 (Goal Tree)</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowGoalModal(false)}
-                    className="text-slate-500 hover:text-slate-800 text-xs font-bold px-1.5 py-0.5 rounded hover:bg-indigo-100"
-                    aria-label="閉じる"
+            <ul className="divide-y divide-slate-100">
+              {checklist.map((item) => (
+                <li
+                  key={item.id}
+                  className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                    item.passed ? "bg-emerald-50/40" : "bg-white"
+                  }`}
+                >
+                  {item.passed ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  ) : (
+                    <Circle className="w-4 h-4 text-slate-300 shrink-0" />
+                  )}
+                  <span
+                    className={
+                      item.passed
+                        ? "text-emerald-900 font-semibold"
+                        : "text-slate-700"
+                    }
                   >
-                    ✕
-                  </button>
-                </div>
-                <div className="p-2 bg-slate-50/70 max-h-80 overflow-auto">
-                  <GitGraphVisualizer state={goalTargetState} isGoalView={true} />
-                </div>
-                <div className="px-3 py-2 bg-white border-t border-slate-200 text-[11px] font-medium text-slate-600 text-center">
-                  この図と同じブランチ・コミット構造を作ればクリア！
-                </div>
+                    {item.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* パネル3: 目指すゴール構成（折りたたみ可能な比較タイムライン） */}
+          <section className="rounded-xl bg-white border border-indigo-200 shadow-xs overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowGoalSection(!showGoalSection)}
+              className="flex items-center justify-between w-full px-4 py-2.5 bg-indigo-50/70 hover:bg-indigo-50 border-b border-indigo-100 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-indigo-600" />
+                <h2 className="text-sm font-bold text-indigo-950">
+                  目指すゴール構成（完成イメージ）
+                </h2>
+              </div>
+              <span className="text-xs font-semibold text-indigo-700 flex items-center gap-1">
+                {showGoalSection ? (
+                  <>
+                    折りたたむ <ChevronUp className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    表示する <ChevronDown className="w-4 h-4" />
+                  </>
+                )}
+              </span>
+            </button>
+            {showGoalSection && (
+              <div className="p-3 bg-indigo-50/20">
+                <GitGraphVisualizer state={goalTargetState} isGoalView={true} />
               </div>
             )}
-          </div>
+          </section>
         </div>
       </div>
     </div>

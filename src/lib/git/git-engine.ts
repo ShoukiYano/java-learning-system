@@ -683,3 +683,69 @@ export function compareGitStates(
 
   return { isMatch: true };
 }
+
+export interface GitGoalCheckItem {
+  id: string;
+  label: string;
+  passed: boolean;
+}
+
+/**
+ * 現在のGit状態と目標状態を項目ごとに照合し、リアルタイムチェックリストを返す
+ */
+export function evaluateGitGoalChecklist(
+  current: GitState,
+  target: GitState
+): GitGoalCheckItem[] {
+  const items: GitGoalCheckItem[] = [];
+
+  // 1. 必要なブランチの存在と構造チェック
+  for (const [branchName, targetCommitId] of Object.entries(target.branches)) {
+    const curCommitId = current.branches[branchName];
+    const targetCommit = target.commits[targetCommitId];
+    const curCommit = curCommitId ? current.commits[curCommitId] : undefined;
+
+    const exists = !!curCommit;
+    const isMergeTarget = (targetCommit?.parents.length ?? 0) >= 2;
+
+    if (isMergeTarget) {
+      const hasMerged = (curCommit?.parents.length ?? 0) >= 2;
+      items.push({
+        id: `branch-merge-${branchName}`,
+        label: `ブランチ「${branchName}」にマージコミットが作成されている`,
+        passed: exists && hasMerged,
+      });
+    } else {
+      items.push({
+        id: `branch-${branchName}`,
+        label: `ブランチ「${branchName}」が存在し、期待される履歴構成になっている`,
+        passed:
+          exists &&
+          (curCommit?.parents.length ?? 0) === (targetCommit?.parents.length ?? 0),
+      });
+    }
+  }
+
+  // 2. HEAD位置のチェック
+  const headMatched =
+    current.head.isDetached === target.head.isDetached &&
+    current.head.target === target.head.target;
+  items.push({
+    id: "head-target",
+    label: target.head.isDetached
+      ? `HEAD がコミット「${target.head.target}」を指している`
+      : `現在の作業ブランチ（HEAD）が「${target.head.target}」になっている`,
+    passed: headMatched,
+  });
+
+  // 3. コミット数のチェック
+  const targetCount = Object.keys(target.commits).length;
+  const currentCount = Object.keys(current.commits).length;
+  items.push({
+    id: "commit-count",
+    label: `リポジトリのコミット数が目標（${targetCount}件）に達している（現在 ${currentCount}件）`,
+    passed: currentCount >= targetCount,
+  });
+
+  return items;
+}

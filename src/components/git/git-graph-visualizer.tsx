@@ -2,12 +2,12 @@
 
 /**
  * ファイル概要：
- * インタラクティブGitツリーグラフ可視化コンポーネント（高視認性ライトテーマSVG描画）
+ * DevSkill Studio オリジナル・横型タイムラインGitグラフ可視化コンポーネント
  *
  * 主な処理：
- * 1. GitState（コミットDAG・ブランチ・HEAD）からノードの階層レイアウトを自動計算
- * 2. 大きく見やすいコミットノード（C0, C1...）、親コミットへの太めの有向矢印、高コントラストなブランチタグ＆HEADポインタを描画
- * 3. 通常ビューおよび目標達成判定用のゴール比較ビューに対応
+ * 1. 時間軸（左→右）とブランチレーン（上→下）で構成される実務志向のコミットカードグラフを描画
+ * 2. コミットID・短縮ハッシュ・コミットメッセージ・マージ有無を角丸カードで分かりやすく表現
+ * 3. ブランチラベルと現在作業中（HEAD）ポインタをカード上部にすっきり配置
  */
 
 import React, { useMemo } from "react";
@@ -19,34 +19,46 @@ interface GitGraphVisualizerProps {
   className?: string;
 }
 
-interface NodeLayout {
+interface CardNodeLayout {
   id: string;
+  hash: string;
+  message: string;
+  isMerge: boolean;
+  col: number;
+  row: number;
   x: number;
   y: number;
-  depth: number;
-  lane: number;
+  w: number;
+  h: number;
   branches: string[];
   isHeadDirect: boolean;
   headBranch?: string;
-  message: string;
+  laneColor: string;
 }
 
-// ブランチごとの高コントラストカラーパレット（白文字がくっきり映える塗りつぶし）
-const BRANCH_COLORS: Record<string, { fill: string; stroke: string; text: string }> = {
-  main: { fill: "#059669", stroke: "#047857", text: "#ffffff" },
-  master: { fill: "#059669", stroke: "#047857", text: "#ffffff" },
-  feature: { fill: "#7c3aed", stroke: "#6d28d9", text: "#ffffff" },
-  bugfix: { fill: "#0284c7", stroke: "#0369a1", text: "#ffffff" },
-  hotfix: { fill: "#e11d48", stroke: "#be123c", text: "#ffffff" },
-  develop: { fill: "#d97706", stroke: "#b45309", text: "#ffffff" },
-};
+const LANE_PALETTE = [
+  "#059669", // row 0 (main): emerald
+  "#7c3aed", // row 1: violet
+  "#0284c7", // row 2: sky
+  "#d97706", // row 3: amber
+  "#e11d48", // row 4: rose
+];
 
-function getBranchColor(name: string) {
+function getBranchStyle(name: string) {
   const lower = name.toLowerCase();
-  for (const [key, val] of Object.entries(BRANCH_COLORS)) {
-    if (lower.includes(key)) return val;
+  if (lower === "main" || lower === "master") {
+    return { bg: "#059669", border: "#047857", text: "#ffffff" };
   }
-  return { fill: "#2563eb", stroke: "#1d4ed8", text: "#ffffff" };
+  if (lower.includes("feature")) {
+    return { bg: "#7c3aed", border: "#6d28d9", text: "#ffffff" };
+  }
+  if (lower.includes("bugfix")) {
+    return { bg: "#0284c7", border: "#0369a1", text: "#ffffff" };
+  }
+  if (lower.includes("hotfix")) {
+    return { bg: "#e11d48", border: "#be123c", text: "#ffffff" };
+  }
+  return { bg: "#2563eb", border: "#1d4ed8", text: "#ffffff" };
 }
 
 export function GitGraphVisualizer({
@@ -54,21 +66,18 @@ export function GitGraphVisualizer({
   isGoalView = false,
   className = "",
 }: GitGraphVisualizerProps) {
-  const { nodes, edges, width, height } = useMemo(() => {
+  const { nodes, edges, width, height, rowCount } = useMemo(() => {
     const commitIds = Object.keys(state.commits);
     if (commitIds.length === 0) {
-      return { nodes: [], edges: [], width: 320, height: 200 };
+      return { nodes: [], edges: [], width: 320, height: 120, rowCount: 1 };
     }
 
-    // 1. 各コミットの深さ（Root C0 からの距離）を計算
-    const depthMap: Record<string, number> = {};
+    // 1. 深さ（col: 左→右の時系列）を計算
+    const depthMap: Record<string, number> = { C0: 0 };
     const queue = ["C0"];
-    depthMap["C0"] = 0;
-
     while (queue.length > 0) {
       const curId = queue.shift()!;
       const curDepth = depthMap[curId] ?? 0;
-
       for (const [cId, commit] of Object.entries(state.commits)) {
         if (commit.parents.includes(curId)) {
           if (depthMap[cId] === undefined || depthMap[cId] < curDepth + 1) {
@@ -78,75 +87,82 @@ export function GitGraphVisualizer({
         }
       }
     }
-
     for (const cId of commitIds) {
-      if (depthMap[cId] === undefined) {
-        depthMap[cId] = 0;
-      }
+      if (depthMap[cId] === undefined) depthMap[cId] = 0;
     }
 
-    // 2. レーン（X座標の列）の割り当て
-    const laneMap: Record<string, number> = { C0: 0 };
-    let rightLane = 1;
+    // 2. レーン（row: 上→下のブランチ列）を割り当て
+    const rowMap: Record<string, number> = { C0: 0 };
+    let nextRow = 1;
+    const sortedIds = [...commitIds].sort(
+      (a, b) => (depthMap[a] ?? 0) - (depthMap[b] ?? 0)
+    );
 
-    const sortedIds = [...commitIds].sort((a, b) => (depthMap[a] ?? 0) - (depthMap[b] ?? 0));
+    // 同じ列・行が重ならないように管理
+    const occupied = new Set<string>(["0:0"]);
 
     for (const cId of sortedIds) {
       if (cId === "C0") continue;
       const commit = state.commits[cId];
       const pId = commit.parents[0];
-      const parentLane = pId ? (laneMap[pId] ?? 0) : 0;
+      const parentRow = pId ? (rowMap[pId] ?? 0) : 0;
+      const col = depthMap[cId] ?? 0;
 
-      const siblings = sortedIds.filter(
-        (id) => id !== cId && state.commits[id]?.parents[0] === pId && depthMap[id] === depthMap[cId]
-      );
+      // main/master ブランチの祖先またはマージ先なら row 0 を優先
+      const isMainTip =
+        state.branches["main"] === cId || state.branches["master"] === cId;
 
-      if (siblings.length > 0 && siblings.indexOf(cId) > 0) {
-        laneMap[cId] = rightLane++;
-      } else if (parentLane !== 0) {
-        laneMap[cId] = parentLane;
-      } else {
-        const isBranching = Object.entries(state.branches).some(
-          ([b, target]) => target === cId && b !== "main" && b !== "master"
+      let assignedRow = parentRow;
+
+      if (isMainTip && !occupied.has(`${col}:0`)) {
+        assignedRow = 0;
+      } else if (occupied.has(`${col}:${parentRow}`)) {
+        assignedRow = nextRow++;
+      } else if (
+        parentRow === 0 &&
+        !isMainTip &&
+        commit.parents.length === 1 &&
+        Object.entries(state.branches).some(
+          ([b, tid]) => tid === cId && b !== "main" && b !== "master"
+        )
+      ) {
+        // main以外のブランチ先端で、親がrow 0の場合は見やすく下レーンへ分岐
+        const parentHasOtherChild = sortedIds.some(
+          (id) => id !== cId && state.commits[id]?.parents[0] === pId
         );
-        if (isBranching && laneMap[cId] === undefined) {
-          laneMap[cId] = rightLane++;
-        } else {
-          laneMap[cId] = parentLane;
+        if (parentHasOtherChild || state.branches["main"] === pId) {
+          assignedRow = nextRow++;
         }
       }
+
+      rowMap[cId] = assignedRow;
+      occupied.add(`${col}:${assignedRow}`);
     }
 
-    // 3. ピクセル座標の決定（見やすくゆったりとした間隔）
-    const nodeSpacingY = isGoalView ? 64 : 96;
-    const nodeSpacingX = isGoalView ? 95 : 140;
-    const startY = isGoalView ? 38 : 64;
+    // 3. カードサイズ・間隔設定
+    const cardW = isGoalView ? 92 : 136;
+    const cardH = isGoalView ? 42 : 62;
+    const gapX = isGoalView ? 38 : 54;
+    const gapY = isGoalView ? 36 : 52;
+    const padX = isGoalView ? 24 : 36;
+    const padTop = isGoalView ? 34 : 48;
+    const padBottom = isGoalView ? 20 : 32;
 
-    const lanes = Object.values(laneMap);
-    const minLane = Math.min(...lanes, 0);
-    const maxLane = Math.max(...lanes, 0);
-    const totalLanes = maxLane - minLane + 1;
+    const maxCol = Math.max(...Object.values(depthMap), 0);
+    const maxRow = Math.max(...Object.values(rowMap), 0);
 
-    // 右側にブランチバッジ用の十分な余白を確保
-    const calculatedWidth = Math.max(
-      isGoalView ? 260 : 480,
-      totalLanes * nodeSpacingX + (isGoalView ? 140 : 220)
+    const calcWidth = Math.max(
+      isGoalView ? 300 : 480,
+      padX * 2 + (maxCol + 1) * cardW + maxCol * gapX
     );
-    const centerX = isGoalView
-      ? calculatedWidth * 0.36 - ((maxLane + minLane) / 2) * nodeSpacingX
-      : calculatedWidth * 0.42 - ((maxLane + minLane) / 2) * nodeSpacingX;
+    const calcHeight =
+      padTop + (maxRow + 1) * cardH + maxRow * gapY + padBottom;
 
-    const maxDepth = Math.max(...Object.values(depthMap), 0);
-    const calculatedHeight = Math.max(
-      isGoalView ? 180 : 340,
-      maxDepth * nodeSpacingY + (isGoalView ? 76 : 140)
-    );
-
-    const layoutNodes: NodeLayout[] = sortedIds.map((cId) => {
-      const depth = depthMap[cId] ?? 0;
-      const lane = laneMap[cId] ?? 0;
-      const x = centerX + lane * nodeSpacingX;
-      const y = startY + depth * nodeSpacingY;
+    const layoutNodes: CardNodeLayout[] = sortedIds.map((cId) => {
+      const col = depthMap[cId] ?? 0;
+      const row = rowMap[cId] ?? 0;
+      const x = padX + col * (cardW + gapX);
+      const y = padTop + row * (cardH + gapY);
 
       const pointingBranches = Object.entries(state.branches)
         .filter(([, targetId]) => targetId === cId)
@@ -158,287 +174,274 @@ export function GitGraphVisualizer({
           ? state.head.target
           : undefined;
 
+      const commit = state.commits[cId];
+
       return {
         id: cId,
+        hash: commit?.hash ?? "",
+        message: commit?.message ?? "",
+        isMerge: (commit?.parents.length ?? 0) >= 2,
+        col,
+        row,
         x,
         y,
-        depth,
-        lane,
+        w: cardW,
+        h: cardH,
         branches: pointingBranches,
         isHeadDirect,
         headBranch,
-        message: state.commits[cId]?.message ?? "",
+        laneColor: LANE_PALETTE[row % LANE_PALETTE.length],
       };
     });
 
-    // 4. エッジ（親へのリンク）の生成
-    const layoutEdges: { fromX: number; fromY: number; toX: number; toY: number; key: string }[] = [];
-    const nodeDict = new Map<string, NodeLayout>(layoutNodes.map((n) => [n.id, n]));
+    // 4. 親（左）→ 子（右）への滑らかな接続曲線
+    const nodeMap = new Map(layoutNodes.map((n) => [n.id, n]));
+    const layoutEdges: {
+      key: string;
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      color: string;
+      isMergeEdge: boolean;
+    }[] = [];
 
-    for (const node of layoutNodes) {
-      const commit = state.commits[node.id];
+    for (const child of layoutNodes) {
+      const commit = state.commits[child.id];
       if (!commit) continue;
 
-      for (const pId of commit.parents) {
-        const parentNode = nodeDict.get(pId);
-        if (parentNode) {
-          layoutEdges.push({
-            fromX: node.x,
-            fromY: node.y,
-            toX: parentNode.x,
-            toY: parentNode.y,
-            key: `${node.id}->${pId}`,
-          });
-        }
-      }
+      commit.parents.forEach((pId, idx) => {
+        const parent = nodeMap.get(pId);
+        if (!parent) return;
+        layoutEdges.push({
+          key: `${pId}->${child.id}`,
+          x1: parent.x + parent.w,
+          y1: parent.y + parent.h / 2,
+          x2: child.x,
+          y2: child.y + child.h / 2,
+          color: idx === 1 ? parent.laneColor : child.laneColor,
+          isMergeEdge: idx === 1,
+        });
+      });
     }
 
     return {
       nodes: layoutNodes,
       edges: layoutEdges,
-      width: calculatedWidth,
-      height: calculatedHeight,
+      width: calcWidth,
+      height: calcHeight,
+      rowCount: maxRow + 1,
     };
   }, [state, isGoalView]);
 
-  const radius = isGoalView ? 18 : 26;
-
   return (
     <div
-      className={`relative w-full h-full overflow-auto flex items-center justify-center select-none ${className}`}
+      className={`w-full overflow-x-auto overflow-y-auto flex items-center ${
+        isGoalView ? "justify-start" : "justify-start md:justify-center"
+      } select-none ${className}`}
     >
       <svg
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        className="transition-all duration-300"
+        className="shrink-0"
       >
         <defs>
-          {/* 親方向へのクッキリ矢印マーカー */}
-          <marker
-            id={isGoalView ? "arrow-goal-light" : "arrow-main-light"}
-            viewBox="0 0 10 10"
-            refX={isGoalView ? "24" : "29"}
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
-            orient="auto-start-reverse"
-          >
-            <path d="M 0 1 L 10 5 L 0 9 z" fill={isGoalView ? "#6366f1" : "#475569"} />
-          </marker>
-
-          {/* ノードのドロップシャドウ */}
-          <filter id="node-shadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#0f172a" floodOpacity="0.16" />
+          <filter id="card-shadow" x="-10%" y="-10%" width="125%" height="135%">
+            <feDropShadow
+              dx="0"
+              dy="2"
+              stdDeviation="3"
+              floodColor="#0f172a"
+              floodOpacity="0.08"
+            />
           </filter>
+          <marker
+            id={isGoalView ? "git-arrow-goal" : "git-arrow-main"}
+            viewBox="0 0 10 10"
+            refX="8"
+            refY="5"
+            markerWidth="6"
+            markerHeight="6"
+            orient="auto"
+          >
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+          </marker>
         </defs>
 
-        {/* コミット間の接続線（矢印） */}
-        {edges.map((edge) => {
-          const deltaY = edge.toY - edge.fromY;
-          const ctrlY1 = edge.fromY + deltaY * 0.45;
-          const ctrlY2 = edge.fromY + deltaY * 0.55;
-          const pathD = `M ${edge.fromX} ${edge.fromY} C ${edge.fromX} ${ctrlY1}, ${edge.toX} ${ctrlY2}, ${edge.toX} ${edge.toY}`;
-
+        {/* ブランチレーンの薄い水平ガイドライン */}
+        {Array.from({ length: rowCount }).map((_, rIdx) => {
+          const cardH = isGoalView ? 42 : 62;
+          const gapY = isGoalView ? 36 : 52;
+          const padTop = isGoalView ? 34 : 48;
+          const cy = padTop + rIdx * (cardH + gapY) + cardH / 2;
           return (
-            <path
-              key={edge.key}
-              d={pathD}
-              fill="none"
-              stroke={isGoalView ? "#818cf8" : "#64748b"}
-              strokeWidth={isGoalView ? "2.5" : "3"}
-              markerEnd={`url(#${isGoalView ? "arrow-goal-light" : "arrow-main-light"})`}
-              className="transition-all duration-300"
+            <line
+              key={`lane-${rIdx}`}
+              x1={12}
+              y1={cy}
+              x2={width - 12}
+              y2={cy}
+              stroke="#e2e8f0"
+              strokeWidth="1.5"
+              strokeDasharray="4 4"
             />
           );
         })}
 
-        {/* コミットノードの描画 */}
+        {/* コミット間コネクタ（左: 親 → 右: 子） */}
+        {edges.map((edge) => {
+          const midX = (edge.x1 + edge.x2) / 2;
+          const d = `M ${edge.x1} ${edge.y1} C ${midX} ${edge.y1}, ${midX} ${edge.y2}, ${edge.x2 - 2} ${edge.y2}`;
+          return (
+            <path
+              key={edge.key}
+              d={d}
+              fill="none"
+              stroke={edge.color}
+              strokeWidth={isGoalView ? "2" : "2.5"}
+              strokeDasharray={edge.isMergeEdge ? "5 3" : "none"}
+              markerEnd={`url(#${isGoalView ? "git-arrow-goal" : "git-arrow-main"})`}
+              opacity={0.85}
+            />
+          );
+        })}
+
+        {/* コミットカードノード */}
         {nodes.map((node) => {
-          const isCurrentHead = node.isHeadDirect || !!node.headBranch;
+          const isActiveHead = node.isHeadDirect || !!node.headBranch;
 
           return (
-            <g key={node.id} className="group">
-              {/* HEADハイライトリング */}
-              {isCurrentHead && !isGoalView && (
-                <circle
-                  cx={node.x}
-                  cy={node.y}
-                  r={radius + 7}
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="2.5"
-                  strokeDasharray="5 3"
-                  className="animate-spin"
-                  style={{ transformOrigin: `${node.x}px ${node.y}px`, animationDuration: "14s" }}
-                />
-              )}
+            <g key={node.id}>
+              {/* カード上部のブランチ＆HEADピル */}
+              {(() => {
+                const pills: {
+                  key: string;
+                  label: string;
+                  bg: string;
+                  text: string;
+                  isHead?: boolean;
+                }[] = [];
 
-              {/* コミット本体の円 */}
-              <circle
-                cx={node.x}
-                cy={node.y}
-                r={radius}
-                fill={
-                  isGoalView
-                    ? isCurrentHead
-                      ? "#4f46e5"
-                      : "#64748b"
-                    : isCurrentHead
-                    ? "#2563eb"
-                    : "#334155"
+                for (const b of node.branches) {
+                  const st = getBranchStyle(b);
+                  pills.push({
+                    key: `b-${b}`,
+                    label: b,
+                    bg: st.bg,
+                    text: st.text,
+                  });
                 }
-                stroke={
-                  isGoalView
-                    ? isCurrentHead
-                      ? "#312e81"
-                      : "#475569"
-                    : isCurrentHead
-                    ? "#1d4ed8"
-                    : "#1e293b"
+                if (isActiveHead) {
+                  pills.push({
+                    key: "head-pill",
+                    label: "HEAD",
+                    bg: "#0f172a",
+                    text: "#38bdf8",
+                    isHead: true,
+                  });
                 }
-                strokeWidth="2.5"
-                filter="url(#node-shadow)"
-                className="transition-all duration-200"
-              />
 
-              {/* コミットIDラベル（C0, C1...） */}
-              <text
+                let curX = node.x;
+                const pillH = isGoalView ? 18 : 22;
+                const pillY = node.y - pillH - 6;
+
+                return pills.map((p) => {
+                  const pillW = Math.max(
+                    isGoalView ? 38 : 46,
+                    p.label.length * (isGoalView ? 6.8 : 7.8) + 14
+                  );
+                  const drawX = curX;
+                  curX += pillW + 4;
+                  return (
+                    <g key={p.key}>
+                      <rect
+                        x={drawX}
+                        y={pillY}
+                        width={pillW}
+                        height={pillH}
+                        rx="5"
+                        fill={p.bg}
+                      />
+                      <text
+                        x={drawX + pillW / 2}
+                        y={pillY + pillH / 2}
+                        dy=".35em"
+                        textAnchor="middle"
+                        fill={p.text}
+                        fontSize={isGoalView ? "9.5" : "11"}
+                        fontWeight="bold"
+                        className="font-mono"
+                      >
+                        {p.label}
+                      </text>
+                    </g>
+                  );
+                });
+              })()}
+
+              {/* カード本体 */}
+              <rect
                 x={node.x}
                 y={node.y}
-                dy=".35em"
-                textAnchor="middle"
-                fill="#ffffff"
-                fontSize={isGoalView ? "11" : "14"}
-                fontWeight="bold"
-                className="pointer-events-none font-mono"
+                width={node.w}
+                height={node.h}
+                rx="10"
+                fill={isActiveHead ? "#eff6ff" : "#ffffff"}
+                stroke={isActiveHead ? "#2563eb" : "#cbd5e1"}
+                strokeWidth={isActiveHead ? "2.5" : "1.5"}
+                filter="url(#card-shadow)"
+              />
+
+              {/* 左端のカラーアクセントバー */}
+              <rect
+                x={node.x + 1}
+                y={node.y + 1}
+                width="6"
+                height={node.h - 2}
+                rx="3"
+                fill={node.laneColor}
+              />
+
+              {/* コミットID（C0, C1...） */}
+              <text
+                x={node.x + 16}
+                y={node.y + (isGoalView ? 18 : 23)}
+                fill="#0f172a"
+                fontSize={isGoalView ? "12" : "14"}
+                fontWeight="800"
+                className="font-mono"
               >
                 {node.id}
               </text>
 
-              {/* 通常ビュー時のみコミットメッセージを左横に薄く表示 */}
-              {!isGoalView && node.message && (
+              {/* 通常ビュー時：短縮ハッシュまたはMERGEタグ */}
+              {!isGoalView && (
                 <text
-                  x={node.x - radius - 12}
-                  y={node.y}
-                  dy=".35em"
+                  x={node.x + node.w - 10}
+                  y={node.y + 22}
                   textAnchor="end"
-                  fill="#64748b"
-                  fontSize="12"
-                  className="pointer-events-none font-sans"
+                  fill={node.isMerge ? "#7c3aed" : "#94a3b8"}
+                  fontSize="10"
+                  fontWeight={node.isMerge ? "bold" : "normal"}
+                  className="font-mono"
                 >
-                  {node.message.length > 18 ? `${node.message.slice(0, 18)}…` : node.message}
+                  {node.isMerge ? "MERGE" : `#${node.hash.slice(0, 6)}`}
                 </text>
               )}
 
-              {/* ブランチラベルバッジ（右横にクッキリ表示） */}
-              {node.branches.map((branchName, bIdx) => {
-                const color = getBranchColor(branchName);
-                const isHeadOnThisBranch = node.headBranch === branchName;
-                const badgeX = node.x + radius + (isGoalView ? 12 : 18);
-                const badgeH = isGoalView ? 22 : 28;
-                const badgeY = node.y - badgeH / 2 + bIdx * (badgeH + 6);
-                const branchWidth = Math.max(
-                  isGoalView ? 46 : 58,
-                  branchName.length * (isGoalView ? 7.5 : 9) + 18
-                );
-                const headBadgeWidth = isGoalView ? 42 : 52;
-
-                return (
-                  <g key={branchName}>
-                    {/* ノードからバッジへの接続ライン */}
-                    <line
-                      x1={node.x + radius + 2}
-                      y1={node.y}
-                      x2={badgeX}
-                      y2={badgeY + badgeH / 2}
-                      stroke={color.fill}
-                      strokeWidth="2"
-                    />
-
-                    {/* ブランチピル */}
-                    <rect
-                      x={badgeX}
-                      y={badgeY}
-                      width={branchWidth}
-                      height={badgeH}
-                      rx="6"
-                      fill={color.fill}
-                      stroke={color.stroke}
-                      strokeWidth="1.5"
-                      filter="url(#node-shadow)"
-                    />
-                    <text
-                      x={badgeX + branchWidth / 2}
-                      y={badgeY + badgeH / 2}
-                      dy=".35em"
-                      textAnchor="middle"
-                      fill={color.text}
-                      fontSize={isGoalView ? "10.5" : "12.5"}
-                      fontWeight="bold"
-                      className="font-mono pointer-events-none"
-                    >
-                      {branchName}
-                    </text>
-
-                    {/* HEAD バッジ（ブランチのすぐ右に独立したピルで表示） */}
-                    {isHeadOnThisBranch && (
-                      <g>
-                        <rect
-                          x={badgeX + branchWidth + 5}
-                          y={badgeY}
-                          width={headBadgeWidth}
-                          height={badgeH}
-                          rx="6"
-                          fill="#1e293b"
-                          stroke="#0f172a"
-                          strokeWidth="1.5"
-                        />
-                        <text
-                          x={badgeX + branchWidth + 5 + headBadgeWidth / 2}
-                          y={badgeY + badgeH / 2}
-                          dy=".35em"
-                          textAnchor="middle"
-                          fill="#38bdf8"
-                          fontSize={isGoalView ? "9.5" : "11"}
-                          fontWeight="bold"
-                          className="font-mono pointer-events-none"
-                        >
-                          HEAD
-                        </text>
-                      </g>
-                    )}
-                  </g>
-                );
-              })}
-
-              {/* Detached HEAD（コミットに直接HEADがある場合） */}
-              {node.isHeadDirect && (
-                <g>
-                  <rect
-                    x={node.x + radius + 14}
-                    y={node.y - (isGoalView ? 11 : 14)}
-                    width={isGoalView ? 54 : 64}
-                    height={isGoalView ? 22 : 28}
-                    rx="6"
-                    fill="#1e293b"
-                    stroke="#0284c7"
-                    strokeWidth="2"
-                  />
-                  <text
-                    x={node.x + radius + 14 + (isGoalView ? 27 : 32)}
-                    y={node.y}
-                    dy=".35em"
-                    textAnchor="middle"
-                    fill="#38bdf8"
-                    fontSize={isGoalView ? "10" : "12"}
-                    fontWeight="bold"
-                    className="font-mono pointer-events-none"
-                  >
-                    HEAD*
-                  </text>
-                </g>
-              )}
+              {/* コミットメッセージ */}
+              <text
+                x={node.x + 16}
+                y={node.y + (isGoalView ? 33 : 45)}
+                fill="#475569"
+                fontSize={isGoalView ? "9.5" : "11"}
+                className="font-sans"
+              >
+                {node.message.length > (isGoalView ? 11 : 15)
+                  ? `${node.message.slice(0, isGoalView ? 11 : 15)}…`
+                  : node.message}
+              </text>
             </g>
           );
         })}
