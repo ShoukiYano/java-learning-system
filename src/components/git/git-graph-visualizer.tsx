@@ -2,11 +2,11 @@
 
 /**
  * ファイル概要：
- * インタラクティブGitツリーグラフ可視化コンポーネント（SVG描画）
+ * インタラクティブGitツリーグラフ可視化コンポーネント（高視認性ライトテーマSVG描画）
  *
  * 主な処理：
  * 1. GitState（コミットDAG・ブランチ・HEAD）からノードの階層レイアウトを自動計算
- * 2. コミットノード（C0, C1...）、親コミットへの有向矢印、ブランチタグ、HEADポインタのリアルタイム描画
+ * 2. 大きく見やすいコミットノード（C0, C1...）、親コミットへの太めの有向矢印、高コントラストなブランチタグ＆HEADポインタを描画
  * 3. 通常ビューおよび目標達成判定用のゴール比較ビューに対応
  */
 
@@ -28,16 +28,17 @@ interface NodeLayout {
   branches: string[];
   isHeadDirect: boolean;
   headBranch?: string;
+  message: string;
 }
 
-// ブランチごとのアクセントカラーパレット
-const BRANCH_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  main: { bg: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40", border: "#10b981", text: "#34d399" },
-  master: { bg: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40", border: "#10b981", text: "#34d399" },
-  feature: { bg: "bg-purple-500/20 text-purple-400 border-purple-500/40", border: "#a855f7", text: "#c084fc" },
-  bugfix: { bg: "bg-sky-500/20 text-sky-400 border-sky-500/40", border: "#0ea5e9", text: "#38bdf8" },
-  hotfix: { bg: "bg-rose-500/20 text-rose-400 border-rose-500/40", border: "#f43f5e", text: "#fb7185" },
-  develop: { bg: "bg-amber-500/20 text-amber-400 border-amber-500/40", border: "#f59e0b", text: "#fbbf24" },
+// ブランチごとの高コントラストカラーパレット（白文字がくっきり映える塗りつぶし）
+const BRANCH_COLORS: Record<string, { fill: string; stroke: string; text: string }> = {
+  main: { fill: "#059669", stroke: "#047857", text: "#ffffff" },
+  master: { fill: "#059669", stroke: "#047857", text: "#ffffff" },
+  feature: { fill: "#7c3aed", stroke: "#6d28d9", text: "#ffffff" },
+  bugfix: { fill: "#0284c7", stroke: "#0369a1", text: "#ffffff" },
+  hotfix: { fill: "#e11d48", stroke: "#be123c", text: "#ffffff" },
+  develop: { fill: "#d97706", stroke: "#b45309", text: "#ffffff" },
 };
 
 function getBranchColor(name: string) {
@@ -45,7 +46,7 @@ function getBranchColor(name: string) {
   for (const [key, val] of Object.entries(BRANCH_COLORS)) {
     if (lower.includes(key)) return val;
   }
-  return { bg: "bg-blue-500/20 text-blue-400 border-blue-500/40", border: "#3b82f6", text: "#60a5fa" };
+  return { fill: "#2563eb", stroke: "#1d4ed8", text: "#ffffff" };
 }
 
 export function GitGraphVisualizer({
@@ -53,11 +54,10 @@ export function GitGraphVisualizer({
   isGoalView = false,
   className = "",
 }: GitGraphVisualizerProps) {
-  // レイアウト座標の計算
   const { nodes, edges, width, height } = useMemo(() => {
     const commitIds = Object.keys(state.commits);
     if (commitIds.length === 0) {
-      return { nodes: [], edges: [], width: 300, height: 200 };
+      return { nodes: [], edges: [], width: 320, height: 200 };
     }
 
     // 1. 各コミットの深さ（Root C0 からの距離）を計算
@@ -69,7 +69,6 @@ export function GitGraphVisualizer({
       const curId = queue.shift()!;
       const curDepth = depthMap[curId] ?? 0;
 
-      // このコミットを親として持つ子コミットを探す
       for (const [cId, commit] of Object.entries(state.commits)) {
         if (commit.parents.includes(curId)) {
           if (depthMap[cId] === undefined || depthMap[cId] < curDepth + 1) {
@@ -80,7 +79,6 @@ export function GitGraphVisualizer({
       }
     }
 
-    // 未訪問（孤立や別Root）コミットのフォールバック
     for (const cId of commitIds) {
       if (depthMap[cId] === undefined) {
         depthMap[cId] = 0;
@@ -88,12 +86,9 @@ export function GitGraphVisualizer({
     }
 
     // 2. レーン（X座標の列）の割り当て
-    // main ブランチの履歴を中央レーン（lane = 0）とし、他ブランチを左右に展開
     const laneMap: Record<string, number> = { C0: 0 };
-    let leftLane = -1;
     let rightLane = 1;
 
-    // 深さ順にソート
     const sortedIds = [...commitIds].sort((a, b) => (depthMap[a] ?? 0) - (depthMap[b] ?? 0));
 
     for (const cId of sortedIds) {
@@ -102,7 +97,6 @@ export function GitGraphVisualizer({
       const pId = commit.parents[0];
       const parentLane = pId ? (laneMap[pId] ?? 0) : 0;
 
-      // 同じ親から分岐した2番目以降の子は別レーンへ
       const siblings = sortedIds.filter(
         (id) => id !== cId && state.commits[id]?.parents[0] === pId && depthMap[id] === depthMap[cId]
       );
@@ -112,7 +106,6 @@ export function GitGraphVisualizer({
       } else if (parentLane !== 0) {
         laneMap[cId] = parentLane;
       } else {
-        // ブランチ名による判定
         const isBranching = Object.entries(state.branches).some(
           ([b, target]) => target === cId && b !== "main" && b !== "master"
         );
@@ -124,22 +117,30 @@ export function GitGraphVisualizer({
       }
     }
 
-    // 3. ピクセル座標の決定
-    const nodeSpacingY = isGoalView ? 65 : 85;
-    const nodeSpacingX = isGoalView ? 80 : 110;
-    const startY = isGoalView ? 40 : 50;
+    // 3. ピクセル座標の決定（見やすくゆったりとした間隔）
+    const nodeSpacingY = isGoalView ? 64 : 96;
+    const nodeSpacingX = isGoalView ? 95 : 140;
+    const startY = isGoalView ? 38 : 64;
 
-    // 最低レーンと最高レーンを求める
     const lanes = Object.values(laneMap);
     const minLane = Math.min(...lanes, 0);
     const maxLane = Math.max(...lanes, 0);
     const totalLanes = maxLane - minLane + 1;
-    const calculatedWidth = Math.max(isGoalView ? 240 : 380, totalLanes * nodeSpacingX + (isGoalView ? 100 : 160));
 
-    const centerX = calculatedWidth / 2 - ((maxLane + minLane) / 2) * nodeSpacingX;
+    // 右側にブランチバッジ用の十分な余白を確保
+    const calculatedWidth = Math.max(
+      isGoalView ? 260 : 480,
+      totalLanes * nodeSpacingX + (isGoalView ? 140 : 220)
+    );
+    const centerX = isGoalView
+      ? calculatedWidth * 0.36 - ((maxLane + minLane) / 2) * nodeSpacingX
+      : calculatedWidth * 0.42 - ((maxLane + minLane) / 2) * nodeSpacingX;
 
     const maxDepth = Math.max(...Object.values(depthMap), 0);
-    const calculatedHeight = Math.max(isGoalView ? 220 : 320, maxDepth * nodeSpacingY + (isGoalView ? 100 : 140));
+    const calculatedHeight = Math.max(
+      isGoalView ? 180 : 340,
+      maxDepth * nodeSpacingY + (isGoalView ? 76 : 140)
+    );
 
     const layoutNodes: NodeLayout[] = sortedIds.map((cId) => {
       const depth = depthMap[cId] ?? 0;
@@ -147,16 +148,15 @@ export function GitGraphVisualizer({
       const x = centerX + lane * nodeSpacingX;
       const y = startY + depth * nodeSpacingY;
 
-      // このコミットを指しているブランチ
       const pointingBranches = Object.entries(state.branches)
         .filter(([, targetId]) => targetId === cId)
         .map(([name]) => name);
 
-      // HEADの判定
       const isHeadDirect = state.head.isDetached && state.head.target === cId;
-      const headBranch = !state.head.isDetached && state.branches[state.head.target] === cId
-        ? state.head.target
-        : undefined;
+      const headBranch =
+        !state.head.isDetached && state.branches[state.head.target] === cId
+          ? state.head.target
+          : undefined;
 
       return {
         id: cId,
@@ -167,6 +167,7 @@ export function GitGraphVisualizer({
         branches: pointingBranches,
         isHeadDirect,
         headBranch,
+        message: state.commits[cId]?.message ?? "",
       };
     });
 
@@ -200,10 +201,11 @@ export function GitGraphVisualizer({
     };
   }, [state, isGoalView]);
 
+  const radius = isGoalView ? 18 : 26;
+
   return (
     <div
       className={`relative w-full h-full overflow-auto flex items-center justify-center select-none ${className}`}
-      style={{ minHeight: isGoalView ? "200px" : "320px" }}
     >
       <svg
         width={width}
@@ -212,32 +214,30 @@ export function GitGraphVisualizer({
         className="transition-all duration-300"
       >
         <defs>
-          {/* 親方向への矢印マーカー */}
+          {/* 親方向へのクッキリ矢印マーカー */}
           <marker
-            id={isGoalView ? "arrow-goal" : "arrow-main"}
+            id={isGoalView ? "arrow-goal-light" : "arrow-main-light"}
             viewBox="0 0 10 10"
-            refX="22"
+            refX={isGoalView ? "24" : "29"}
             refY="5"
-            markerWidth="6"
-            markerHeight="6"
+            markerWidth="7"
+            markerHeight="7"
             orient="auto-start-reverse"
           >
-            <path d="M 0 1 L 10 5 L 0 9 z" fill={isGoalView ? "#94a3b8" : "#64748b"} />
+            <path d="M 0 1 L 10 5 L 0 9 z" fill={isGoalView ? "#6366f1" : "#475569"} />
           </marker>
 
-          {/* コミットノードのグロー効果 */}
-          <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          {/* ノードのドロップシャドウ */}
+          <filter id="node-shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#0f172a" floodOpacity="0.16" />
           </filter>
         </defs>
 
         {/* コミット間の接続線（矢印） */}
         {edges.map((edge) => {
-          // ベジェ曲線で滑らかに結ぶ
           const deltaY = edge.toY - edge.fromY;
-          const ctrlY1 = edge.fromY + deltaY * 0.4;
-          const ctrlY2 = edge.fromY + deltaY * 0.6;
+          const ctrlY1 = edge.fromY + deltaY * 0.45;
+          const ctrlY2 = edge.fromY + deltaY * 0.55;
           const pathD = `M ${edge.fromX} ${edge.fromY} C ${edge.fromX} ${ctrlY1}, ${edge.toX} ${ctrlY2}, ${edge.toX} ${edge.toY}`;
 
           return (
@@ -245,10 +245,9 @@ export function GitGraphVisualizer({
               key={edge.key}
               d={pathD}
               fill="none"
-              stroke={isGoalView ? "#64748b" : "#475569"}
-              strokeWidth={isGoalView ? "2" : "2.5"}
-              strokeDasharray={isGoalView ? "4 2" : "none"}
-              markerEnd={`url(#${isGoalView ? "arrow-goal" : "arrow-main"})`}
+              stroke={isGoalView ? "#818cf8" : "#64748b"}
+              strokeWidth={isGoalView ? "2.5" : "3"}
+              markerEnd={`url(#${isGoalView ? "arrow-goal-light" : "arrow-main-light"})`}
               className="transition-all duration-300"
             />
           );
@@ -257,22 +256,21 @@ export function GitGraphVisualizer({
         {/* コミットノードの描画 */}
         {nodes.map((node) => {
           const isCurrentHead = node.isHeadDirect || !!node.headBranch;
-          const radius = isGoalView ? 16 : 20;
 
           return (
-            <g key={node.id} className="cursor-pointer group">
+            <g key={node.id} className="group">
               {/* HEADハイライトリング */}
               {isCurrentHead && !isGoalView && (
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r={radius + 6}
+                  r={radius + 7}
                   fill="none"
-                  stroke="#38bdf8"
-                  strokeWidth="2"
-                  strokeDasharray="4 2"
+                  stroke="#3b82f6"
+                  strokeWidth="2.5"
+                  strokeDasharray="5 3"
                   className="animate-spin"
-                  style={{ transformOrigin: `${node.x}px ${node.y}px`, animationDuration: "10s" }}
+                  style={{ transformOrigin: `${node.x}px ${node.y}px`, animationDuration: "14s" }}
                 />
               )}
 
@@ -281,11 +279,27 @@ export function GitGraphVisualizer({
                 cx={node.x}
                 cy={node.y}
                 r={radius}
-                fill={isGoalView ? "#334155" : isCurrentHead ? "#0284c7" : "#1e293b"}
-                stroke={isGoalView ? "#94a3b8" : isCurrentHead ? "#38bdf8" : "#475569"}
-                strokeWidth={isCurrentHead ? "3" : "2"}
-                className="transition-all duration-200 group-hover:scale-110"
-                style={{ transformOrigin: `${node.x}px ${node.y}px` }}
+                fill={
+                  isGoalView
+                    ? isCurrentHead
+                      ? "#4f46e5"
+                      : "#64748b"
+                    : isCurrentHead
+                    ? "#2563eb"
+                    : "#334155"
+                }
+                stroke={
+                  isGoalView
+                    ? isCurrentHead
+                      ? "#312e81"
+                      : "#475569"
+                    : isCurrentHead
+                    ? "#1d4ed8"
+                    : "#1e293b"
+                }
+                strokeWidth="2.5"
+                filter="url(#node-shadow)"
+                className="transition-all duration-200"
               />
 
               {/* コミットIDラベル（C0, C1...） */}
@@ -295,68 +309,104 @@ export function GitGraphVisualizer({
                 dy=".35em"
                 textAnchor="middle"
                 fill="#ffffff"
-                fontSize={isGoalView ? "10" : "12"}
+                fontSize={isGoalView ? "11" : "14"}
                 fontWeight="bold"
                 className="pointer-events-none font-mono"
               >
                 {node.id}
               </text>
 
-              {/* ブランチラベルバッジ（右横に描画） */}
+              {/* 通常ビュー時のみコミットメッセージを左横に薄く表示 */}
+              {!isGoalView && node.message && (
+                <text
+                  x={node.x - radius - 12}
+                  y={node.y}
+                  dy=".35em"
+                  textAnchor="end"
+                  fill="#64748b"
+                  fontSize="12"
+                  className="pointer-events-none font-sans"
+                >
+                  {node.message.length > 18 ? `${node.message.slice(0, 18)}…` : node.message}
+                </text>
+              )}
+
+              {/* ブランチラベルバッジ（右横にクッキリ表示） */}
               {node.branches.map((branchName, bIdx) => {
                 const color = getBranchColor(branchName);
                 const isHeadOnThisBranch = node.headBranch === branchName;
-                const badgeX = node.x + radius + 10;
-                const badgeY = node.y - 10 + bIdx * (isGoalView ? 20 : 26);
+                const badgeX = node.x + radius + (isGoalView ? 12 : 18);
+                const badgeH = isGoalView ? 22 : 28;
+                const badgeY = node.y - badgeH / 2 + bIdx * (badgeH + 6);
+                const branchWidth = Math.max(
+                  isGoalView ? 46 : 58,
+                  branchName.length * (isGoalView ? 7.5 : 9) + 18
+                );
+                const headBadgeWidth = isGoalView ? 42 : 52;
 
                 return (
                   <g key={branchName}>
-                    {/* ノードからバッジへの指示線 */}
+                    {/* ノードからバッジへの接続ライン */}
                     <line
-                      x1={node.x + radius}
+                      x1={node.x + radius + 2}
                       y1={node.y}
                       x2={badgeX}
-                      y2={badgeY + 9}
-                      stroke={color.border}
-                      strokeWidth="1.5"
+                      y2={badgeY + badgeH / 2}
+                      stroke={color.fill}
+                      strokeWidth="2"
                     />
 
-                    {/* バッジの背景 */}
+                    {/* ブランチピル */}
                     <rect
                       x={badgeX}
                       y={badgeY}
-                      width={branchName.length * (isGoalView ? 6.5 : 8) + (isHeadOnThisBranch ? 38 : 16)}
-                      height={isGoalView ? "18" : "22"}
-                      rx="4"
-                      fill="#0f172a"
-                      stroke={color.border}
+                      width={branchWidth}
+                      height={badgeH}
+                      rx="6"
+                      fill={color.fill}
+                      stroke={color.stroke}
                       strokeWidth="1.5"
+                      filter="url(#node-shadow)"
                     />
-
-                    {/* ブランチテキスト */}
                     <text
-                      x={badgeX + 6}
-                      y={badgeY + (isGoalView ? 12 : 15)}
+                      x={badgeX + branchWidth / 2}
+                      y={badgeY + badgeH / 2}
+                      dy=".35em"
+                      textAnchor="middle"
                       fill={color.text}
-                      fontSize={isGoalView ? "9" : "11"}
+                      fontSize={isGoalView ? "10.5" : "12.5"}
                       fontWeight="bold"
                       className="font-mono pointer-events-none"
                     >
                       {branchName}
                     </text>
 
-                    {/* HEAD ポインタマーク */}
+                    {/* HEAD バッジ（ブランチのすぐ右に独立したピルで表示） */}
                     {isHeadOnThisBranch && (
-                      <text
-                        x={badgeX + branchName.length * (isGoalView ? 6.5 : 8) + 8}
-                        y={badgeY + (isGoalView ? 12 : 15)}
-                        fill="#38bdf8"
-                        fontSize={isGoalView ? "9" : "10"}
-                        fontWeight="extrabold"
-                        className="font-mono pointer-events-none animate-pulse"
-                      >
-                        *HEAD
-                      </text>
+                      <g>
+                        <rect
+                          x={badgeX + branchWidth + 5}
+                          y={badgeY}
+                          width={headBadgeWidth}
+                          height={badgeH}
+                          rx="6"
+                          fill="#1e293b"
+                          stroke="#0f172a"
+                          strokeWidth="1.5"
+                        />
+                        <text
+                          x={badgeX + branchWidth + 5 + headBadgeWidth / 2}
+                          y={badgeY + badgeH / 2}
+                          dy=".35em"
+                          textAnchor="middle"
+                          fill="#38bdf8"
+                          fontSize={isGoalView ? "9.5" : "11"}
+                          fontWeight="bold"
+                          className="font-mono pointer-events-none"
+                        >
+                          HEAD
+                        </text>
+                      </g>
                     )}
                   </g>
                 );
@@ -366,21 +416,22 @@ export function GitGraphVisualizer({
               {node.isHeadDirect && (
                 <g>
                   <rect
-                    x={node.x - 30}
-                    y={node.y - radius - (isGoalView ? 20 : 24)}
-                    width="60"
-                    height={isGoalView ? "16" : "20"}
-                    rx="4"
-                    fill="#0369a1"
-                    stroke="#38bdf8"
-                    strokeWidth="1.5"
+                    x={node.x + radius + 14}
+                    y={node.y - (isGoalView ? 11 : 14)}
+                    width={isGoalView ? 54 : 64}
+                    height={isGoalView ? 22 : 28}
+                    rx="6"
+                    fill="#1e293b"
+                    stroke="#0284c7"
+                    strokeWidth="2"
                   />
                   <text
-                    x={node.x}
-                    y={node.y - radius - (isGoalView ? 9 : 10)}
+                    x={node.x + radius + 14 + (isGoalView ? 27 : 32)}
+                    y={node.y}
+                    dy=".35em"
                     textAnchor="middle"
-                    fill="#ffffff"
-                    fontSize={isGoalView ? "9" : "11"}
+                    fill="#38bdf8"
+                    fontSize={isGoalView ? "10" : "12"}
                     fontWeight="bold"
                     className="font-mono pointer-events-none"
                   >
