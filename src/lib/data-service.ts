@@ -572,7 +572,7 @@ export async function getProblemDetailForStudent(
       estimated_minutes: seedProb.estimated_minutes,
       tags: seedProb.tags,
       starter_code: seedProb.starter_code,
-      solution_code: "", // 受講生側へは模範解答を渡さない
+      solution_code: seedProb.language === "git" ? seedProb.solution_code : "", // Git問題は目標ツリー生成用に目標スクリプトを渡す
       explanation_md: seedProb.explanation_md,
       order_index: seedProb.order_index,
       is_published: true,

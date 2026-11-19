@@ -22,6 +22,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runJavaCode, compareOutputs } from "@/lib/java";
 import { runSqlCode } from "@/lib/sql";
+import { createInitialGitState, executeGitScript, compareGitStates } from "@/lib/git/git-engine";
 import {
   SEED_PROBLEMS,
   SEED_COURSE_ID,

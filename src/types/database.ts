@@ -32,7 +32,7 @@ export type Difficulty = "easy" | "medium" | "hard";
  * - java: 自作Javaインタプリタで実行
  * - sql: 自作SQLクエリエンジンで実行
  */
-export type ProblemLanguage = "java" | "sql";
+export type ProblemLanguage = "java" | "sql" | "git";
 
 /**
  * 各問題に対する受講生の進捗ステータス

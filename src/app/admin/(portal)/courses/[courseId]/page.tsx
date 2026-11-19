@@ -273,9 +273,9 @@ export default function AdminCourseChaptersPage({
                       >
                         <div className="flex items-center gap-2.5">
                           <Badge
-                            variant={lang === "sql" ? "warning" : "default"}
+                            variant={lang === "git" ? "secondary" : lang === "sql" ? "warning" : "default"}
                           >
-                            {lang === "sql" ? "SQL" : "Java"}
+                            {lang === "git" ? "Git" : lang === "sql" ? "SQL" : "Java"}
                           </Badge>
                           <span className="font-semibold text-slate-900">
                             {prob.title}

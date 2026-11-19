@@ -6,6 +6,7 @@ import {
   getCoursesWithProgress,
 } from "@/lib/data-service";
 import { ProblemWorkspaceClient } from "@/components/problem/problem-workspace-client";
+import { GitWorkspaceClient } from "@/components/git/git-workspace-client";
 import { Lock, ArrowLeft, AlertCircle } from "lucide-react";
 import {
   Card,

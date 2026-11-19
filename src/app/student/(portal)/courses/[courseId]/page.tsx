@@ -202,11 +202,11 @@ export default async function StudentCourseDetailTreePage({
                                   <div className="font-semibold text-sm text-slate-700 flex items-center gap-2">
                                     <Badge
                                       variant={
-                                        lang === "sql" ? "warning" : "default"
+                                        lang === "git" ? "secondary" : lang === "sql" ? "warning" : "default"
                                       }
                                       className="text-[10px] px-1.5 py-0"
                                     >
-                                      {lang === "sql" ? "SQL" : "Java"}
+                                      {lang === "git" ? "Git" : lang === "sql" ? "SQL" : "Java"}
                                     </Badge>
                                     {problem.title}
                                     <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-200 text-slate-600">
@@ -262,11 +262,11 @@ export default async function StudentCourseDetailTreePage({
                                 <div className="font-semibold text-sm text-slate-900 flex items-center gap-2">
                                   <Badge
                                     variant={
-                                      lang === "sql" ? "warning" : "default"
+                                      lang === "git" ? "secondary" : lang === "sql" ? "warning" : "default"
                                     }
                                     className="text-[10px] px-1.5 py-0"
                                   >
-                                    {lang === "sql" ? "SQL" : "Java"}
+                                    {lang === "git" ? "Git" : lang === "sql" ? "SQL" : "Java"}
                                   </Badge>
                                   {problem.title}
                                   {problem.status === "completed" && (
