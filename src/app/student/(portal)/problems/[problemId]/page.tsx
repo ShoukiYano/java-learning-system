@@ -28,9 +28,37 @@ export default async function StudentProblemPage({
     getCoursesWithProgress(profile.id, profile.company_id),
   ]);
 
-  // コースがロックされているかチェック
+  // コースが自社テナントで非表示（URL直打ち不正アクセス対策）またはロックされているかチェック
   const currentCourse = courses.find((c) => c.id === detail.courseId);
-  if (currentCourse?.isLocked) {
+  if (!currentCourse) {
+    return (
+      <div className="container mx-auto px-6 py-16 max-w-xl">
+        <Card className="border-rose-200 bg-rose-50/50 shadow-sm text-center">
+          <CardHeader className="space-y-3 pb-3">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+              <Lock className="h-7 w-7" />
+            </div>
+            <CardTitle className="text-xl text-slate-900">
+              この問題にはアクセスできません
+            </CardTitle>
+            <CardDescription className="text-slate-600 text-sm">
+              対象コースは非公開または所属企業で非表示に設定されています。
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <Link
+              href="/student/courses"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              カリキュラム一覧へ戻る
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  if (currentCourse.isLocked) {
     return (
       <div className="container mx-auto px-6 py-16 max-w-xl">
         <Card className="border-amber-200 bg-amber-50/50 shadow-sm text-center">

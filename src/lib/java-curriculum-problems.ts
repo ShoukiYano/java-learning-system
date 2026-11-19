@@ -11,76 +11,96 @@
 import type { SeedChapter, SeedProblem } from "@/lib/seed-data";
 
 export const SEED_JAVA_BEGINNER_COURSE_ID =
-  "11111111-1111-4111-8111-111111111104";
+  "0b083361-6d07-47a9-a787-508913d9efa8";
 export const SEED_JAVA_INTERMEDIATE_COURSE_ID =
-  "11111111-1111-4111-8111-111111111105";
+  "c4bd0c61-1a12-4d2a-af9d-ac2eb8a12165";
 export const SEED_JAVA_ADVANCED_COURSE_ID =
-  "11111111-1111-4111-8111-111111111106";
+  "bb827c60-3d1d-40db-ac42-5da47866d141";
+
+/** 推測・URL改ざん防止のため暗号論的ランダムUUID v4を割り当てた新規Java問題ID一覧 */
+export const EXTRA_JAVA_PROBLEM_IDS = {
+  introProfile: "63c36437-c01c-4fa4-9da1-ca7f5350b486",
+  introTax: "09f376c6-3943-4a98-b718-5f9f3ff9b064",
+  introShipping: "acbaf347-38d2-426c-8128-6ba18db82f02",
+  introHttpSwitch: "ae05977e-4f08-4d96-b996-fe5d805662c6",
+  begMatrixSales: "cdb7743b-7403-4297-9c4c-dc6156f4eb0b",
+  begOverload: "a5a673fd-798d-4064-a5a0-e9ab3d50bf30",
+  begStaticTicket: "73821690-4523-4036-a21e-cc4b4071f26c",
+  begPaymentInterface: "832360ab-0091-4ec0-b81b-a88d1b969106",
+  intArrayListSearch: "04fc00cc-c83f-4857-ac2f-ea8f79d703e7",
+  intHashMapSales: "a68d7e1a-c9bc-4b04-91cb-20eeffe72c3e",
+  intCsvParse: "8e305198-d8f9-47c2-9313-42f0928951f0",
+  intExceptionStock: "338eceb9-a942-415f-ae2f-1012d8bc104c",
+  advCustomerDao: "13f69b84-652e-4921-abe6-7d4703f0d86d",
+  advApiValidation: "39a6ec73-6e56-43cc-8b6e-5d28d8769545",
+  advDealService: "655b0d6e-f5a3-4a2d-be5b-70457fc0e1a4",
+  advBoundaryTest: "80caf184-42ff-481e-b11f-d6db1a712fe7",
+} as const;
 
 export const EXTRA_JAVA_CHAPTERS: SeedChapter[] = [
   // --- Java初級コース（2章構成・4問） ---
   {
-    id: "22222222-2222-4222-8222-222222222231",
+    id: "bf20e7ec-5d77-4543-bb06-f1a260271b59",
     course_id: SEED_JAVA_BEGINNER_COURSE_ID,
     title: "初級第1章：二次元配列とメソッド設計",
     description:
       "表形式データを扱う二次元配列の集計と、メソッドのオーバーロードによる実務的なAPI設計を学びます。",
     order_index: 1,
-    lesson_id: "33333333-3333-4333-8333-333333333331",
+    lesson_id: "5347964f-04df-4e46-ae8a-a654826f9d73",
     lesson_title: "1-1. 二次元配列・オーバーロード実践",
   },
   {
-    id: "22222222-2222-4222-8222-222222222232",
+    id: "f62233bb-0095-4a76-80d3-6a70846ee360",
     course_id: SEED_JAVA_BEGINNER_COURSE_ID,
     title: "初級第2章：static・インターフェース・ポリモーフィズム",
     description:
       "staticメンバーによる共通管理と、interfaceを活用したポリモーフィズム設計（第1回実技試験レベル）を習得します。",
     order_index: 2,
-    lesson_id: "33333333-3333-4333-8333-333333333332",
+    lesson_id: "41302b0f-c345-4660-9dfe-6cf806c97783",
     lesson_title: "2-1. オブジェクト指向応用と実技課題",
   },
 
   // --- Java中級コース（2章構成・4問） ---
   {
-    id: "22222222-2222-4222-8222-222222222241",
+    id: "f0721c45-037c-49d0-8393-98bb86ce3523",
     course_id: SEED_JAVA_INTERMEDIATE_COURSE_ID,
     title: "中級第1章：コレクション（ArrayList / HashMap）実務活用",
     description:
       "実務で最頻出の ArrayList と HashMap を使い、顧客検索やカテゴリ別売上集計を実装します。",
     order_index: 1,
-    lesson_id: "33333333-3333-4333-8333-333333333341",
+    lesson_id: "1177c80b-bcc9-4745-a4f8-7caf1ef01327",
     lesson_title: "1-1. List・Mapによる業務データ管理",
   },
   {
-    id: "22222222-2222-4222-8222-222222222242",
+    id: "7bb76c60-bac2-408b-a0f5-cb69f0546f13",
     course_id: SEED_JAVA_INTERMEDIATE_COURSE_ID,
     title: "中級第2章：文字列API・CSV処理・例外ハンドリング",
     description:
       "StringメソッドによるCSVパースと、try-catch-finally / throw を使った安全な例外処理を実装します。",
     order_index: 2,
-    lesson_id: "33333333-3333-4333-8333-333333333342",
+    lesson_id: "06f2d4e3-729c-4392-8945-9af33d7833e5",
     lesson_title: "2-1. CSVデータ処理と例外制御",
   },
 
   // --- Java上級コース（2章構成・4問） ---
   {
-    id: "22222222-2222-4222-8222-222222222251",
+    id: "b5486a57-160b-4bb3-9d1b-f5e9f7cc6590",
     course_id: SEED_JAVA_ADVANCED_COURSE_ID,
     title: "上級第1章：DAOパターンとAPIバリデーション設計",
     description:
       "DBアクセスを分離するDAOリポジトリ設計と、Spring Boot APIを想定した入力バリデーション・エラー応答を実装します。",
     order_index: 1,
-    lesson_id: "33333333-3333-4333-8333-333333333351",
+    lesson_id: "d62467af-4c0c-45b3-be32-3224f0765b0d",
     lesson_title: "1-1. DAO設計とバリデーション",
   },
   {
-    id: "22222222-2222-4222-8222-222222222252",
+    id: "446172d3-98c4-4c34-8277-7973f5953a36",
     course_id: SEED_JAVA_ADVANCED_COURSE_ID,
     title: "上級第2章：顧客・案件管理ロジック＆単体テスト設計",
     description:
       "最終模擬プロジェクトのコア業務ロジック実装と、正常系・異常系・境界値を網羅したテスト検証を行います。",
     order_index: 2,
-    lesson_id: "33333333-3333-4333-8333-333333333352",
+    lesson_id: "3f313153-e5f5-466a-b5f2-51a43cefbf1d",
     lesson_title: "2-1. 実務模擬プロジェクトと単体テスト",
   },
 ];
@@ -90,7 +110,7 @@ export const EXTRA_JAVA_PROBLEMS: SeedProblem[] = [
   // Java入門コース 追加問題（既存の第1章・第2章を補強：4問）
   // ===========================================================================
   {
-    id: "44444444-4444-4444-8444-444444444701",
+    id: EXTRA_JAVA_PROBLEM_IDS.introProfile,
     chapter_id: "22222222-2222-4222-8222-222222222201",
     lesson_id: "33333333-3333-4333-8333-333333333301",
     language: "java",
@@ -169,7 +189,7 @@ public class Main {
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444702",
+    id: EXTRA_JAVA_PROBLEM_IDS.introTax,
     chapter_id: "22222222-2222-4222-8222-222222222201",
     lesson_id: "33333333-3333-4333-8333-333333333301",
     language: "java",
@@ -238,7 +258,7 @@ public class Main {
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444703",
+    id: EXTRA_JAVA_PROBLEM_IDS.introShipping,
     chapter_id: "22222222-2222-4222-8222-222222222202",
     lesson_id: "33333333-3333-4333-8333-333333333302",
     language: "java",
@@ -310,7 +330,7 @@ public class Main {
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444704",
+    id: EXTRA_JAVA_PROBLEM_IDS.introHttpSwitch,
     chapter_id: "22222222-2222-4222-8222-222222222202",
     lesson_id: "33333333-3333-4333-8333-333333333302",
     language: "java",
@@ -402,9 +422,9 @@ public class Main {
   // Java初級コース（4問：二次元配列 / オーバーロード / static / インターフェース）
   // ===========================================================================
   {
-    id: "44444444-4444-4444-8444-444444444711",
-    chapter_id: "22222222-2222-4222-8222-222222222231",
-    lesson_id: "33333333-3333-4333-8333-333333333331",
+    id: EXTRA_JAVA_PROBLEM_IDS.begMatrixSales,
+    chapter_id: "bf20e7ec-5d77-4543-bb06-f1a260271b59",
+    lesson_id: "5347964f-04df-4e46-ae8a-a654826f9d73",
     language: "java",
     title: "初級 1-1. 店舗別・日別売上の二次元配列集計",
     description_md: `### 問題概要
@@ -486,9 +506,9 @@ public class Main {
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444712",
-    chapter_id: "22222222-2222-4222-8222-222222222231",
-    lesson_id: "33333333-3333-4333-8333-333333333331",
+    id: EXTRA_JAVA_PROBLEM_IDS.begOverload,
+    chapter_id: "bf20e7ec-5d77-4543-bb06-f1a260271b59",
+    lesson_id: "5347964f-04df-4e46-ae8a-a654826f9d73",
     language: "java",
     title: "初級 1-2. 割引計算メソッドのオーバーロード設計",
     description_md: `### 問題概要
@@ -565,9 +585,9 @@ public class Main {
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444713",
-    chapter_id: "22222222-2222-4222-8222-222222222232",
-    lesson_id: "33333333-3333-4333-8333-333333333332",
+    id: EXTRA_JAVA_PROBLEM_IDS.begStaticTicket,
+    chapter_id: "f62233bb-0095-4a76-80d3-6a70846ee360",
+    lesson_id: "41302b0f-c345-4660-9dfe-6cf806c97783",
     language: "java",
     title: "初級 2-1. static フィールドによる自動採番チケット管理クラス",
     description_md: `### 問題概要
@@ -660,9 +680,9 @@ public class Main {
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444714",
-    chapter_id: "22222222-2222-4222-8222-222222222232",
-    lesson_id: "33333333-3333-4333-8333-333333333332",
+    id: EXTRA_JAVA_PROBLEM_IDS.begPaymentInterface,
+    chapter_id: "f62233bb-0095-4a76-80d3-6a70846ee360",
+    lesson_id: "41302b0f-c345-4660-9dfe-6cf806c97783",
     language: "java",
     title: "初級 2-2. 決済インターフェースとポリモーフィズム（第1回実技レベル）",
     description_md: `### 問題概要
@@ -777,9 +797,9 @@ public class Main {
   // Java中級コース（4問：ArrayList / HashMap / CSVパース / 例外処理）
   // ===========================================================================
   {
-    id: "44444444-4444-4444-8444-444444444721",
-    chapter_id: "22222222-2222-4222-8222-222222222241",
-    lesson_id: "33333333-3333-4333-8333-333333333341",
+    id: EXTRA_JAVA_PROBLEM_IDS.intArrayListSearch,
+    chapter_id: "f0721c45-037c-49d0-8393-98bb86ce3523",
+    lesson_id: "1177c80b-bcc9-4745-a4f8-7caf1ef01327",
     language: "java",
     title: "中級 1-1. ArrayList による顧客名の検索フィルタリング",
     description_md: `### 問題概要
@@ -858,9 +878,9 @@ public class Main {
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444722",
-    chapter_id: "22222222-2222-4222-8222-222222222241",
-    lesson_id: "33333333-3333-4333-8333-333333333341",
+    id: EXTRA_JAVA_PROBLEM_IDS.intHashMapSales,
+    chapter_id: "f0721c45-037c-49d0-8393-98bb86ce3523",
+    lesson_id: "1177c80b-bcc9-4745-a4f8-7caf1ef01327",
     language: "java",
     title: "中級 1-2. HashMap による商品カテゴリ別売上集計",
     description_md: `### 問題概要
@@ -928,9 +948,9 @@ public class Main {
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444723",
-    chapter_id: "22222222-2222-4222-8222-222222222242",
-    lesson_id: "33333333-3333-4333-8333-333333333342",
+    id: EXTRA_JAVA_PROBLEM_IDS.intCsvParse,
+    chapter_id: "7bb76c60-bac2-408b-a0f5-cb69f0546f13",
+    lesson_id: "06f2d4e3-729c-4392-8945-9af33d7833e5",
     language: "java",
     title: "中級 2-1. CSV注文データのパースと合計金額計算",
     description_md: `### 問題概要
@@ -1001,9 +1021,9 @@ public class Main {
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444724",
-    chapter_id: "22222222-2222-4222-8222-222222222242",
-    lesson_id: "33333333-3333-4333-8333-333333333342",
+    id: EXTRA_JAVA_PROBLEM_IDS.intExceptionStock,
+    chapter_id: "7bb76c60-bac2-408b-a0f5-cb69f0546f13",
+    lesson_id: "06f2d4e3-729c-4392-8945-9af33d7833e5",
     language: "java",
     title: "中級 2-2. 例外処理（try-catch / throw）による安全な在庫引当",
     description_md: `### 問題概要
@@ -1098,9 +1118,9 @@ public class Main {
   // Java上級コース（4問：DAOパターン / APIバリデーション / 顧客案件ロジック / 単体テスト）
   // ===========================================================================
   {
-    id: "44444444-4444-4444-8444-444444444731",
-    chapter_id: "22222222-2222-4222-8222-222222222251",
-    lesson_id: "33333333-3333-4333-8333-333333333351",
+    id: EXTRA_JAVA_PROBLEM_IDS.advCustomerDao,
+    chapter_id: "b5486a57-160b-4bb3-9d1b-f5e9f7cc6590",
+    lesson_id: "d62467af-4c0c-45b3-be32-3224f0765b0d",
     language: "java",
     title: "上級 1-1. DAOパターンによる顧客CRUDリポジトリ実装",
     description_md: `### 問題概要
@@ -1211,9 +1231,9 @@ public class Main {
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444732",
-    chapter_id: "22222222-2222-4222-8222-222222222251",
-    lesson_id: "33333333-3333-4333-8333-333333333351",
+    id: EXTRA_JAVA_PROBLEM_IDS.advApiValidation,
+    chapter_id: "b5486a57-160b-4bb3-9d1b-f5e9f7cc6590",
+    lesson_id: "d62467af-4c0c-45b3-be32-3224f0765b0d",
     language: "java",
     title: "上級 1-2. REST API入力バリデーション＆ステータス判定",
     description_md: `### 問題概要
@@ -1301,9 +1321,9 @@ public class Main {
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444733",
-    chapter_id: "22222222-2222-4222-8222-222222222252",
-    lesson_id: "33333333-3333-4333-8333-333333333352",
+    id: EXTRA_JAVA_PROBLEM_IDS.advDealService,
+    chapter_id: "446172d3-98c4-4c34-8277-7973f5953a36",
+    lesson_id: "3f313153-e5f5-466a-b5f2-51a43cefbf1d",
     language: "java",
     title: "上級 2-1. 顧客・案件管理サービス：受注済み案件の合計予算集計",
     description_md: `### 問題概要
@@ -1405,9 +1425,9 @@ public class Main {
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444734",
-    chapter_id: "22222222-2222-4222-8222-222222222252",
-    lesson_id: "33333333-3333-4333-8333-333333333352",
+    id: EXTRA_JAVA_PROBLEM_IDS.advBoundaryTest,
+    chapter_id: "446172d3-98c4-4c34-8277-7973f5953a36",
+    lesson_id: "3f313153-e5f5-466a-b5f2-51a43cefbf1d",
     language: "java",
     title: "上級 2-2. 境界値・異常系を含む単体テスト検証メソッドの実装",
     description_md: `### 問題概要

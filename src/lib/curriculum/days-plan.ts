@@ -774,8 +774,8 @@ Java研修
     executionMode: "auto_git",
     status: "published",
     problemIds: [
-      "44444444-4444-4444-8444-444444444601",
-      "44444444-4444-4444-8444-444444444602",
+      "f1f2b638-0364-44fb-b855-88ce8a1eeb3b",
+      "b05d7199-850f-4ce6-8c2d-50362abf643a",
     ],
   },
   {
@@ -790,8 +790,8 @@ Java研修
     executionMode: "auto_git",
     status: "published",
     problemIds: [
-      "44444444-4444-4444-8444-444444444603",
-      "44444444-4444-4444-8444-444444444604",
+      "f3da9229-efeb-44bf-be80-926c2319811d",
+      "ebc882bf-b24e-4d04-976b-1cb4933570ef",
     ],
   },
   {

@@ -62,7 +62,7 @@ export interface SeedChapter {
 
 export const SEED_COURSE_ID = "11111111-1111-4111-8111-111111111101";
 export const SEED_SQL_COURSE_ID = "11111111-1111-4111-8111-111111111102";
-export const SEED_GIT_COURSE_ID = "11111111-1111-4111-8111-111111111103";
+export const SEED_GIT_COURSE_ID = "4107aaa5-10f0-41ca-8c22-a3a99eeebcbb";
 
 export const SEED_COURSES = [
   {
@@ -487,21 +487,21 @@ export const SEED_CHAPTERS: SeedChapter[] = [
   },
   // --- Git実践コース（2章構成・全4問） ---
   {
-    id: "22222222-2222-4222-8222-222222222221",
+    id: "c29397c4-6902-4601-94b7-c1c782ed0405",
     course_id: SEED_GIT_COURSE_ID,
     title: "Git第1章：コミットの基礎とブランチ作成",
     description: "コミットの作成（git commit）と新ブランチの分岐・切り替え（git branch / git switch）を学びます。",
     order_index: 1,
-    lesson_id: "33333333-3333-4333-8333-333333333321",
+    lesson_id: "1c09eb0c-7300-440d-9894-8ccbee254d4d",
     lesson_title: "1-1. コミットとブランチの基本",
   },
   {
-    id: "22222222-2222-4222-8222-222222222222",
+    id: "9ebaae70-bf77-46cb-a8a6-a827b7831cbd",
     course_id: SEED_GIT_COURSE_ID,
     title: "Git第2章：ブランチの統合と履歴操作",
     description: "Fast-forwardマージ、3-Wayマージ、およびRebaseによるコミット履歴の付け替えを学びます。",
     order_index: 2,
-    lesson_id: "33333333-3333-4333-8333-333333333322",
+    lesson_id: "61a155fe-360f-41fc-b6de-2a9a00967f52",
     lesson_title: "2-1. マージとRebaseの実践",
   },
   ...EXTRA_JAVA_CHAPTERS,
@@ -2081,9 +2081,9 @@ INSERT INTO orders VALUES (1, 20), (2, 20), (3, 20);`,
   // Git実践コース（全4問：commit / branch / switch / merge / rebase）
   // ===========================================================================
   {
-    id: "44444444-4444-4444-8444-444444444601",
-    chapter_id: "22222222-2222-4222-8222-222222222221",
-    lesson_id: "33333333-3333-4333-8333-333333333321",
+    id: "f1f2b638-0364-44fb-b855-88ce8a1eeb3b",
+    chapter_id: "c29397c4-6902-4601-94b7-c1c782ed0405",
+    lesson_id: "1c09eb0c-7300-440d-9894-8ccbee254d4d",
     language: "git",
     title: "Git 1-1. 初めてのコミット作成（git commit）",
     description_md: `### ミッション概要
@@ -2123,9 +2123,9 @@ Gitの最も基本的な操作であるコミット（\`git commit\`）を作成
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444602",
-    chapter_id: "22222222-2222-4222-8222-222222222221",
-    lesson_id: "33333333-3333-4333-8333-333333333321",
+    id: "b05d7199-850f-4ce6-8c2d-50362abf643a",
+    chapter_id: "c29397c4-6902-4601-94b7-c1c782ed0405",
+    lesson_id: "1c09eb0c-7300-440d-9894-8ccbee254d4d",
     language: "git",
     title: "Git 1-2. 新規ブランチの作成と切り替え（git branch / git switch）",
     description_md: `### ミッション概要
@@ -2168,9 +2168,9 @@ Gitの最も基本的な操作であるコミット（\`git commit\`）を作成
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444603",
-    chapter_id: "22222222-2222-4222-8222-222222222222",
-    lesson_id: "33333333-3333-4333-8333-333333333322",
+    id: "f3da9229-efeb-44bf-be80-926c2319811d",
+    chapter_id: "9ebaae70-bf77-46cb-a8a6-a827b7831cbd",
+    lesson_id: "61a155fe-360f-41fc-b6de-2a9a00967f52",
     language: "git",
     title: "Git 2-1. ブランチの統合（git merge）",
     description_md: `### ミッション概要
@@ -2212,9 +2212,9 @@ Gitの最も基本的な操作であるコミット（\`git commit\`）を作成
     ],
   },
   {
-    id: "44444444-4444-4444-8444-444444444604",
-    chapter_id: "22222222-2222-4222-8222-222222222222",
-    lesson_id: "33333333-3333-4333-8333-333333333322",
+    id: "ebc882bf-b24e-4d04-976b-1cb4933570ef",
+    chapter_id: "9ebaae70-bf77-46cb-a8a6-a827b7831cbd",
+    lesson_id: "61a155fe-360f-41fc-b6de-2a9a00967f52",
     language: "git",
     title: "Git 2-2. 履歴の付け替え（git rebase）",
     description_md: `### ミッション概要
