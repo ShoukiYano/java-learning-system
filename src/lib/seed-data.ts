@@ -4,7 +4,7 @@
 //   およびDBフォールバック表示で共通利用するマスターデータ
 // =============================================================================
 
-import { Difficulty, ProblemLanguage, CompanyManager } from "@/types/database";
+import { Difficulty, ProblemLanguage, CompanyManager, TrainingMilestone } from "@/types/database";
 
 export interface SeedTestCase {
   name: string;
@@ -110,11 +110,127 @@ const INITIAL_DEMO_MANAGERS: DemoManagerWithPassword[] = [
   },
 ];
 
+export interface DemoCompanySlackSettings {
+  webhookUrl?: string | null;
+  channelName?: string | null;
+}
+
+const INITIAL_DEMO_SLACK_SETTINGS: Record<string, DemoCompanySlackSettings> = {
+  "00000000-0000-4000-8000-000000000001": {
+    webhookUrl: "",
+    channelName: "#client-acme2025",
+  },
+  "00000000-0000-4000-8000-000000000002": {
+    webhookUrl: "",
+    channelName: "#client-nextsys2025",
+  },
+};
+
+export const INITIAL_DEMO_MILESTONES: TrainingMilestone[] = [
+  {
+    id: "milestone-1",
+    company_id: "00000000-0000-4000-8000-000000000001", // ACME
+    title: "Java基礎完了（第1・2章）",
+    target_date: "2025-05-15",
+    course_id: SEED_COURSE_ID,
+    target_problem_count: 6,
+    description: "変数・四則演算・条件分岐・ループの全6問をクリアする目標ライン",
+    order_index: 1,
+  },
+  {
+    id: "milestone-2",
+    company_id: "00000000-0000-4000-8000-000000000001", // ACME
+    title: "Java入門コース全問修了",
+    target_date: "2025-05-25",
+    course_id: SEED_COURSE_ID,
+    target_problem_count: 12,
+    description: "配列・メソッド・クラス設計を含むJava入門全12問を完全制覇",
+    order_index: 2,
+  },
+  {
+    id: "milestone-3",
+    company_id: "00000000-0000-4000-8000-000000000001", // ACME
+    title: "実践SQL演習修了",
+    target_date: "2025-06-10",
+    course_id: SEED_SQL_COURSE_ID,
+    target_problem_count: 20,
+    description: "データベース抽出・集計・JOINを含む全クエリ課題をクリア",
+    order_index: 3,
+  },
+];
+
 declare global {
   // eslint-disable-next-line no-var
   var __demoStudentCourseLocks: Map<string, "auto" | "unlocked" | "locked"> | undefined;
   // eslint-disable-next-line no-var
   var __demoCompanyManagers: DemoManagerWithPassword[] | undefined;
+  // eslint-disable-next-line no-var
+  var __demoCompanySlack: Record<string, DemoCompanySlackSettings> | undefined;
+  // eslint-disable-next-line no-var
+  var __demoMilestones: TrainingMilestone[] | undefined;
+}
+
+export function getInMemoryCompanySlackSettings(companyId: string): DemoCompanySlackSettings {
+  if (!globalThis.__demoCompanySlack) {
+    globalThis.__demoCompanySlack = { ...INITIAL_DEMO_SLACK_SETTINGS };
+  }
+  return (
+    globalThis.__demoCompanySlack[companyId] ?? {
+      webhookUrl: "",
+      channelName: "",
+    }
+  );
+}
+
+export function updateInMemoryCompanySlackSettings(
+  companyId: string,
+  webhookUrl?: string | null,
+  channelName?: string | null
+) {
+  if (!globalThis.__demoCompanySlack) {
+    globalThis.__demoCompanySlack = { ...INITIAL_DEMO_SLACK_SETTINGS };
+  }
+  globalThis.__demoCompanySlack[companyId] = {
+    webhookUrl: webhookUrl ?? null,
+    channelName: channelName ?? null,
+  };
+}
+
+export function getInMemoryMilestones(companyId?: string): TrainingMilestone[] {
+  if (!globalThis.__demoMilestones) {
+    globalThis.__demoMilestones = [...INITIAL_DEMO_MILESTONES];
+  }
+  if (!companyId) return globalThis.__demoMilestones;
+  return globalThis.__demoMilestones.filter(
+    (m) => !m.company_id || m.company_id === companyId
+  );
+}
+
+export function saveInMemoryMilestone(milestone: Omit<TrainingMilestone, "id"> & { id?: string }): TrainingMilestone {
+  if (!globalThis.__demoMilestones) {
+    globalThis.__demoMilestones = [...INITIAL_DEMO_MILESTONES];
+  }
+  const id = milestone.id || `milestone-${Date.now()}`;
+  const record: TrainingMilestone = {
+    ...milestone,
+    id,
+  };
+  const idx = globalThis.__demoMilestones.findIndex((m) => m.id === id);
+  if (idx >= 0) {
+    globalThis.__demoMilestones[idx] = record;
+  } else {
+    globalThis.__demoMilestones.push(record);
+  }
+  return record;
+}
+
+export function deleteInMemoryMilestone(id: string): boolean {
+  if (!globalThis.__demoMilestones) {
+    globalThis.__demoMilestones = [...INITIAL_DEMO_MILESTONES];
+  }
+  const prevLen = globalThis.__demoMilestones.length;
+  globalThis.__demoMilestones = globalThis.__demoMilestones.filter((m) => m.id !== id);
+  return globalThis.__demoMilestones.length < prevLen;
 }
 
 export function getInMemoryCompanyManagers(companyId: string): CompanyManager[] {

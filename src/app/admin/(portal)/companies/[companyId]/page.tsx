@@ -17,6 +17,8 @@ export default async function AdminCompanyDetailPage({
       courses={detail.courses}
       initialCourseVisibility={detail.courseVisibility}
       initialManagers={detail.managers}
+      initialSlackSettings={detail.slackSettings}
+      initialMilestones={detail.milestones}
     />
   );
 }

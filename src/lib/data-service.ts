@@ -25,6 +25,8 @@ import {
   getInMemoryStudentCourseLock,
   setInMemoryStudentCourseLock,
   getInMemoryCompanyManagers,
+  getInMemoryCompanySlackSettings,
+  getInMemoryMilestones,
 } from "@/lib/seed-data";
 import { DEMO_STUDENTS_ANALYTICS, StudentAnalyticsRecord } from "@/lib/mock-analytics";
 import {
@@ -43,6 +45,7 @@ import {
   StudyLog,
   Submission,
   TestCase,
+  TrainingMilestone,
 } from "@/types/database";
 
 /**
@@ -1588,12 +1591,17 @@ export async function getAdminCompanyDetail(companyId: string) {
     managers = getInMemoryCompanyManagers(targetCompany.id);
   }
 
+  const slackSettings = getInMemoryCompanySlackSettings(targetCompany.id);
+  const milestones = getInMemoryMilestones(targetCompany.id);
+
   return {
     company: targetCompany,
     students,
     courses,
     courseVisibility,
     managers,
+    slackSettings,
+    milestones,
   };
 }
 

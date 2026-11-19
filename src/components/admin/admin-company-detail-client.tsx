@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { StudentAnalyticsRecord } from "@/lib/mock-analytics";
 import { exportStudentsProgressToCsv } from "@/lib/csv-export";
 import { AdminCourseItem, AdminCompanyBasic } from "./admin-courses-client";
-import { CompanyManager } from "@/types/database";
+import { CompanyManager, TrainingMilestone } from "@/types/database";
+import { DemoCompanySlackSettings } from "@/lib/seed-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,6 +39,11 @@ import {
   Edit2,
   X,
   ShieldCheck,
+  Send,
+  Calendar,
+  Flag,
+  Bell,
+  Hash,
 } from "lucide-react";
 
 export function AdminCompanyDetailClient({
@@ -46,12 +52,16 @@ export function AdminCompanyDetailClient({
   courses,
   initialCourseVisibility,
   initialManagers = [],
+  initialSlackSettings,
+  initialMilestones = [],
 }: {
   company: AdminCompanyBasic;
   students: StudentAnalyticsRecord[];
   courses: AdminCourseItem[];
   initialCourseVisibility: Record<string, boolean>;
   initialManagers?: CompanyManager[];
+  initialSlackSettings?: DemoCompanySlackSettings;
+  initialMilestones?: TrainingMilestone[];
 }) {
   const router = useRouter();
   const [name, setName] = useState(company.name);
@@ -78,6 +88,25 @@ export function AdminCompanyDetailClient({
   const [editingMgrId, setEditingMgrId] = useState<string | null>(null);
   const [editMgrName, setEditMgrName] = useState("");
   const [editMgrEmail, setEditMgrEmail] = useState("");
+
+  // Slack連携用の state
+  const [slackWebhookUrl, setSlackWebhookUrl] = useState(
+    initialSlackSettings?.webhookUrl || ""
+  );
+  const [slackChannelName, setSlackChannelName] = useState(
+    initialSlackSettings?.channelName || `#client-${company.company_code.toLowerCase()}`
+  );
+  const [slackTesting, setSlackTesting] = useState(false);
+  const [slackSending, setSlackSending] = useState(false);
+
+  // マイルストーン用の state
+  const [milestones, setMilestones] = useState<TrainingMilestone[]>(initialMilestones);
+  const [isAddingMs, setIsAddingMs] = useState(false);
+  const [msTitle, setMsTitle] = useState("");
+  const [msDate, setMsDate] = useState("");
+  const [msCount, setMsCount] = useState(6);
+  const [msDesc, setMsDesc] = useState("");
+  const [msSubmitting, setMsSubmitting] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -258,6 +287,136 @@ export function AdminCompanyDetailClient({
     }
   };
 
+  // Slackテスト通知
+  const handleTestSlack = async () => {
+    if (!slackWebhookUrl.trim() || slackTesting) return;
+    setSlackTesting(true);
+    setNotice(null);
+    setErrorMsg(null);
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "test_slack_notification",
+          payload: {
+            webhookUrl: slackWebhookUrl.trim(),
+            companyName: name,
+            channelName: slackChannelName.trim(),
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setErrorMsg(data.result?.error || data.error || "Slack送信に失敗しました。");
+      } else {
+        setNotice(`💬 Slackチャンネル「${slackChannelName}」へテスト通知を送信しました！`);
+      }
+    } catch {
+      setErrorMsg("Slack通信エラーが発生しました。");
+    } finally {
+      setSlackTesting(false);
+    }
+  };
+
+  // Slackへ今すぐ進捗ダイジェスト送信
+  const handleSendSlackDigest = async () => {
+    if (!slackWebhookUrl.trim() || slackSending) return;
+    setSlackSending(true);
+    setNotice(null);
+    setErrorMsg(null);
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "send_slack_digest",
+          payload: {
+            companyId: company.id,
+            companyName: name,
+            webhookUrl: slackWebhookUrl.trim(),
+            channelName: slackChannelName.trim(),
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setErrorMsg(data.result?.error || data.error || "Slack送信に失敗しました。");
+      } else {
+        setNotice(`📢 Slackチャンネル「${slackChannelName}」へ受講生進捗ダイジェスト（速報）を送信しました！`);
+      }
+    } catch {
+      setErrorMsg("Slack通信エラーが発生しました。");
+    } finally {
+      setSlackSending(false);
+    }
+  };
+
+  // マイルストーン新規登録
+  const handleCreateMilestone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!msTitle.trim() || !msDate.trim() || msSubmitting) return;
+    setMsSubmitting(true);
+    setNotice(null);
+    setErrorMsg(null);
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "save_milestone",
+          payload: {
+            companyId: company.id,
+            title: msTitle.trim(),
+            targetDate: msDate.trim(),
+            targetProblemCount: msCount,
+            description: msDesc.trim(),
+            orderIndex: milestones.length + 1,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setErrorMsg(data.error || "マイルストーン登録に失敗しました。");
+      } else {
+        setMilestones((prev) => [...prev, data.milestone]);
+        setMsTitle("");
+        setMsDate("");
+        setMsCount(6);
+        setMsDesc("");
+        setIsAddingMs(false);
+        setNotice(`🎯 目標マイルストーン「${data.milestone.title}」を追加しました。`);
+        router.refresh();
+      }
+    } catch {
+      setErrorMsg("通信エラーが発生しました。");
+    } finally {
+      setMsSubmitting(false);
+    }
+  };
+
+  // マイルストーン削除
+  const handleDeleteMilestone = async (id: string, title: string) => {
+    if (!confirm(`マイルストーン「${title}」を削除してもよろしいですか？`)) return;
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete_milestone",
+          payload: { id },
+        }),
+      });
+      if (res.ok) {
+        setMilestones((prev) => prev.filter((m) => m.id !== id));
+        setNotice(`🎯 マイルストーン「${title}」を削除しました。`);
+        router.refresh();
+      }
+    } catch {
+      setErrorMsg("削除エラーが発生しました。");
+    }
+  };
+
   const handleSaveCompany = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !companyCode.trim() || saving) return;
@@ -277,6 +436,8 @@ export function AdminCompanyDetailClient({
             company_code: companyCode.trim().toUpperCase(),
             contact_email: contactEmail.trim(),
             new_manager_password: newManagerPassword.trim() || undefined,
+            slack_webhook_url: slackWebhookUrl.trim() || null,
+            slack_channel_name: slackChannelName.trim() || null,
           },
         }),
       });
@@ -484,6 +645,91 @@ export function AdminCompanyDetailClient({
                   <p className="text-[11px] text-slate-500">
                     ※ 初期パスワードは <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono font-bold">Password123!</code> です。変更する場合のみ入力して保存してください（保存すると即座にログインパスワードに反映され、ロックも解除されます）。
                   </p>
+                </div>
+
+                {/* ★ 管理者Slack連携設定（企業別チャンネルへの進捗・アラート自動通知） */}
+                <div className="space-y-3 pt-3 border-t bg-slate-50/70 p-3 rounded-lg border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Hash className="h-4 w-4 text-emerald-600" />
+                      管理者Slack通知連携設定
+                    </label>
+                    <Badge variant="outline" className="text-[10px] text-emerald-700 bg-emerald-50">
+                      無料版Slack対応
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                    運営側Slackの該当企業専用チャンネル（例: <code>#client-acme2025</code>）のIncoming Webhookを登録すると、受講生の進捗ダイジェストや遅れアラートが自動投稿されます。
+                  </p>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-slate-700">
+                      通知先チャンネル名（メモ用）
+                    </label>
+                    <Input
+                      value={slackChannelName}
+                      onChange={(e) => setSlackChannelName(e.target.value)}
+                      placeholder="#client-acme2025"
+                      className="font-mono text-xs bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-slate-700">
+                      Slack Incoming Webhook URL
+                    </label>
+                    <Input
+                      type="url"
+                      value={slackWebhookUrl}
+                      onChange={(e) => setSlackWebhookUrl(e.target.value)}
+                      placeholder="https://hooks.slack.com/services/..."
+                      className="font-mono text-xs bg-white"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!slackWebhookUrl.trim() || slackTesting}
+                      onClick={handleTestSlack}
+                      className="text-xs h-8"
+                    >
+                      {slackTesting ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                          送信中...
+                        </>
+                      ) : (
+                        <>
+                          <Bell className="h-3.5 w-3.5 mr-1 text-emerald-600" />
+                          テスト通知を送信
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      disabled={!slackWebhookUrl.trim() || slackSending}
+                      onClick={handleSendSlackDigest}
+                      className="text-xs h-8 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border-emerald-300"
+                    >
+                      {slackSending ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                          速報作成中...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-3.5 w-3.5 mr-1 text-emerald-700" />
+                          今すぐ進捗速報をSlack送信
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
@@ -1007,6 +1253,191 @@ export function AdminCompanyDetailClient({
                       </Link>
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* ★ 4. 研修スケジュール（目標マイルストーン管理） */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Flag className="h-4 w-4 text-amber-600" />
+                  4. 研修スケジュール（目標マイルストーン管理）
+                </CardTitle>
+                <CardDescription className="text-xs mt-1">
+                  目標期日とクリア問題数を設定することで、予定ペースからの遅れアラートを自動検出し、Slackや受講生画面へ通知します。
+                </CardDescription>
+              </div>
+
+              {!isAddingMs && (
+                <Button
+                  size="sm"
+                  onClick={() => setIsAddingMs(true)}
+                  className="bg-amber-600 hover:bg-amber-500 text-white text-xs h-8"
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" />
+                  マイルストーン追加
+                </Button>
+              )}
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              {isAddingMs && (
+                <form
+                  onSubmit={handleCreateMilestone}
+                  className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                      <Flag className="h-3.5 w-3.5 text-amber-600" />
+                      新規マイルストーン設定
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingMs(false)}
+                      className="text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div className="sm:col-span-2 space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700">
+                        マイルストーン目標名
+                      </label>
+                      <Input
+                        required
+                        value={msTitle}
+                        onChange={(e) => setMsTitle(e.target.value)}
+                        placeholder="例: Java基礎（第1・2章）修了"
+                        className="bg-white text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700">
+                        目標期日 (YYYY-MM-DD)
+                      </label>
+                      <Input
+                        type="date"
+                        required
+                        value={msDate}
+                        onChange={(e) => setMsDate(e.target.value)}
+                        className="bg-white text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700">
+                        目標クリア問題数
+                      </label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={50}
+                        required
+                        value={msCount}
+                        onChange={(e) => setMsCount(Number(e.target.value))}
+                        className="bg-white text-xs font-mono"
+                      />
+                    </div>
+                    <div className="sm:col-span-2 space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700">
+                        説明・備考メモ（任意）
+                      </label>
+                      <Input
+                        value={msDesc}
+                        onChange={(e) => setMsDesc(e.target.value)}
+                        placeholder="例: 新人研修2週目終了時の到達目安"
+                        className="bg-white text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsAddingMs(false)}
+                      className="text-xs h-7"
+                    >
+                      キャンセル
+                    </Button>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={msSubmitting}
+                      className="bg-amber-600 hover:bg-amber-500 text-white text-xs h-7"
+                    >
+                      {msSubmitting ? "保存中..." : "マイルストーンを登録"}
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {milestones.length === 0 ? (
+                <div className="text-center py-6 text-xs text-slate-500 bg-slate-50 rounded-lg border border-dashed">
+                  目標マイルストーンはまだ登録されていません。上の「マイルストーン追加」ボタンから目標を設定できます。
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {milestones.map((ms, idx) => {
+                    const todayStr = new Date().toISOString().slice(0, 10);
+                    const isPassed = ms.target_date < todayStr;
+                    return (
+                      <div
+                        key={ms.id}
+                        className="p-3 rounded-lg border bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 transition-colors"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold">
+                              {idx + 1}
+                            </span>
+                            <strong className="text-xs text-slate-900 font-semibold">
+                              {ms.title}
+                            </strong>
+                            <Badge
+                              variant={isPassed ? "secondary" : "outline"}
+                              className="text-[10px]"
+                            >
+                              {isPassed ? "期日経過" : "進行中"}
+                            </Badge>
+                          </div>
+                          <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-1 pl-7">
+                            <span className="flex items-center gap-1 font-mono text-slate-700">
+                              <Calendar className="h-3 w-3 text-amber-600" />
+                              目標期日: {ms.target_date}
+                            </span>
+                            <span className="text-slate-600">
+                              クリア基準: <strong className="text-slate-900 font-mono">{ms.target_problem_count} 問</strong>以上
+                            </span>
+                            {ms.description && (
+                              <span className="text-slate-400">（{ms.description}）</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 shrink-0 pl-7 sm:pl-0">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteMilestone(ms.id, ms.title)}
+                            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-7 text-xs px-2"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-1" />
+                            削除
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

@@ -69,6 +69,10 @@ export interface Company {
   company_code: string;
   /** 代表連絡先メールアドレス（未設定時はnull） */
   contact_email: string | null;
+  /** 管理者Slack通知用 Incoming Webhook URL（例: https://hooks.slack.com/services/...） */
+  slack_webhook_url?: string | null;
+  /** 管理者Slack通知先チャンネル名メモ（例: #client-acme2025） */
+  slack_channel_name?: string | null;
   /** レコード作成日時（ISO 8601文字列） */
   created_at: string;
 }
@@ -434,4 +438,29 @@ export interface CompanyManager {
   created_at: string;
   /** 最終ログイン日時（未ログイン時はnull） */
   last_login_at: string | null;
+}
+
+/**
+ * 研修スケジュール・目標マイルストーン定義
+ * 企業またはコースごとに目標達成基準（期日、クリア問数）を設定し進捗遅れを監視
+ */
+export interface TrainingMilestone {
+  /** マイルストーン一意ID（UUID） */
+  id: string;
+  /** 対象企業ID（特定企業用設定の場合。全体共通マイルストーンの場合はnull） */
+  company_id?: string | null;
+  /** 目標タイトル（例: "Java前半（第1・2章）完了", "Java入門修了", "実践SQL修了"） */
+  title: string;
+  /** 目標達成期日（YYYY-MM-DD形式） */
+  target_date: string;
+  /** 目標基準となる対象コースID（任意） */
+  course_id?: string | null;
+  /** 達成基準となる累計クリア問題数（例: 6問、12問） */
+  target_problem_count: number;
+  /** 目標の詳細説明・補足メモ */
+  description?: string;
+  /** 表示順序番号 */
+  order_index: number;
+  /** 作成日時 */
+  created_at?: string;
 }

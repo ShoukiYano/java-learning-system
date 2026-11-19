@@ -17,6 +17,8 @@
 import React from "react";
 import Link from "next/link";
 import { StudentAnalyticsRecord } from "@/lib/mock-analytics";
+import { TrainingMilestone } from "@/types/database";
+import { DemoCompanySlackSettings } from "@/lib/seed-data";
 import { exportStudentsProgressToCsv } from "@/lib/csv-export";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,15 +39,67 @@ import {
   Eye,
   CheckCircle2,
   BookOpen,
+  Flag,
+  Calendar,
+  Send,
+  Hash,
+  Bell,
+  Loader2,
 } from "lucide-react";
 
 export function CompanyDashboardClient({
+  companyId,
   companyName,
   companyStudents,
+  slackSettings,
+  milestones = [],
 }: {
+  companyId?: string;
   companyName: string;
   companyStudents: StudentAnalyticsRecord[];
+  slackSettings?: DemoCompanySlackSettings;
+  milestones?: TrainingMilestone[];
 }) {
+  const [slackSending, setSlackSending] = React.useState(false);
+  const [slackNotice, setSlackNotice] = React.useState<string | null>(null);
+  const [slackError, setSlackError] = React.useState<string | null>(null);
+
+  const handleSendSlack = async () => {
+    if (!companyId || slackSending) return;
+    setSlackSending(true);
+    setSlackNotice(null);
+    setSlackError(null);
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "send_slack_digest",
+          payload: {
+            companyId,
+            companyName,
+            webhookUrl: slackSettings?.webhookUrl,
+            channelName: slackSettings?.channelName,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setSlackError(data.result?.error || data.error || "Slack送信に失敗しました。");
+      } else {
+        setSlackNotice(`📢 Slackチャンネル「${slackSettings?.channelName || "専用チャンネル"}」へ進捗速報を送信しました！`);
+      }
+    } catch {
+      setSlackError("通信エラーが発生しました。");
+    } finally {
+      setSlackSending(false);
+    }
+  };
+
+  // 直近のアクティブなマイルストーン
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const activeMilestone =
+    milestones.find((m) => m.target_date >= todayStr) || milestones[0];
   const delayedStudents = companyStudents.filter((s) => s.isDelayed);
   const avgProgress = Math.round(
     companyStudents.reduce((acc, cur) => acc + cur.progressPercent, 0) /

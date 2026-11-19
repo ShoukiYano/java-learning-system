@@ -14,6 +14,7 @@
 import React from "react";
 import Link from "next/link";
 import { getCurrentProfile, getStudentDashboardData } from "@/lib/data-service";
+import { getInMemoryMilestones } from "@/lib/seed-data";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
 import { StudyHeatmap } from "@/components/dashboard/study-heatmap";
 import {
@@ -37,6 +38,8 @@ import {
   Star,
   ArrowRight,
   BookOpen,
+  Flag,
+  Calendar,
 } from "lucide-react";
 
 export default async function StudentDashboardPage() {
@@ -45,6 +48,15 @@ export default async function StudentDashboardPage() {
     profile.id,
     profile.company_id
   );
+
+  const milestones = getInMemoryMilestones(profile.company_id ?? undefined);
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const activeMilestone =
+    milestones.find((m) => m.target_date >= todayStr) || milestones[0];
+  const completedCount = dashboard.completedCount;
+  const remainingForMilestone = activeMilestone
+    ? Math.max(0, activeMilestone.target_problem_count - completedCount)
+    : 0;
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl space-y-8">
@@ -85,6 +97,56 @@ export default async function StudentDashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* ★ 研修目標マイルストーンバナー */}
+      {activeMilestone && (
+        <Card className="border-amber-200 bg-gradient-to-r from-amber-50/70 to-orange-50/50">
+          <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-500 text-white shadow-sm shrink-0">
+                <Flag className="h-5 w-5" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-amber-900 tracking-wide uppercase">
+                    現在の目標マイルストーン
+                  </span>
+                  <Badge variant="outline" className="text-[10px] bg-white text-amber-800 border-amber-300">
+                    目標期日: {activeMilestone.target_date}
+                  </Badge>
+                </div>
+                <div className="text-base font-bold text-slate-900">
+                  {activeMilestone.title}
+                </div>
+                {activeMilestone.description && (
+                  <p className="text-xs text-slate-600">
+                    {activeMilestone.description}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+              <div className="text-right">
+                <div className="text-xs text-slate-500">目標達成まで</div>
+                <div className="text-lg font-extrabold font-mono text-amber-900">
+                  {remainingForMilestone === 0 ? (
+                    <span className="text-emerald-600">🎉 目標クリア！</span>
+                  ) : (
+                    <span>あと <strong className="text-amber-600 text-xl">{remainingForMilestone}</strong> 問</span>
+                  )}
+                </div>
+              </div>
+              <Link
+                href="/student/courses"
+                className="px-3.5 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-sm transition"
+              >
+                問題に挑戦する
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 主要KPI 3指標 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
