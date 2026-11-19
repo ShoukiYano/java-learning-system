@@ -4,6 +4,7 @@ import { getStudentDetailForAdminOrCompany } from "@/lib/data-service";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
 import { EvaluationCommentManager } from "@/components/dashboard/evaluation-comment-manager";
 import { StudentCourseLockManager } from "@/components/dashboard/student-course-lock-manager";
+import { GraduationEvaluationCard } from "@/components/company/graduation-evaluation-card";
 import {
   Card,
   CardContent,
@@ -88,6 +89,21 @@ export default async function CompanyStudentDetailPage({
         studentId={student.id}
         studentName={student.fullName}
         initialCourseStatuses={courseLockStatuses}
+      />
+
+      {/* ★ 90日間研修 100点満点修了判定パネル */}
+      <GraduationEvaluationCard
+        studentName={student.fullName}
+        initialScores={{
+          java_oop: Math.min(20, Math.round((student.progressPercent / 100) * 20)),
+          java_api_collections: Math.min(10, Math.round((student.progressPercent / 100) * 10)),
+          sql_db: Math.min(10, Math.round((student.progressPercent / 100) * 8)),
+          spring_boot_api: 0,
+          git_workflow: 5,
+          junit_testing: 0,
+          final_project: 0,
+        }}
+        initialMandatoryPassed={false}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

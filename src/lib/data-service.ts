@@ -829,9 +829,14 @@ export async function getStudentDashboardData(
     .filter((l) => l.study_date >= sevenDaysStr)
     .reduce((acc, cur) => acc + cur.minutes, 0);
 
+  const completedProblemIds = allProblems
+    .filter((p) => p.status === "completed")
+    .map((p) => p.id);
+
   return {
     overallProgressPercent,
     completedCount,
+    completedProblemIds,
     totalCount: allProblems.length,
     weeklyMinutes,
     resumeProblem,
