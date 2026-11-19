@@ -237,6 +237,7 @@ export function AdminCoursesClient({
 
       <div className="space-y-5">
         {courses.map((course) => {
+          const isGit = course.title.toUpperCase().includes("GIT");
           const isSql = course.title.toUpperCase().includes("SQL");
           return (
             <Card key={course.id}>
