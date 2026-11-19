@@ -109,4 +109,12 @@ describe("Git Engine - Virtual Git Interpreter", () => {
     const check = compareGitStates(userState, targetState);
     expect(check.isMatch).toBe(true);
   });
+
+  it("git プレフィックスを省略した場合は反復練習用の案内エラーを返すこと", () => {
+    const state = createInitialGitState();
+    const res = executeGitCommand(state, "commit -m 'no git prefix'");
+    expect(res.isError).toBe(true);
+    expect(res.output).toContain("git ");
+    expect(Object.keys(res.state.commits)).toHaveLength(1);
+  });
 });

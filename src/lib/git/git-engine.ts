@@ -98,12 +98,51 @@ export function executeGitCommand(currentState: GitState, commandLine: string): 
     return { state: currentState, output: "", isError: false, command: commandLine };
   }
 
-  // "git" プレフィックスの正規化（省略されていても自動でgitコマンドとして扱う）
-  let cleanCmd = trimmed;
-  if (cleanCmd.startsWith("git ")) {
-    cleanCmd = cleanCmd.slice(4).trim();
+  // help は単独コマンドとして許可。それ以外のGit操作は実務と同様に "git " プレフィックスを必須とする
+  const lowerTrimmed = trimmed.toLowerCase();
+  if (lowerTrimmed === "help") {
+    return {
+      state: currentState,
+      output: [
+        "利用可能なGitコマンド一覧:",
+        "  git commit [-m <msg>]    : 新しいコミットを作成して進める",
+        "  git branch <name>        : 新しいブランチを作成する",
+        "  git branch -d <name>     : ブランチを削除する",
+        "  git switch <name>        : ブランチを切り替える",
+        "  git switch -c <name>     : 新しいブランチを作成して即座に切り替える",
+        "  git checkout <name/id>   : ブランチまたはコミットへ切り替える",
+        "  git merge <name>         : 指定ブランチを現在のブランチにマージする",
+        "  git rebase <name>        : 指定ブランチの上に履歴を付け替える",
+        "  git status               : 現在のブランチ・作業ツリー状態を確認する",
+        "  git log                  : コミット履歴を表示する",
+        "  clear                    : ターミナルのログを消去する",
+        "  reset                    : 初期状態にリセットする",
+      ].join("\n"),
+      isError: false,
+      command: commandLine,
+    };
   }
 
+  if (lowerTrimmed === "git") {
+    return {
+      state: currentState,
+      output: "usage: git <command> [<args>]（'help' でコマンド一覧を確認できます）",
+      isError: true,
+      command: commandLine,
+    };
+  }
+
+  if (!lowerTrimmed.startsWith("git ")) {
+    const firstWord = trimmed.split(/\s+/)[0];
+    return {
+      state: currentState,
+      output: `command not found: ${firstWord}\nヒント: Gitコマンドは先頭に 'git ' を付けて入力してください（例: git ${trimmed}）。`,
+      isError: true,
+      command: commandLine,
+    };
+  }
+
+  const cleanCmd = trimmed.slice(4).trim();
   const parts = cleanCmd.split(/\s+/);
   const subcommand = parts[0]?.toLowerCase();
   const args = parts.slice(1);

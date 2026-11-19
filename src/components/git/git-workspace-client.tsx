@@ -64,12 +64,12 @@ interface TerminalLogEntry {
 }
 
 const QUICK_COMMANDS = [
-  { label: "git commit", cmd: "commit" },
-  { label: "git branch", cmd: "branch " },
-  { label: "git switch", cmd: "switch " },
-  { label: "git merge", cmd: "merge " },
-  { label: "git rebase", cmd: "rebase " },
-  { label: "git status", cmd: "status" },
+  { label: "git commit", cmd: "git commit" },
+  { label: "git branch", cmd: "git branch " },
+  { label: "git switch", cmd: "git switch " },
+  { label: "git merge", cmd: "git merge " },
+  { label: "git rebase", cmd: "git rebase " },
+  { label: "git status", cmd: "git status" },
 ];
 
 export function GitWorkspaceClient({
@@ -176,7 +176,7 @@ export function GitWorkspaceClient({
       ...prev,
       {
         id: `cmd-${Date.now()}`,
-        command: raw.startsWith("git ") ? raw : `git ${raw}`,
+        command: raw,
         output: res.output,
         isError: res.isError,
         type: res.isError ? "system" : "user",
@@ -411,7 +411,7 @@ export function GitWorkspaceClient({
               className="flex items-center gap-2 px-4 py-3 bg-slate-800 border-t-2 border-blue-500"
             >
               <span className="text-emerald-400 font-bold select-none shrink-0">
-                $ git
+                $
               </span>
               <input
                 ref={inputRef}
@@ -419,7 +419,7 @@ export function GitWorkspaceClient({
                 value={inputVal}
                 onChange={(e) => setInputVal(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="commit / branch bugfix / switch bugfix ..."
+                placeholder="git commit / git branch bugfix / git switch bugfix ..."
                 className="flex-1 bg-transparent text-white outline-none placeholder:text-slate-400 font-mono text-sm"
                 autoFocus
                 spellCheck={false}
