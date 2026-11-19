@@ -27,6 +27,7 @@ import {
   SEED_PROBLEMS,
   SEED_COURSE_ID,
   SEED_SQL_COURSE_ID,
+  SEED_GIT_COURSE_ID,
   detectProblemLanguage,
 } from "@/lib/seed-data";
 import { isSupabaseConfigured, getCoursesWithProgress } from "@/lib/data-service";
@@ -127,7 +128,14 @@ export async function POST(request: NextRequest) {
         if (user) {
           const userCourses = await getCoursesWithProgress(user.id);
           const seedProbRef = SEED_PROBLEMS.find((p) => p.id === problemId);
-          const targetCourseId = seedProbRef?.tags.includes("SQL")
+          const isGit =
+            seedProbRef?.language === "git" ||
+            seedProbRef?.tags.some((t) => t.toUpperCase().includes("GIT"));
+          const isSql =
+            seedProbRef?.language === "sql" || seedProbRef?.tags.includes("SQL");
+          const targetCourseId = isGit
+            ? SEED_GIT_COURSE_ID
+            : isSql
             ? SEED_SQL_COURSE_ID
             : SEED_COURSE_ID;
 
@@ -200,6 +208,43 @@ export async function POST(request: NextRequest) {
     let compileDiagnostics = null;
 
     for (const tc of allTestCases) {
+      if (problemLanguage === "git") {
+        const initial = createInitialGitState();
+        const baseState = seedProb?.starter_code
+          ? executeGitScript(initial, seedProb.starter_code).state
+          : initial;
+        const targetState = seedProb?.solution_code
+          ? executeGitScript(initial, seedProb.solution_code).state
+          : baseState;
+
+        const { state: userFinalState, results: userResults } = executeGitScript(
+          baseState,
+          code
+        );
+        const hasErr = userResults.some((r) => r.isError);
+        const check = compareGitStates(userFinalState, targetState);
+
+        const isPass = !hasErr && check.isMatch;
+        results.push({
+          name: tc.name || "Gitツリー整合性判定",
+          isHidden: !!tc.is_hidden,
+          passed: isPass,
+          actualOutput: isPass
+            ? "CLEAR: 目標ツリーと完全一致"
+            : check.reason || "目標ツリーと一致しません",
+          expectedOutput: "CLEAR: 目標ツリーと完全一致",
+          executionTimeMs: 5,
+          stepsExecuted: userResults.length,
+        });
+
+        if (isPass) {
+          passedCount++;
+        } else {
+          overallStatus = "wrong_answer";
+        }
+        continue;
+      }
+
       const execRes =
         problemLanguage === "sql"
           ? runSqlCode(code, { setupSql: tc.input })

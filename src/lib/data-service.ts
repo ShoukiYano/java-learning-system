@@ -21,6 +21,7 @@ import {
   SEED_COURSES,
   SEED_PROBLEMS,
   SEED_SQL_COURSE_ID,
+  SEED_GIT_COURSE_ID,
   detectProblemLanguage,
   getInMemoryStudentCourseLock,
   setInMemoryStudentCourseLock,
@@ -698,8 +699,13 @@ export async function getStudentDashboardData(
     .flatMap((c) => c.lessons.flatMap((l) => l.problems))
     .filter((p) => {
       // 問題が属するコースがアクセス可能か
-      const isSql = p.tags.includes("SQL");
-      const pCourseId = isSql ? SEED_SQL_COURSE_ID : SEED_COURSE_ID;
+      const isGit = p.tags.some((t) => t.toUpperCase().includes("GIT"));
+      const isSql = p.tags.some((t) => t.toUpperCase().includes("SQL"));
+      const pCourseId = isGit
+        ? SEED_GIT_COURSE_ID
+        : isSql
+        ? SEED_SQL_COURSE_ID
+        : SEED_COURSE_ID;
       return accessibleCourseIds.has(pCourseId);
     });
 

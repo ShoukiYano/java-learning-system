@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Database,
   Code2,
+  GitBranch,
   Plus,
   Settings,
   Eye,
@@ -244,7 +245,11 @@ export function AdminCoursesClient({
               <CardHeader className="pb-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Badge variant={isSql ? "warning" : "default"}>
+                    <Badge
+                      variant={
+                        isGit ? "secondary" : isSql ? "warning" : "default"
+                      }
+                    >
                       コース #{course.order_index}
                     </Badge>
                     {course.is_published ? (
@@ -287,7 +292,9 @@ export function AdminCoursesClient({
                 </div>
 
                 <CardTitle className="text-lg mt-2 flex items-center gap-2">
-                  {isSql ? (
+                  {isGit ? (
+                    <GitBranch className="h-5 w-5 text-purple-600" />
+                  ) : isSql ? (
                     <Database className="h-5 w-5 text-amber-600" />
                   ) : (
                     <Code2 className="h-5 w-5 text-indigo-600" />

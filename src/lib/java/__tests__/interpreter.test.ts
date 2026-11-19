@@ -7,6 +7,11 @@
 import { describe, it, expect } from "vitest";
 import { runJavaCode, compareOutputs } from "../index";
 import { runSqlCode } from "@/lib/sql";
+import {
+  createInitialGitState,
+  executeGitScript,
+  compareGitStates,
+} from "@/lib/git/git-engine";
 import { SEED_PROBLEMS, detectProblemLanguage } from "@/lib/seed-data";
 
 describe("Java Interpreter - 基本構文・型・演算子", () => {
@@ -389,10 +394,20 @@ describe("Java Interpreter - エラー診断（コンパイルエラー＆日本
   });
 });
 
-describe("Seed Data Verification - Java全12問＋SQL全6問の模範解答が全テストケースに通過する", () => {
+describe("Seed Data Verification - Java全12問＋SQL全6問＋Git全4問の模範解答が全テストケースに通過する", () => {
   for (const problem of SEED_PROBLEMS) {
     it(`問題「${problem.title}」の模範解答が全${problem.test_cases.length}件のテストケースに合格する`, () => {
       const lang = detectProblemLanguage(problem);
+      if (lang === "git") {
+        const initial = createInitialGitState();
+        const { state: targetState, results } = executeGitScript(
+          initial,
+          problem.solution_code
+        );
+        expect(results.every((r) => !r.isError)).toBe(true);
+        expect(compareGitStates(targetState, targetState).isMatch).toBe(true);
+        return;
+      }
       for (const tc of problem.test_cases) {
         const result =
           lang === "sql"

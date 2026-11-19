@@ -70,6 +70,21 @@ export default async function StudentProblemPage({
     );
   }
 
+  const isGit =
+    detail.problem.language === "git" ||
+    detail.problem.tags?.some((t) => t.toUpperCase().includes("GIT"));
+
+  if (isGit) {
+    return (
+      <GitWorkspaceClient
+        problem={detail.problem}
+        initialProgress={detail.progress}
+        nextProblemId={detail.nextProblemId}
+        courseId={detail.courseId}
+      />
+    );
+  }
+
   return (
     <ProblemWorkspaceClient
       problem={detail.problem}

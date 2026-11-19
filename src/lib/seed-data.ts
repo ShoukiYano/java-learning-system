@@ -70,6 +70,15 @@ export const SEED_COURSES = [
     is_published: true,
     prerequisite_course_id: SEED_COURSE_ID,
   },
+  {
+    id: SEED_GIT_COURSE_ID,
+    title: "Git実践マスター：ビジュアル分岐・マージ演習",
+    description:
+      "ブラウザ上でコミットやブランチの分岐・マージをリアルタイムに視覚化しながら学ぶ、実践的Gitトレーニング。コマンドライン操作とツリー構造の直感的理解を深めます。",
+    order_index: 3,
+    is_published: true,
+    prerequisite_course_id: null,
+  },
 ];
 
 // デモ・インメモリ環境用の受講生別コースロック状態保存ストア（key: `${userId}:${courseId}` -> "auto" | "unlocked" | "locked"）
@@ -157,6 +166,16 @@ export const INITIAL_DEMO_MILESTONES: TrainingMilestone[] = [
     target_problem_count: 20,
     description: "データベース抽出・集計・JOINを含む全クエリ課題をクリア",
     order_index: 3,
+  },
+  {
+    id: "milestone-4",
+    company_id: "00000000-0000-4000-8000-000000000001", // ACME
+    title: "Git基礎・ブランチマージ習得",
+    target_date: "2025-06-30",
+    course_id: SEED_GIT_COURSE_ID,
+    target_problem_count: 24,
+    description: "Gitコマンドによるコミット・ブランチ作成・マージ・リベース演習を全問クリア",
+    order_index: 4,
   },
 ];
 
@@ -425,6 +444,25 @@ export const SEED_CHAPTERS: SeedChapter[] = [
     order_index: 3,
     lesson_id: "33333333-3333-4333-8333-333333333313",
     lesson_title: "3-1. テーブル結合（INNER JOIN / LEFT JOIN）",
+  },
+  // --- Git実践コース（2章構成・全4問） ---
+  {
+    id: "22222222-2222-4222-8222-222222222221",
+    course_id: SEED_GIT_COURSE_ID,
+    title: "Git第1章：コミットの基礎とブランチ作成",
+    description: "コミットの作成（git commit）と新ブランチの分岐・切り替え（git branch / git switch）を学びます。",
+    order_index: 1,
+    lesson_id: "33333333-3333-4333-8333-333333333321",
+    lesson_title: "1-1. コミットとブランチの基本",
+  },
+  {
+    id: "22222222-2222-4222-8222-222222222222",
+    course_id: SEED_GIT_COURSE_ID,
+    title: "Git第2章：ブランチの統合と履歴操作",
+    description: "Fast-forwardマージ、3-Wayマージ、およびRebaseによるコミット履歴の付け替えを学びます。",
+    order_index: 2,
+    lesson_id: "33333333-3333-4333-8333-333333333322",
+    lesson_title: "2-1. マージとRebaseの実践",
   },
 ];
 
@@ -1998,6 +2036,182 @@ INSERT INTO orders VALUES (1, 20), (2, 20), (3, 20);`,
       },
     ],
   },
+  // ===========================================================================
+  // Git実践コース（全4問：commit / branch / switch / merge / rebase）
+  // ===========================================================================
+  {
+    id: "44444444-4444-4444-8444-444444444601",
+    chapter_id: "22222222-2222-4222-8222-222222222221",
+    lesson_id: "33333333-3333-4333-8333-333333333321",
+    language: "git",
+    title: "Git 1-1. 初めてのコミット作成（git commit）",
+    description_md: `### ミッション概要
+Gitの最も基本的な操作であるコミット（\`git commit\`）を作成しましょう。
+
+現在、リポジトリには初期コミット \`C0\` が存在し、\`main\` ブランチがそれを指しています。
+\`git commit\` コマンドを **2回** 実行して、コミット \`C1\` と \`C2\` を追加し、\`main\` ブランチを進めてください。
+
+### 達成条件
+- \`main\` ブランチが新しく作成されたコミット（C2）を指していること。
+- 右上の「到達目標 (Goal)」と同じツリー構造にすること。`,
+    difficulty: "easy",
+    estimated_minutes: 5,
+    tags: ["Git基礎", "コミット操作"],
+    starter_code: "",
+    solution_code: `git commit -m "first commit"\ngit commit -m "second commit"`,
+    explanation_md: `\`git commit\` を実行すると、現在のHEADが指しているコミットの直下に新しいコミットノードが作成され、ブランチのポインタが自動的に前進します。`,
+    order_index: 1,
+    test_cases: [
+      {
+        name: "公開テスト1：コミットの追加とブランチ前進",
+        input: "",
+        expected_output: "CLEAR: 目標ツリーと完全一致",
+        is_hidden: false,
+        order_index: 1,
+      },
+    ],
+    hints: [
+      {
+        step_number: 1,
+        content_md: "ターミナルに `git commit` と入力して Enter キーを押してください。",
+      },
+      {
+        step_number: 2,
+        content_md: "もう一度 `git commit` を実行して、2つ目のコミットを作成すれば目標達成です。",
+      },
+    ],
+  },
+  {
+    id: "44444444-4444-4444-8444-444444444602",
+    chapter_id: "22222222-2222-4222-8222-222222222221",
+    lesson_id: "33333333-3333-4333-8333-333333333321",
+    language: "git",
+    title: "Git 1-2. 新規ブランチの作成と切り替え（git branch / git switch）",
+    description_md: `### ミッション概要
+新しい機能開発やバグ修正を行うため、\`bugfix\` という名前の新しいブランチを作成して切り替え、コミットを作成しましょう。
+
+### 手順
+1. \`git branch bugfix\` で新ブランチ \`bugfix\` を作成する。
+2. \`git switch bugfix\` で \`bugfix\` ブランチに切り替える。
+   （または \`git switch -c bugfix\` で作成と切り替えを同時に行っても構いません）
+3. \`git commit\` を1回実行して、\`bugfix\` ブランチ上で作業を進める。
+
+### 達成条件
+- \`main\` ブランチは初期コミット \`C0\` のままであること。
+- \`bugfix\` ブランチが新コミット \`C1\` を指し、現在 \`HEAD\` が \`bugfix\` を指していること。`,
+    difficulty: "easy",
+    estimated_minutes: 8,
+    tags: ["Gitブランチ", "チェックアウト"],
+    starter_code: "",
+    solution_code: `git branch bugfix\ngit switch bugfix\ngit commit -m "fix bug"`,
+    explanation_md: `\`git branch <名前>\` でブランチを作成し、\`git switch <名前>\` で作業ブランチを切り替えます。\`git switch -c <名前>\` を使えば1コマンドで両方を同時に実行できます。`,
+    order_index: 2,
+    test_cases: [
+      {
+        name: "公開テスト1：ブランチ作成と切り替えコミット",
+        input: "",
+        expected_output: "CLEAR: 目標ツリーと完全一致",
+        is_hidden: false,
+        order_index: 1,
+      },
+    ],
+    hints: [
+      {
+        step_number: 1,
+        content_md: "`git branch bugfix` でブランチを作成します。",
+      },
+      {
+        step_number: 2,
+        content_md: "`git switch bugfix` で切り替えてから、`git commit` を実行します。",
+      },
+    ],
+  },
+  {
+    id: "44444444-4444-4444-8444-444444444603",
+    chapter_id: "22222222-2222-4222-8222-222222222222",
+    lesson_id: "33333333-3333-4333-8333-333333333322",
+    language: "git",
+    title: "Git 2-1. ブランチの統合（git merge）",
+    description_md: `### ミッション概要
+独立して開発された \`feature\` ブランチを、本線である \`main\` ブランチに統合（マージ）しましょう。
+
+初期状態では、\`main\` でコミット \`C1\`、\`feature\` でコミット \`C2\` がそれぞれ分岐しています。
+
+### 手順
+1. \`main\` ブランチに切り替える（すでに \`main\` にいるか \`git status\` で確認）。
+2. \`git merge feature\` を実行して、\`feature\` ブランチの変更を \`main\` に統合する。
+
+### 達成条件
+- \`main\` ブランチに2つの親（C1とC2）を持つマージコミットが作成されていること。`,
+    difficulty: "medium",
+    estimated_minutes: 10,
+    tags: ["Gitマージ", "ブランチ統合"],
+    starter_code: `git commit -m "main work"\ngit switch -c feature\ngit commit -m "feature work"\ngit switch main`,
+    solution_code: `git commit -m "main work"\ngit switch -c feature\ngit commit -m "feature work"\ngit switch main\ngit merge feature`,
+    explanation_md: `\`git merge <ブランチ名>\` を実行すると、現在のブランチに指定ブランチの履歴が統合されます。分岐している場合は、双方の親を持つマージコミットが新しく作成されます。`,
+    order_index: 1,
+    test_cases: [
+      {
+        name: "公開テスト1：マージコミットの生成",
+        input: "",
+        expected_output: "CLEAR: 目標ツリーと完全一致",
+        is_hidden: false,
+        order_index: 1,
+      },
+    ],
+    hints: [
+      {
+        step_number: 1,
+        content_md: "まず `git switch main` で main ブランチにいることを確認します。",
+      },
+      {
+        step_number: 2,
+        content_md: "`git merge feature` を実行すると、3-wayマージコミットが作成されます。",
+      },
+    ],
+  },
+  {
+    id: "44444444-4444-4444-8444-444444444604",
+    chapter_id: "22222222-2222-4222-8222-222222222222",
+    lesson_id: "33333333-3333-4333-8333-333333333322",
+    language: "git",
+    title: "Git 2-2. 履歴の付け替え（git rebase）",
+    description_md: `### ミッション概要
+コミット履歴をきれいに一本化するため、\`git rebase\` を使って \`feature\` ブランチのコミットを \`main\` ブランチの先端に付け替えましょう。
+
+### 手順
+1. \`feature\` ブランチに切り替える（\`git switch feature\`）。
+2. \`git rebase main\` を実行して、\`feature\` のコミットを \`main\` の最新コミットの上に再配置する。
+
+### 達成条件
+- \`feature\` ブランチが \`main\` の上に一本の線として付け替えられていること。`,
+    difficulty: "medium",
+    estimated_minutes: 10,
+    tags: ["Gitリベース", "履歴整理"],
+    starter_code: `git commit -m "c1"\ngit switch -c feature\ngit commit -m "f1"\ngit switch main\ngit commit -m "c2"\ngit switch feature`,
+    solution_code: `git commit -m "c1"\ngit switch -c feature\ngit commit -m "f1"\ngit switch main\ngit commit -m "c2"\ngit switch feature\ngit rebase main`,
+    explanation_md: `\`git rebase <ブランチ名>\` は、現在のブランチのコミットをターゲットブランチの先端に順番にコピーして付け替えることで、直線的で見やすい履歴を作成するコマンドです。`,
+    order_index: 2,
+    test_cases: [
+      {
+        name: "公開テスト1：Rebaseによる履歴一本化",
+        input: "",
+        expected_output: "CLEAR: 目標ツリーと完全一致",
+        is_hidden: false,
+        order_index: 1,
+      },
+    ],
+    hints: [
+      {
+        step_number: 1,
+        content_md: "まず `git switch feature` で feature ブランチに切り替えます。",
+      },
+      {
+        step_number: 2,
+        content_md: "`git rebase main` を実行すると、feature のコミットが main の先端に付け替えられます。",
+      },
+    ],
+  },
 ];
 
 export function detectProblemLanguage(problem: {
@@ -2005,14 +2219,20 @@ export function detectProblemLanguage(problem: {
   tags?: string[];
   starter_code?: string;
 }): ProblemLanguage {
-  if (problem.language === "sql" || problem.language === "java") {
+  if (problem.language === "git" || problem.language === "sql" || problem.language === "java") {
     return problem.language;
+  }
+  if (problem.tags?.some((t) => t.toUpperCase().includes("GIT"))) {
+    return "git";
   }
   if (problem.tags?.some((t) => t.toUpperCase().includes("SQL"))) {
     return "sql";
   }
   if (problem.starter_code && /^\s*(--|SELECT|INSERT|UPDATE|DELETE|CREATE)\b/i.test(problem.starter_code)) {
     return "sql";
+  }
+  if (problem.starter_code && /^\s*(git\b|#\s*git)/i.test(problem.starter_code)) {
+    return "git";
   }
   return "java";
 }

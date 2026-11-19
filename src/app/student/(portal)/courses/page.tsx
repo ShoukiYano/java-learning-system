@@ -14,6 +14,7 @@ import {
   BookOpen,
   Database,
   Code2,
+  GitBranch,
   Lock,
   Unlock,
   CheckCircle2,
@@ -59,8 +60,21 @@ export default async function StudentCoursesPage() {
               <CardHeader className="pb-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Badge variant={isSql ? "warning" : "default"}>
-                      {isSql ? "SQL Database Track" : "Java Programming Track"}
+                    <Badge
+                      variant={
+                        isGit ? "secondary" : isSql ? "warning" : "default"
+                      }
+                      className={
+                        isGit
+                          ? "bg-purple-100 text-purple-700 border-purple-300"
+                          : ""
+                      }
+                    >
+                      {isGit
+                        ? "Git Version Control Track"
+                        : isSql
+                        ? "SQL Database Track"
+                        : "Java Programming Track"}
                     </Badge>
                     {course.lockStatus === "unlocked" ? (
                       <Badge
@@ -98,7 +112,9 @@ export default async function StudentCoursesPage() {
                   </span>
                 </div>
                 <CardTitle className="text-xl mt-2 flex items-center gap-2">
-                  {isSql ? (
+                  {isGit ? (
+                    <GitBranch className="h-5 w-5 text-purple-600" />
+                  ) : isSql ? (
                     <Database className="h-5 w-5 text-amber-600" />
                   ) : (
                     <Code2 className="h-5 w-5 text-blue-600" />

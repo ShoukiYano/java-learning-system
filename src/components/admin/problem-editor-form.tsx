@@ -356,7 +356,7 @@ export function ProblemEditorForm({
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold">演習言語種別（Java / SQL）</label>
+              <label className="text-xs font-semibold">演習言語種別（Java / SQL / Git）</label>
               <select
                 value={problemLanguage}
                 onChange={(e) => {
@@ -366,12 +366,17 @@ export function ProblemEditorForm({
                     setStarterCode("-- ここにSQLクエリを記述してください\nSELECT * FROM employees;");
                     setSolutionCode("SELECT name, salary FROM employees WHERE department = 'Engineering';");
                     setTagsInput("SQL抽出, 基礎構文");
+                  } else if (lang === "git") {
+                    setStarterCode("");
+                    setSolutionCode("git branch bugfix\ngit switch bugfix\ngit commit -m \"fix bug\"");
+                    setTagsInput("Git基礎, コミット操作");
                   }
                 }}
                 className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm font-semibold"
               >
                 <option value="java">Java（オブジェクト指向・アルゴリズム演習）</option>
                 <option value="sql">SQL（データベース抽出・集計・JOIN演習）</option>
+                <option value="git">Git（ビジュアル分岐・マージ・Rebase演習）</option>
               </select>
             </div>
 
