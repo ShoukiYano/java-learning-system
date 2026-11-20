@@ -12,13 +12,6 @@ declare global {
   var __demoAnnouncementReads: Record<string, string[]> | undefined;
 }
 
-export function getInMemoryReadAnnouncementIds(userId: string): string[] {
-  if (!globalThis.__demoAnnouncementReads) {
-    globalThis.__demoAnnouncementReads = {};
-  }
-  return globalThis.__demoAnnouncementReads[userId] ?? [];
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

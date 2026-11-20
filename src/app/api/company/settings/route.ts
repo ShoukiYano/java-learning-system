@@ -14,14 +14,14 @@ declare global {
   var __demoCompanyDelayDays: Record<string, number> | undefined;
 }
 
-export function getInMemoryCompanyDelayDays(companyId: string): number {
-  return globalThis.__demoCompanyDelayDays?.[companyId] ?? 5;
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const companyId = String(body.companyId ?? "").trim();
+    const profile = await getCurrentProfile();
+    const companyId =
+      String(body.companyId ?? "").trim() ||
+      profile.company_id ||
+      "00000000-0000-4000-8000-000000000001";
     const delayAlertDays = Math.max(
       1,
       Math.min(30, Number(body.delayAlertDays ?? 5))

@@ -26,10 +26,6 @@ declare global {
     | undefined;
 }
 
-export function getInMemoryGraduationEval(studentId: string) {
-  return globalThis.__demoGraduationEvaluations?.[studentId] ?? null;
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
