@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Building2, Users, BookOpen, ShieldCheck } from "lucide-react";
+import { Building2, Users, BookOpen, ShieldCheck, Table2 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
 export default function CompanyPortalLayout({
@@ -31,6 +31,13 @@ export default function CompanyPortalLayout({
             >
               <Users className="h-3.5 w-3.5 text-emerald-400" />
               自社受講生一覧・進捗CSV
+            </Link>
+            <Link
+              href="/company/progress"
+              className="px-3 py-1.5 rounded-md hover:bg-emerald-900 hover:text-white flex items-center gap-1.5 transition"
+            >
+              <Table2 className="h-3.5 w-3.5 text-sky-400" />
+              受講生全体進捗表
             </Link>
             <Link
               href="/company/courses"

@@ -1747,3 +1747,200 @@ export async function getProblemForAdminEdit(problemId: string) {
   }
 }
 
+// =============================================================================
+// 企業担当者向け：受講生全体進捗表（コース → 章 → 問題 × クリア日付マトリクス）
+// =============================================================================
+
+export interface ProgressMatrixProblem {
+  id: string;
+  shortCode: string;
+  title: string;
+}
+
+export interface ProgressMatrixChapter {
+  id: string;
+  shortTitle: string;
+  title: string;
+  problems: ProgressMatrixProblem[];
+}
+
+export interface ProgressMatrixCourse {
+  id: string;
+  shortTitle: string;
+  title: string;
+  chapters: ProgressMatrixChapter[];
+}
+
+export interface ProgressMatrixStudentRow {
+  studentId: string;
+  companyName: string;
+  fullName: string;
+  email: string;
+  completedDates: Record<string, string>; // problemId -> "YYYY/MM/DD"
+}
+
+function formatDateSlash(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}/${m}/${day}`;
+}
+
+function extractProblemShortCode(title: string, chapterOrder: number, probOrder: number): string {
+  const m = title.match(/(\d+-\d+)/);
+  if (m) return m[1];
+  return `${chapterOrder}-${probOrder}`;
+}
+
+function extractChapterShortTitle(title: string, chapterOrder: number): string {
+  const m = title.match(/(第\d+章)/);
+  if (m) return m[1];
+  return `第${chapterOrder}章`;
+}
+
+function extractCourseShortTitle(title: string): string {
+  const idx = title.indexOf("：");
+  return idx > 0 ? title.slice(0, idx) : title;
+}
+
+/**
+ * 企業単位の受講生全体進捗マトリクスデータを取得する
+ */
+export async function getCompanyProgressMatrix(companyId: string): Promise<{
+  courses: ProgressMatrixCourse[];
+  students: ProgressMatrixStudentRow[];
+}> {
+  const analyticsStudents = await getStudentsAnalyticsFromDb(companyId);
+
+  // 非表示コースを除外
+  const hiddenCourseIds = new Set<string>();
+  if (isSupabaseConfigured()) {
+    try {
+      const db = getServerQueryClient() ?? (await createClient());
+      const { data: visRows } = await db
+        .from("company_courses")
+        .select("course_id, is_visible")
+        .eq("company_id", companyId);
+      if (visRows) {
+        for (const r of visRows as { course_id: string; is_visible: boolean }[]) {
+          if (r.is_visible === false) hiddenCourseIds.add(r.course_id);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // コース → 章 → 問題 の3階層構造を構築
+  const courses: ProgressMatrixCourse[] = SEED_COURSES.filter(
+    (c) => !hiddenCourseIds.has(c.id)
+  )
+    .sort((a, b) => a.order_index - b.order_index)
+    .map((c) => {
+      const chs = SEED_CHAPTERS.filter((ch) => ch.course_id === c.id)
+        .sort((a, b) => a.order_index - b.order_index)
+        .map((ch) => {
+          const probs = SEED_PROBLEMS.filter((p) => p.chapter_id === ch.id)
+            .sort((a, b) => a.order_index - b.order_index)
+            .map((p, pIdx) => ({
+              id: p.id,
+              shortCode: extractProblemShortCode(
+                p.title,
+                ch.order_index,
+                pIdx + 1
+              ),
+              title: p.title,
+            }));
+          return {
+            id: ch.id,
+            shortTitle: extractChapterShortTitle(ch.title, ch.order_index),
+            title: ch.title,
+            problems: probs,
+          };
+        })
+        .filter((ch) => ch.problems.length > 0);
+
+      return {
+        id: c.id,
+        shortTitle: extractCourseShortTitle(c.title),
+        title: c.title,
+        chapters: chs,
+      };
+    })
+    .filter((c) => c.chapters.length > 0);
+
+  const orderedProblemIds = courses.flatMap((c) =>
+    c.chapters.flatMap((ch) => ch.problems.map((p) => p.id))
+  );
+
+  // Supabase から各受講生の問題別完了日時を取得
+  const dbProgressByUser = new Map<string, Record<string, string>>();
+  if (isSupabaseConfigured() && analyticsStudents.length > 0) {
+    try {
+      const db = getServerQueryClient() ?? (await createClient());
+      const studentIds = analyticsStudents.map((s) => s.id);
+      const { data: progRows } = await db
+        .from("progress")
+        .select("user_id, problem_id, status, completed_at, updated_at")
+        .in("user_id", studentIds)
+        .eq("status", "completed");
+
+      if (progRows) {
+        for (const row of progRows as Array<{
+          user_id: string;
+          problem_id: string;
+          completed_at?: string | null;
+          updated_at?: string | null;
+        }>) {
+          const dateStr = formatDateSlash(row.completed_at ?? row.updated_at);
+          if (!dateStr) continue;
+          const map = dbProgressByUser.get(row.user_id) ?? {};
+          map[row.problem_id] = dateStr;
+          dbProgressByUser.set(row.user_id, map);
+        }
+      }
+    } catch {
+      // fallback below
+    }
+  }
+
+  // 各受講生行を構築（DBレコードが無いデモ受講生は completedProblems 数に応じて完了日を生成）
+  const baseDate = new Date();
+  const students: ProgressMatrixStudentRow[] = analyticsStudents.map(
+    (st, sIdx) => {
+      const existingMap = dbProgressByUser.get(st.id);
+      if (existingMap && Object.keys(existingMap).length > 0) {
+        return {
+          studentId: st.id,
+          companyName: st.companyName,
+          fullName: st.fullName,
+          email: st.email,
+          completedDates: existingMap,
+        };
+      }
+
+      const fallbackDates: Record<string, string> = {};
+      const count = Math.min(st.completedProblems, orderedProblemIds.length);
+      for (let i = 0; i < count; i++) {
+        const d = new Date(baseDate);
+        d.setDate(baseDate.getDate() - (count - i) - (sIdx % 3));
+        fallbackDates[orderedProblemIds[i]] = formatDateSlash(d.toISOString());
+      }
+
+      return {
+        studentId: st.id,
+        companyName: st.companyName,
+        fullName: st.fullName,
+        email: st.email,
+        completedDates: fallbackDates,
+      };
+    }
+  );
+
+  return { courses, students };
+}
+
+

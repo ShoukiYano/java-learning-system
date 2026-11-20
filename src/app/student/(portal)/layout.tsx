@@ -15,7 +15,6 @@ import {
   Code2,
   LayoutDashboard,
   BookOpen,
-  CalendarDays,
   History,
   UserCircle,
   Flame,
@@ -63,13 +62,6 @@ export default async function StudentPortalLayout({
             >
               <BookOpen className="h-4 w-4 text-emerald-600" />
               カリキュラム受講
-            </Link>
-            <Link
-              href="/student/roadmap"
-              className="px-3 py-1.5 rounded-md hover:bg-slate-100 hover:text-slate-900 flex items-center gap-1.5 transition"
-            >
-              <CalendarDays className="h-4 w-4 text-indigo-600" />
-              90日研修プラン
             </Link>
             <Link
               href="/student/submissions"
