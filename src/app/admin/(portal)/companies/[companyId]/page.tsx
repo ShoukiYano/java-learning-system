@@ -2,6 +2,8 @@ import React from "react";
 import { getAdminCompanyDetail } from "@/lib/data-service";
 import { AdminCompanyDetailClient } from "@/components/admin/admin-company-detail-client";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminCompanyDetailPage({
   params,
 }: {

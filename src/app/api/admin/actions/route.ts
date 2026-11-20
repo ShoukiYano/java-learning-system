@@ -638,29 +638,29 @@ export async function POST(request: NextRequest) {
           compUpdateData.slack_channel_name = payload.slack_channel_name;
         }
 
-        let updatedCompany = null;
-        const { data: upData, error: upErr } = await db
+        const { data: updatedCompany, error: upErr } = await db
           .from("companies")
           .update(compUpdateData)
           .eq("id", companyId)
           .select("*")
-          .single();
+          .maybeSingle();
 
         if (upErr) {
-          const { data: fallbackComp, error: fallbackErr } = await db
-            .from("companies")
-            .update({
-              name: String(name).trim(),
-              company_code: cleanCode,
-              contact_email: cleanEmail,
-            })
-            .eq("id", companyId)
-            .select("*")
-            .single();
-          if (fallbackErr) throw fallbackErr;
-          updatedCompany = fallbackComp;
-        } else {
-          updatedCompany = upData;
+          return NextResponse.json(
+            {
+              error: `DB保存エラー: ${upErr.message}（カラム追加直後の場合はSupabaseで NOTIFY pgrst, 'reload schema'; を実行してください）`,
+            },
+            { status: 500 }
+          );
+        }
+        if (!updatedCompany) {
+          return NextResponse.json(
+            {
+              error:
+                "企業レコードの更新が反映されませんでした（RLS権限またはSUPABASE_SERVICE_ROLE_KEY設定を確認してください）。",
+            },
+            { status: 403 }
+          );
         }
 
         // もし新しいパスワードが指定されており、サービスロールキーがある場合は企業担当者アカウントを作成またはPW更新
