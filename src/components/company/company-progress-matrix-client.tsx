@@ -290,16 +290,21 @@ export function CompanyProgressMatrixClient({
         </div>
       </div>
 
+      {/* モバイル向け横スクロール案内（PCでは非表示） */}
+      <div className="md:hidden text-xs text-slate-500 text-center bg-slate-100 py-1.5 rounded-lg border border-slate-200">
+        ← 左右にスワイプして全問題・クリア日を確認できます →
+      </div>
+
       {/* Excelスタイル 3段ヘッダー全体進捗マトリクス表 */}
       <div className="rounded-xl bg-white border border-slate-300 shadow-sm overflow-x-auto">
         <table className="w-full border-collapse text-xs">
           <thead>
-            {/* 1段目：左固定3列（rowSpan=3）＋ コース名 */}
+            {/* 1段目：左固定3列（PCではrowSpan=3で左固定、モバイルでは通常スクロール）＋ コース名 */}
             <tr className="bg-slate-100 text-slate-900">
               <th
                 rowSpan={3}
                 onClick={() => handleSort("companyName")}
-                className="sticky left-0 z-20 bg-slate-100 border border-slate-300 px-3 py-2.5 text-left font-bold min-w-[150px] cursor-pointer hover:bg-slate-200 select-none"
+                className="md:sticky md:left-0 md:z-20 bg-slate-100 border border-slate-300 px-3 py-2.5 text-left font-bold min-w-[140px] md:min-w-[150px] cursor-pointer hover:bg-slate-200 select-none"
               >
                 企業名
                 {renderSortIcon("companyName")}
@@ -307,7 +312,7 @@ export function CompanyProgressMatrixClient({
               <th
                 rowSpan={3}
                 onClick={() => handleSort("fullName")}
-                className="sticky left-[150px] z-20 bg-slate-100 border border-slate-300 px-3 py-2.5 text-left font-bold min-w-[130px] cursor-pointer hover:bg-slate-200 select-none"
+                className="md:sticky md:left-[150px] md:z-20 bg-slate-100 border border-slate-300 px-3 py-2.5 text-left font-bold min-w-[120px] md:min-w-[130px] cursor-pointer hover:bg-slate-200 select-none"
               >
                 氏名
                 {renderSortIcon("fullName")}
@@ -315,7 +320,7 @@ export function CompanyProgressMatrixClient({
               <th
                 rowSpan={3}
                 onClick={() => handleSort("progress")}
-                className="sticky left-[280px] z-20 bg-slate-100 border border-slate-300 px-3 py-2.5 text-center font-bold min-w-[88px] cursor-pointer hover:bg-slate-200 select-none shadow-[2px_0_4px_-2px_rgba(0,0,0,0.12)]"
+                className="md:sticky md:left-[280px] md:z-20 bg-slate-100 border border-slate-300 px-3 py-2.5 text-center font-bold min-w-[82px] md:min-w-[88px] cursor-pointer hover:bg-slate-200 select-none md:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.12)]"
               >
                 進捗率
                 {renderSortIcon("progress")}
@@ -397,10 +402,10 @@ export function CompanyProgressMatrixClient({
                   key={st.studentId}
                   className="hover:bg-blue-50/40 transition-colors"
                 >
-                  <td className="sticky left-0 z-10 bg-white border border-slate-300 px-3 py-2 font-medium text-slate-700 whitespace-nowrap">
+                  <td className="md:sticky md:left-0 md:z-10 bg-white border border-slate-300 px-3 py-2 font-medium text-slate-700 whitespace-nowrap">
                     {st.companyName}
                   </td>
-                  <td className="sticky left-[150px] z-10 bg-white border border-slate-300 px-3 py-2 font-bold text-slate-900 whitespace-nowrap">
+                  <td className="md:sticky md:left-[150px] md:z-10 bg-white border border-slate-300 px-3 py-2 font-bold text-slate-900 whitespace-nowrap">
                     <Link
                       href={`/company/students/${st.studentId}`}
                       className="text-blue-700 hover:underline"
@@ -408,7 +413,7 @@ export function CompanyProgressMatrixClient({
                       {st.fullName}
                     </Link>
                   </td>
-                  <td className="sticky left-[280px] z-10 bg-white border border-slate-300 px-3 py-2 text-right font-mono font-extrabold text-slate-900 whitespace-nowrap shadow-[2px_0_4px_-2px_rgba(0,0,0,0.12)]">
+                  <td className="md:sticky md:left-[280px] md:z-10 bg-white border border-slate-300 px-3 py-2 text-right font-mono font-extrabold text-slate-900 whitespace-nowrap md:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.12)]">
                     <span
                       className={
                         st.progressPercent >= 80

@@ -233,9 +233,9 @@ export function GitWorkspaceClient({
   const passedCheckCount = checklist.filter((c) => c.passed).length;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-100/70 text-slate-900 overflow-hidden">
+    <div className="flex flex-col min-h-[calc(100vh-3.5rem)] lg:h-[calc(100vh-3.5rem)] bg-slate-100/70 text-slate-900 lg:overflow-hidden">
       {/* 1. トップヘッダー */}
-      <header className="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5 bg-white border-b border-slate-200 text-sm shrink-0">
+      <header className="flex flex-wrap items-center justify-between gap-2 px-4 md:px-5 py-2.5 bg-white border-b border-slate-200 text-sm shrink-0">
         <div className="flex items-center gap-3">
           <Link
             href={`/student/courses/${courseId}`}
@@ -290,11 +290,11 @@ export function GitWorkspaceClient({
       </header>
 
       {/* 2. メイン 2カラムワークスペース */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 lg:overflow-hidden">
         {/* 左カラム (lg:col-span-5): 問題説明 + コマンドコンソール */}
-        <div className="lg:col-span-5 flex flex-col border-r border-slate-200 bg-white overflow-hidden">
+        <div className="lg:col-span-5 flex flex-col border-b lg:border-b-0 lg:border-r border-slate-200 bg-white lg:overflow-hidden">
           {/* 上部: 問題文 */}
-          <div className="p-5 border-b border-slate-200 overflow-y-auto max-h-[45%]">
+          <div className="p-4 md:p-5 border-b border-slate-200 lg:overflow-y-auto lg:max-h-[45%]">
             <div className="flex items-center justify-between mb-3">
               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
                 <BookOpen className="w-3.5 h-3.5" />
@@ -337,7 +337,7 @@ export function GitWorkspaceClient({
           </div>
 
           {/* 下部: オリジナル コマンド入力コンソール */}
-          <div className="flex-1 flex flex-col bg-slate-900 text-slate-100 font-mono text-sm overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-[300px] lg:min-h-0 bg-slate-900 text-slate-100 font-mono text-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2 bg-slate-800 border-b border-slate-700 select-none">
               <span className="text-slate-100 text-xs font-sans font-bold flex items-center gap-2">
                 <TerminalIcon className="w-4 h-4 text-blue-400" />

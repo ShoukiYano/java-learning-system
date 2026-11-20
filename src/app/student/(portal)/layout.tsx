@@ -21,6 +21,7 @@ import {
   Building2,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { MobileNavMenu } from "@/components/layout/mobile-nav-menu";
 
 export default async function StudentPortalLayout({
   children,
@@ -31,11 +32,25 @@ export default async function StudentPortalLayout({
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
-      <header className="sticky top-0 z-30 h-14 border-b bg-white/95 backdrop-blur px-6 flex items-center justify-between">
-        <div className="flex items-center gap-6">
+      <header className="sticky top-0 z-30 h-14 border-b bg-white/95 backdrop-blur px-3 md:px-6 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 md:gap-6 min-w-0">
+          <MobileNavMenu
+            variant="light"
+            subtitle={
+              profile.companies
+                ? `${profile.companies.name} / ${profile.full_name}`
+                : profile.full_name
+            }
+            items={[
+              { href: "/student", label: "マイダッシュボード" },
+              { href: "/student/courses", label: "カリキュラム受講" },
+              { href: "/student/submissions", label: "提出履歴" },
+              { href: "/student/profile", label: "プロフィール" },
+            ]}
+          />
           <Link
             href="/student"
-            className="flex items-center gap-2 font-bold text-slate-900"
+            className="flex items-center gap-2 font-bold text-slate-900 shrink-0"
           >
             <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
               <Code2 className="h-4 w-4" />
@@ -43,7 +58,7 @@ export default async function StudentPortalLayout({
             <span>
               DevSkill<span className="text-blue-600">Studio</span>
             </span>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+            <span className="hidden sm:inline-block text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
               受講生ポータル
             </span>
           </Link>

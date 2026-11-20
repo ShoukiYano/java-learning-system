@@ -92,9 +92,22 @@ export function ProblemWorkspaceClient({
 
   // 下部ペイン：コンソール／テスト結果タブ
   const [bottomTab, setBottomTab] = useState<"console" | "tests">("console");
+  // モバイル表示判定（768px未満のみタブ切替UIを使用。PC版3ペインには一切影響しない）
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [mobileTab, setMobileTab] = useState<"problem" | "editor" | "output">(
+    "problem"
+  );
   const [runningMode, setRunningMode] = useState<
     "idle" | "run" | "test" | "submit"
   >("idle");
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   // 実行結果・診断エラー状態
   const [consoleStdout, setConsoleStdout] = useState<string>("");
@@ -327,9 +340,9 @@ export function ProblemWorkspaceClient({
 
   return (
     <div className="h-[calc(100vh-3.5rem)] flex flex-col bg-slate-100">
-      {/* 上部ツールバー */}
-      <div className="h-12 bg-white border-b px-4 flex items-center justify-between gap-4 shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
+      {/* 上部ツールバー（PC版はh-12固定1行、モバイル版のみ折り返し最適化） */}
+      <div className="min-h-12 py-1.5 md:py-0 md:h-12 bg-white border-b px-3 md:px-4 flex flex-wrap md:flex-nowrap items-center justify-between gap-2 md:gap-4 shrink-0">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0">
           <Link
             href={`/student/courses/${courseId}`}
             className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-slate-900 shrink-0"
@@ -345,7 +358,7 @@ export function ProblemWorkspaceClient({
             {problem.title}
           </h1>
           <span
-            className={`text-[11px] px-2 py-0.5 rounded border font-semibold shrink-0 ${diff.color}`}
+            className={`hidden sm:inline-block text-[11px] px-2 py-0.5 rounded border font-semibold shrink-0 ${diff.color}`}
           >
             {diff.label}
           </span>
@@ -358,7 +371,7 @@ export function ProblemWorkspaceClient({
         </div>
 
         {/* クリア時の進捗バーと「次の問題へ」ボタン、挑戦回数・所要時間 */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 md:gap-3 shrink-0 flex-wrap">
           <div className="hidden lg:flex items-center gap-3 text-xs text-slate-600 bg-slate-100 px-3 py-1 rounded-md">
             <span>挑戦回数: <strong>{attemptsCount}回</strong></span>
             <span>|</span>
@@ -372,19 +385,31 @@ export function ProblemWorkspaceClient({
           <Button
             size="sm"
             variant="outline"
-            onClick={handleRun}
+            onClick={() => {
+              if (isMobile) setMobileTab("output");
+              handleRun();
+            }}
             disabled={runningMode !== "idle"}
             title="任意の標準入力で実行 (Ctrl+Enter)"
           >
             <Play className="h-3.5 w-3.5 text-blue-600 fill-blue-600" />
-            {runningMode === "run" ? "実行中..." : "実行 (Ctrl+Enter)"}
+            {runningMode === "run" ? (
+              "実行中..."
+            ) : (
+              <>
+                実行<span className="hidden md:inline"> (Ctrl+Enter)</span>
+              </>
+            )}
           </Button>
 
           {/* テスト（公開テスト） */}
           <Button
             size="sm"
             variant="secondary"
-            onClick={handlePublicTest}
+            onClick={() => {
+              if (isMobile) setMobileTab("output");
+              handlePublicTest();
+            }}
             disabled={runningMode !== "idle"}
             title="公開テストケースで検証"
           >
@@ -396,14 +421,22 @@ export function ProblemWorkspaceClient({
           <Button
             size="sm"
             variant="success"
-            onClick={handleSubmit}
+            onClick={() => {
+              if (isMobile) setMobileTab("output");
+              handleSubmit();
+            }}
             disabled={runningMode !== "idle"}
             title="非公開テストを含めてサーバー採点 (Ctrl+Shift+Enter)"
           >
             <Send className="h-3.5 w-3.5" />
-            {runningMode === "submit"
-              ? "採点中..."
-              : "提出 (Ctrl+Shift+Enter)"}
+            {runningMode === "submit" ? (
+              "採点中..."
+            ) : (
+              <>
+                提出
+                <span className="hidden md:inline"> (Ctrl+Shift+Enter)</span>
+              </>
+            )}
           </Button>
 
           {isCleared && nextProblemId && (
@@ -454,7 +487,223 @@ export function ProblemWorkspaceClient({
         </div>
       )}
 
-      {/* ★ 3ペイン構成（react-resizable-panels でドラッグ幅調整） */}
+      {/* ★ モバイル専用：3タブ切替UI（768px未満のみ表示、PC版3ペインには一切影響しない） */}
+      {isMobile ? (
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="grid grid-cols-3 bg-white border-b text-xs font-bold shrink-0">
+            <button
+              type="button"
+              onClick={() => setMobileTab("problem")}
+              className={`py-2.5 border-b-2 transition ${
+                mobileTab === "problem"
+                  ? "border-blue-600 text-blue-700 bg-blue-50/40"
+                  : "border-transparent text-slate-600"
+              }`}
+            >
+              問題文・ヒント
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("editor")}
+              className={`py-2.5 border-b-2 transition ${
+                mobileTab === "editor"
+                  ? "border-blue-600 text-blue-700 bg-blue-50/40"
+                  : "border-transparent text-slate-600"
+              }`}
+            >
+              コード編集
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab("output")}
+              className={`py-2.5 border-b-2 transition ${
+                mobileTab === "output"
+                  ? "border-blue-600 text-blue-700 bg-blue-50/40"
+                  : "border-transparent text-slate-600"
+              }`}
+            >
+              実行・テスト結果
+            </button>
+          </div>
+
+          {mobileTab === "problem" && (
+            <div className="flex-1 overflow-y-auto bg-white p-4 space-y-5">
+              <MarkdownRenderer content={problem.description_md} />
+
+              {publicTestCases.length > 0 && (
+                <div className="space-y-3 pt-3 border-t">
+                  <h3 className="text-sm font-bold text-slate-900">入出力例</h3>
+                  {publicTestCases.map((tc, i) => (
+                    <div
+                      key={tc.id}
+                      className="rounded-lg border bg-slate-50 p-3 space-y-2 text-xs"
+                    >
+                      <div className="font-semibold text-slate-700">
+                        例{i + 1}: {tc.name}
+                      </div>
+                      {tc.input && (
+                        <pre className="p-2 rounded bg-white border font-mono text-slate-800 overflow-x-auto">
+                          {tc.input}
+                        </pre>
+                      )}
+                      <pre className="p-2 rounded bg-white border font-mono text-slate-800 overflow-x-auto">
+                        {tc.expected_output}
+                      </pre>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {hints.length > 0 && (
+                <div className="space-y-2.5 pt-3 border-t">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                      <Lightbulb className="h-4 w-4 text-amber-500" />
+                      段階的ヒント ({unlockedHintStep} / {hints.length})
+                    </span>
+                    {unlockedHintStep < hints.length && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setUnlockedHintStep((s) => s + 1)}
+                      >
+                        次のヒントを見る
+                      </Button>
+                    )}
+                  </div>
+                  {hints.slice(0, unlockedHintStep).map((h) => (
+                    <div
+                      key={h.id}
+                      className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-950"
+                    >
+                      <div className="font-bold mb-1">ヒント {h.step_number}</div>
+                      <MarkdownRenderer content={h.content_md} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {mobileTab === "editor" && (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="h-9 bg-slate-800 text-slate-200 px-3 flex items-center justify-between text-xs border-b border-slate-700 shrink-0">
+                <span className="font-mono font-semibold text-blue-400">
+                  {problemLanguage === "sql" ? "query.sql" : "Main.java"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCode(problem.starter_code)}
+                  className="px-2 py-1 rounded bg-slate-700 text-slate-200 inline-flex items-center gap-1"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  初期化
+                </button>
+              </div>
+              <div className="flex-1 min-h-0">
+                <LocalMonacoEditor
+                  value={code}
+                  onChange={setCode}
+                  language={problemLanguage}
+                  theme={editorTheme}
+                  fontSize={fontSize}
+                  diagnostics={diagnostics}
+                />
+              </div>
+            </div>
+          )}
+
+          {mobileTab === "output" && (
+            <div className="flex-1 overflow-y-auto bg-slate-900 text-slate-100 p-4 space-y-3 text-xs">
+              <div className="flex items-center gap-2 border-b border-slate-700 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setBottomTab("console")}
+                  className={`px-3 py-1 rounded font-semibold ${
+                    bottomTab === "console"
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-800 text-slate-300"
+                  }`}
+                >
+                  コンソール
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBottomTab("tests")}
+                  className={`px-3 py-1 rounded font-semibold ${
+                    bottomTab === "tests"
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-800 text-slate-300"
+                  }`}
+                >
+                  テスト結果 ({testResults.length})
+                </button>
+              </div>
+
+              {bottomTab === "console" ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[11px] text-slate-400 block mb-1">
+                      標準入力 (stdin)
+                    </label>
+                    <Textarea
+                      rows={3}
+                      value={customStdin}
+                      onChange={(e) => setCustomStdin(e.target.value)}
+                      className="bg-slate-800 border-slate-700 text-slate-100 font-mono text-xs"
+                    />
+                  </div>
+                  {consoleStdout && (
+                    <pre className="p-3 rounded bg-slate-950 border border-slate-800 text-emerald-300 font-mono overflow-x-auto whitespace-pre-wrap">
+                      {consoleStdout}
+                    </pre>
+                  )}
+                  {consoleStderr && (
+                    <pre className="p-3 rounded bg-rose-950/60 border border-rose-800 text-rose-300 font-mono overflow-x-auto whitespace-pre-wrap">
+                      {consoleStderr}
+                    </pre>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {testResults.length === 0 ? (
+                    <p className="text-slate-400">
+                      上部の「テスト」または「提出」ボタンを押すと結果が表示されます。
+                    </p>
+                  ) : (
+                    testResults.map((tr, i) => (
+                      <div
+                        key={i}
+                        className={`p-3 rounded-lg border ${
+                          tr.passed
+                            ? "bg-emerald-950/40 border-emerald-700"
+                            : "bg-rose-950/40 border-rose-700"
+                        }`}
+                      >
+                        <div className="font-bold flex items-center justify-between">
+                          <span>{tr.name}</span>
+                          <span>{tr.passed ? "PASS" : "FAIL"}</span>
+                        </div>
+                        {!tr.isHidden && (
+                          <div className="mt-2 space-y-1 font-mono text-[11px]">
+                            <div className="text-slate-400">
+                              期待: {tr.expectedOutput}
+                            </div>
+                            <div className="text-slate-200">
+                              実測: {tr.actualOutput || tr.errorDetail || "(出力なし)"}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+      /* ★ PC版 3ペイン構成（react-resizable-panels でドラッグ幅調整：既存レイアウト100%維持） */
       <PanelGroup direction="horizontal" className="flex-1 overflow-hidden">
         {/* 左ペイン：問題文、入出力例、段階的ヒント（1段階ずつ開示）、解説（クリア後に解放） */}
         <Panel defaultSize={36} minSize={22} className="bg-white flex flex-col">
@@ -831,6 +1080,7 @@ export function ProblemWorkspaceClient({
           </PanelGroup>
         </Panel>
       </PanelGroup>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { Building2, Users, BookOpen, ShieldCheck, Table2 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { MobileNavMenu } from "@/components/layout/mobile-nav-menu";
 
 export default function CompanyPortalLayout({
   children,
@@ -10,16 +11,25 @@ export default function CompanyPortalLayout({
 }) {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
-      <header className="sticky top-0 z-30 h-14 bg-emerald-950 text-white px-6 flex items-center justify-between border-b border-emerald-900">
-        <div className="flex items-center gap-6">
-          <Link href="/company" className="flex items-center gap-2 font-bold">
+      <header className="sticky top-0 z-30 h-14 bg-emerald-950 text-white px-3 md:px-6 flex items-center justify-between gap-2 border-b border-emerald-900">
+        <div className="flex items-center gap-3 md:gap-6 min-w-0">
+          <MobileNavMenu
+            variant="emerald"
+            subtitle="企業担当者ポータル（閲覧専用）"
+            items={[
+              { href: "/company", label: "自社受講生一覧・進捗CSV" },
+              { href: "/company/progress", label: "受講生全体進捗表" },
+              { href: "/company/courses", label: "カリキュラム内容・問題一覧の確認" },
+            ]}
+          />
+          <Link href="/company" className="flex items-center gap-2 font-bold shrink-0">
             <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center">
               <Building2 className="h-4 w-4 text-white" />
             </div>
             <span>
               DevSkill<span className="text-emerald-400">Studio</span>
             </span>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-900 text-emerald-200 border border-emerald-700">
+            <span className="hidden sm:inline-block text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-900 text-emerald-200 border border-emerald-700">
               企業担当者ポータル
             </span>
           </Link>
