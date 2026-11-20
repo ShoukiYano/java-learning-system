@@ -1,6 +1,6 @@
-# Java全28問 模範解答・解説・コード実行順序ガイド（講師・受講生サポート用）
+# Java全34問 模範解答・解説・コード実行順序ガイド（講師・受講生サポート用）
 
-本ドキュメントは、**DevSkillStudio の Java全4コース（計28問）** について、受講生への質問対応や振り返り解説でそのまま使える **模範解答・コードの実行順序・分かりやすい説明ポイント・よくあるミス** をまとめたマニュアルです。
+本ドキュメントは、**DevSkillStudio の Java全4コース（計34問）** について、受講生への質問対応や振り返り解説でそのまま使える **模範解答・コードの実行順序・分かりやすい説明ポイント・よくあるミス** をまとめたマニュアルです。
 
 ---
 
@@ -12,15 +12,15 @@
   - [第2章：条件分岐とループ（2-1 〜 2-5）](#第2章条件分岐とループ)
   - [第3章：配列とメソッド（3-1 〜 3-3）](#第3章配列とメソッド)
   - [第4章：クラスとオブジェクト（4-1 〜 4-3）](#第4章クラスとオブジェクト)
-- [Java初級コース（全4問）](#java初級コース全4問)
-  - [初級第1章：二次元配列とメソッド設計（初級 1-1 〜 1-2）](#初級第1章二次元配列とメソッド設計)
-  - [初級第2章：static・インターフェース・ポリモーフィズム（初級 2-1 〜 2-2）](#初級第2章staticインターフェースポリモーフィズム)
-- [Java中級コース（全4問）](#java中級コース全4問)
-  - [中級第1章：コレクション（ArrayList / HashMap）実務活用（中級 1-1 〜 1-2）](#中級第1章コレクションarraylist--hashmap実務活用)
-  - [中級第2章：文字列API・CSV処理・例外ハンドリング（中級 2-1 〜 2-2）](#中級第2章文字列apicsv処理例外ハンドリング)
-- [Java上級コース（全4問）](#java上級コース全4問)
-  - [上級第1章：DAOパターンとAPIバリデーション設計（上級 1-1 〜 1-2）](#上級第1章daoパターンとapiバリデーション設計)
-  - [上級第2章：顧客・案件管理ロジック＆単体テスト設計（上級 2-1 〜 2-2）](#上級第2章顧客案件管理ロジック単体テスト設計)
+- [Java初級コース（全6問）](#java初級コース全6問)
+  - [初級第1章：二次元配列とメソッド設計（初級 1-1 〜 1-3）](#初級第1章二次元配列とメソッド設計)
+  - [初級第2章：static・インターフェース・ポリモーフィズム（初級 2-1 〜 2-3）](#初級第2章staticインターフェースポリモーフィズム)
+- [Java中級コース（全6問）](#java中級コース全6問)
+  - [中級第1章：コレクション（ArrayList / HashMap）実務活用（中級 1-1 〜 1-3）](#中級第1章コレクションarraylist--hashmap実務活用)
+  - [中級第2章：文字列API・CSV処理・例外ハンドリング（中級 2-1 〜 2-3）](#中級第2章文字列apicsv処理例外ハンドリング)
+- [Java上級コース（全6問）](#java上級コース全6問)
+  - [上級第1章：DAOパターンとAPIバリデーション設計（上級 1-1 〜 1-3）](#上級第1章daoパターンとapiバリデーション設計)
+  - [上級第2章：顧客・案件管理ロジック＆単体テスト設計（上級 2-1 〜 2-3）](#上級第2章顧客案件管理ロジック単体テスト設計)
 
 ---
 
@@ -678,7 +678,7 @@ public class Main {
 
 ---
 
-# Java初級コース（全4問）
+# Java初級コース（全6問）
 
 ## 初級第1章：二次元配列とメソッド設計
 
@@ -767,6 +767,51 @@ public class Main {
 
 #### 受講生への説明ポイント・よくあるミス
 - **説明のコツ**: 同じメソッド名でも「引数の数・型が違えばJavaが自動で見分けてくれる」のがオーバーロードです。2引数版から1引数版を呼ぶことで、税率変更時に修正箇所が1か所で済む設計の良さも伝えましょう。
+
+---
+
+### 初級 1-3. 配列の昇順ソートと中央値（メソッド設計）
+- **難易度**: 中級（目安：15分） / **テーマ**: バブルソート・配列の参照渡し・中央値
+
+#### 模範解答
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void sortAsc(int[] arr) {
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = 0; j < arr.length - 1 - i; j++) {
+                if (arr[j] > arr[j + 1]) {
+                    int tmp = arr[j];
+                    arr[j] = arr[j + 1];
+                    arr[j + 1] = tmp;
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[] nums = new int[n];
+        for (int i = 0; i < n; i++) {
+            nums[i] = sc.nextInt();
+        }
+        sortAsc(nums);
+        System.out.println("Min: " + nums[0]);
+        System.out.println("Median: " + nums[n / 2]);
+        System.out.println("Max: " + nums[n - 1]);
+    }
+}
+```
+
+#### コードが動く順番
+1. 18〜22行目：要素数 `n` と配列 `nums` を読み込む。
+2. 23行目：`sortAsc(nums)` を呼び出し、二重ループで隣り合う要素を比較・交換して小さい順に並び替える。
+3. 24〜26行目：並び替え完了後、先頭 `nums[0]`（最小）、真ん中 `nums[n / 2]`（中央値）、末尾 `nums[n - 1]`（最大）を出力する。
+
+#### 受講生への説明ポイント・よくあるミス
+- **よくあるミス**: 2つの値を入れ替えるときに一時変数 `tmp` を忘れると片方の値が上書きされて消えてしまいます（「2つのコップの中身を入れ替えるには空のコップが1つ必要」と例えると分かりやすいです）。
 
 ---
 
@@ -881,7 +926,71 @@ public class Main {
 
 ---
 
-# Java中級コース（全4問）
+### 初級 2-3. 給与計算インターフェースと雇用形態別ポリモーフィズム
+- **難易度**: 中級（目安：15分） / **テーマ**: `interface`＋フィールド保持＋ポリモーフィズム
+
+#### 模範解答
+```java
+import java.util.Scanner;
+
+interface Payable {
+    int calcMonthlyPay();
+}
+
+class FullTimeEmployee implements Payable {
+    private int baseSalary;
+    private int overtimeHours;
+
+    public FullTimeEmployee(int baseSalary, int overtimeHours) {
+        this.baseSalary = baseSalary;
+        this.overtimeHours = overtimeHours;
+    }
+
+    public int calcMonthlyPay() {
+        return this.baseSalary + this.overtimeHours * 2500;
+    }
+}
+
+class PartTimeEmployee implements Payable {
+    private int hourlyWage;
+    private int workHours;
+
+    public PartTimeEmployee(int hourlyWage, int workHours) {
+        this.hourlyWage = hourlyWage;
+        this.workHours = workHours;
+    }
+
+    public int calcMonthlyPay() {
+        return this.hourlyWage * this.workHours;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String type = sc.next();
+        int a = sc.nextInt();
+        int b = sc.nextInt();
+
+        Payable emp;
+        if (type.equals("FULL")) {
+            emp = new FullTimeEmployee(a, b);
+        } else {
+            emp = new PartTimeEmployee(a, b);
+        }
+        System.out.println("Pay: " + emp.calcMonthlyPay());
+    }
+}
+```
+
+#### コードが動く順番
+1. 38〜40行目：種別 `type` と2つの数値 `a`, `b` を読み込む。
+2. 42〜47行目：`FULL` なら `FullTimeEmployee`、それ以外なら `PartTimeEmployee` を生成し、`Payable` 型の変数 `emp` に代入する。
+3. 48行目：`emp.calcMonthlyPay()` を呼び、代入された実体クラス側の給与計算を実行して出力する。
+
+---
+
+# Java中級コース（全6問）
 
 ## 中級第1章：コレクション（ArrayList / HashMap）実務活用
 
@@ -965,6 +1074,43 @@ public class Main {
 
 #### 受講生への説明ポイント・よくあるミス
 - **よくあるミス**: 存在しないキーに対して `map.get(cat)` をそのまま足し算しようとして `NullPointerException` が発生する。必ず `containsKey`（または `getOrDefault`）で `0` 扱いにする習慣をつけましょう。
+
+---
+
+### 中級 1-3. HashMap によるアクセスログ種別カウントと最多項目抽出
+- **難易度**: 中級（目安：15分） / **テーマ**: `HashMap` 集計＋最大値同時追跡
+
+#### 模範解答
+```java
+import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        HashMap<String, Integer> counts = new HashMap<>();
+        String topPath = "";
+        int topCount = 0;
+
+        for (int i = 0; i < n; i++) {
+            String path = sc.next();
+            int next = (counts.containsKey(path) ? counts.get(path) : 0) + 1;
+            counts.put(path, next);
+            if (next > topCount) {
+                topCount = next;
+                topPath = path;
+            }
+        }
+        System.out.println("Top: " + topPath + " (" + topCount + ")");
+    }
+}
+```
+
+#### コードが動く順番
+1. 7〜10行目：ログ件数 `n` を読み込み、回数管理用 `counts` と暫定1位（`topPath`, `topCount`）を初期化する。
+2. 12〜20行目：ログを1件読むたびに `counts` の回数を `+1` し、暫定1位 `topCount` を超えたら即座に `topCount` と `topPath` を更新する。
+3. 21行目：最終的な最多エンドポイントと回数を出力する。
 
 ---
 
@@ -1055,7 +1201,47 @@ public class Main {
 
 ---
 
-# Java上級コース（全4問）
+### 中級 2-3. 例外処理（try-catch）による不正データ除外と安全集計
+- **難易度**: 中級（目安：15分） / **テーマ**: ループ内 `try-catch`・バッチ処理の障害耐性
+
+#### 模範解答
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = Integer.parseInt(sc.nextLine().trim());
+        int sum = 0;
+        int skipped = 0;
+
+        for (int i = 0; i < n; i++) {
+            String raw = sc.nextLine().trim();
+            try {
+                int val = Integer.parseInt(raw);
+                sum += val;
+            } catch (Exception e) {
+                skipped++;
+            }
+        }
+
+        System.out.println("Sum: " + sum);
+        System.out.println("Skipped: " + skipped);
+    }
+}
+```
+
+#### コードが動く順番
+1. 6〜8行目：行数 `n` を読み込み、`sum = 0`, `skipped = 0` を初期化。
+2. 10〜18行目：1行ずつ読み込み、ループの内側の `try` で `Integer.parseInt` を実行。数値なら `sum` に加算、変換失敗して例外が出たら `catch` へ飛んで `skipped++` して次の行へ進む。
+3. 20〜21行目：有効数値の合計とスキップ件数を出力する。
+
+#### 受講生への説明ポイント・よくあるミス
+- **よくあるミス**: `try` を `for` ループの「外側」に書いてしまうと、最初の1件目の不正データでループ全体が中断してしまいます。
+
+---
+
+# Java上級コース（全6問）
 
 ## 上級第1章：DAOパターンとAPIバリデーション設計
 
@@ -1166,6 +1352,53 @@ public class Main {
 
 ---
 
+### 上級 1-3. REST API ページネーション計算と対象ページ抽出
+- **難易度**: 上級（目安：20分） / **テーマ**: ページング計算・境界チェック
+
+#### 模範解答
+```java
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int page = sc.nextInt();
+        int size = sc.nextInt();
+        ArrayList<String> items = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            items.add(sc.next());
+        }
+
+        int totalPages = n == 0 ? 0 : (n + size - 1) / size;
+        System.out.println("Page: " + page + "/" + totalPages);
+
+        int start = (page - 1) * size;
+        int end = start + size;
+        if (end > n) {
+            end = n;
+        }
+
+        if (page < 1 || start >= n) {
+            System.out.println("EMPTY");
+        } else {
+            for (int i = start; i < end; i++) {
+                System.out.println(items.get(i));
+            }
+        }
+    }
+}
+```
+
+#### コードが動く順番
+1. 7〜13行目：件数 `n`・ページ番号 `page`・1ページ件数 `size` と全アイテムを読み込む。
+2. 15〜16行目：切り上げ公式 `(n + size - 1) / size` で総ページ数を計算し `Page: page/totalPages` を出力。
+3. 18〜22行目：開始位置 `start = (page - 1) * size`、終了位置 `end = Math.min(start + size, n)` を計算。
+4. 24〜30行目：範囲外なら `EMPTY`、範囲内なら `start` 〜 `end - 1` を順番に出力する。
+
+---
+
 ## 上級第2章：顧客・案件管理ロジック＆単体テスト設計
 
 ---
@@ -1257,3 +1490,47 @@ public class Main {
 
 #### 受講生への説明ポイント・よくあるミス
 - **説明のコツ**: JUnit などの単体テストも本質はこれと全く同じ（**「テスト対象を呼ぶ → 期待値と一致するか比較する」**）です。境界値（`17`, `18`, `65`, `66`）をテストする意味を伝えると品質意識が高まります。
+
+---
+
+### 上級 2-3. 注文ステータス遷移バリデーション（状態遷移設計）
+- **難易度**: 上級（目安：20分） / **テーマ**: ステートマシン・ホワイトリスト判定
+
+#### 模範解答
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static boolean canTransition(String from, String to) {
+        if (from.equals("DRAFT")) {
+            return to.equals("CONFIRMED") || to.equals("CANCELLED");
+        }
+        if (from.equals("CONFIRMED")) {
+            return to.equals("SHIPPED") || to.equals("CANCELLED");
+        }
+        if (from.equals("SHIPPED")) {
+            return to.equals("DELIVERED");
+        }
+        return false;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int t = sc.nextInt();
+        for (int i = 0; i < t; i++) {
+            String from = sc.next();
+            String to = sc.next();
+            System.out.println(canTransition(from, to) ? "ALLOW" : "DENY");
+        }
+    }
+}
+```
+
+#### コードが動く順番
+1. 19行目：検証件数 `t` を読み込む。
+2. 20〜24行目：1件ごとに `from`（現在状態）と `to`（遷移先）を読み込み、`canTransition(from, to)` を呼び出す。
+3. 4〜15行目：許可された遷移ルート（`DRAFT→CONFIRMED/CANCELLED`, `CONFIRMED→SHIPPED/CANCELLED`, `SHIPPED→DELIVERED`）のみ `true` を返し、それ以外（終端状態 `DELIVERED` / `CANCELLED` を含む）はすべて `false` で拒否する。
+4. 23行目：`true` なら `ALLOW`、`false` なら `DENY` を出力する。
+
+#### 受講生への説明ポイント・よくあるミス
+- **説明のコツ**: 「ダメな遷移を禁止する（ブラックリスト）」のではなく、「許可する遷移だけを書く（ホワイトリスト）」方が漏れがなく安全、という実務セキュリティの基本原則を伝えましょう。

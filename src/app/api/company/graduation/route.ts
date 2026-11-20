@@ -69,20 +69,31 @@ export async function POST(request: NextRequest) {
             ? createAdminClient()
             : await createClient();
 
-        await db.from("graduation_evaluations").upsert(
-          {
-            user_id: studentId,
-            company_id: caller.company_id ?? null,
-            scores_json: scores,
-            total_score: evaluation.totalScore,
-            mandatory_final_project_passed: mandatoryPassed,
-            verdict: evaluation.verdict,
-            evaluator_id: caller.id,
-            evaluator_comment: evaluatorComment || null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id" }
-        );
+        const { error: upsertErr } = await db
+          .from("graduation_evaluations")
+          .upsert(
+            {
+              user_id: studentId,
+              company_id: caller.company_id ?? null,
+              scores_json: scores,
+              total_score: evaluation.totalScore,
+              mandatory_final_project_passed: mandatoryPassed,
+              verdict: evaluation.verdict,
+              evaluator_id: caller.id,
+              evaluator_comment: evaluatorComment || null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id" }
+          );
+
+        if (upsertErr) {
+          return NextResponse.json(
+            {
+              error: `DB保存エラー: ${upsertErr.message}（SupabaseでマイグレーションSQLを実行済みかご確認ください）`,
+            },
+            { status: 500 }
+          );
+        }
       } catch {
         // テーブル未適用時はインメモリ保存で継続
       }

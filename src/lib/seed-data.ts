@@ -2204,8 +2204,8 @@ Gitの最も基本的な操作であるコミット（\`git commit\`）を作成
     difficulty: "medium",
     estimated_minutes: 10,
     tags: ["Gitマージ", "ブランチ統合"],
-    starter_code: `git commit -m "main work"\ngit switch -c feature\ngit commit -m "feature work"\ngit switch main`,
-    solution_code: `git commit -m "main work"\ngit switch -c feature\ngit commit -m "feature work"\ngit switch main\ngit merge feature`,
+    starter_code: `git commit -m "main work"\ngit switch -c feature\ngit commit -m "feature work"\ngit switch main\ngit commit -m "main update"`,
+    solution_code: `git commit -m "main work"\ngit switch -c feature\ngit commit -m "feature work"\ngit switch main\ngit commit -m "main update"\ngit merge feature`,
     explanation_md: `\`git merge <ブランチ名>\` を実行すると、現在のブランチに指定ブランチの履歴が統合されます。分岐している場合は、双方の親を持つマージコミットが新しく作成されます。`,
     order_index: 1,
     test_cases: [

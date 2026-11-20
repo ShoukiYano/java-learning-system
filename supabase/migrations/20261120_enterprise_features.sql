@@ -67,18 +67,35 @@ CREATE TABLE IF NOT EXISTS public.announcement_reads (
 );
 
 -- 権限付与（permission denied 防止）
+-- 6. 100点修了判定テーブル（未作成環境でも確実に作成＋権限付与）
+CREATE TABLE IF NOT EXISTS public.graduation_evaluations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE REFERENCES public.profiles(id) ON DELETE CASCADE,
+  company_id UUID REFERENCES public.companies(id) ON DELETE SET NULL,
+  scores_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+  total_score INTEGER NOT NULL DEFAULT 0 CHECK (total_score BETWEEN 0 AND 100),
+  mandatory_final_project_passed BOOLEAN NOT NULL DEFAULT false,
+  verdict TEXT NOT NULL DEFAULT 'needs_review'
+    CHECK (verdict IN ('graduated', 'conditional_review', 'needs_review')),
+  evaluator_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  evaluator_comment TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON TABLE
   public.training_milestones,
   public.student_questions,
   public.audit_logs,
-  public.announcement_reads
+  public.announcement_reads,
+  public.graduation_evaluations
 TO authenticated, service_role;
 
 ALTER TABLE public.training_milestones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.student_questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.announcement_reads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.graduation_evaluations ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Authenticated manage milestones" ON public.training_milestones;
 CREATE POLICY "Authenticated manage milestones" ON public.training_milestones FOR ALL TO authenticated USING (true) WITH CHECK (true);
@@ -91,5 +108,8 @@ CREATE POLICY "Authenticated manage audit_logs" ON public.audit_logs FOR ALL TO 
 
 DROP POLICY IF EXISTS "Authenticated manage announcement_reads" ON public.announcement_reads;
 CREATE POLICY "Authenticated manage announcement_reads" ON public.announcement_reads FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Authenticated manage graduation_evaluations" ON public.graduation_evaluations;
+CREATE POLICY "Authenticated manage graduation_evaluations" ON public.graduation_evaluations FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 NOTIFY pgrst, 'reload schema';

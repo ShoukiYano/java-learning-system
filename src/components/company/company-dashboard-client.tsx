@@ -57,7 +57,7 @@ export function CompanyDashboardClient({
   companyStudents,
   slackSettings,
   milestones = [],
-  initialDelayAlertDays = 3,
+  initialDelayAlertDays = 5,
 }: {
   companyId?: string;
   companyName: string;

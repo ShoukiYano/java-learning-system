@@ -10,6 +10,7 @@ import {
   reviewInMemoryDeliverable,
 } from "@/lib/curriculum/graduation";
 import { isSupabaseConfigured } from "@/lib/data-service";
+import { requireApiAuth } from "@/lib/api-auth";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
@@ -17,28 +18,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { action = "submit" } = body;
 
-    let userId = "demo-student";
-    let companyId: string | null = null;
+    const auth = await requireApiAuth(
+      action === "review" ? ["company", "admin"] : ["student", "company", "admin"]
+    );
+    if (!auth.ok) return auth.response;
 
-    if (isSupabaseConfigured()) {
-      try {
-        const supabase = await createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) {
-          userId = user.id;
-          const { data: prof } = await supabase
-            .from("profiles")
-            .select("company_id")
-            .eq("id", user.id)
-            .maybeSingle();
-          companyId = prof?.company_id ?? null;
-        }
-      } catch {
-        // ignore
-      }
-    }
+    const userId = auth.profile.id;
+    const companyId: string | null = auth.profile.company_id ?? null;
 
     if (action === "review") {
       const { submissionId, reviewStatus, reviewerComment, score } = body;

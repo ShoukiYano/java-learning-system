@@ -947,6 +947,7 @@ export async function getStudentsAnalyticsFromDb(
       { data: progressesDb },
       { data: studyLogsDb },
       { data: feedbacksDb },
+      { data: companiesDelayDb },
     ] = await Promise.all([
       adminOrUserClient
         .from("problems")
@@ -970,7 +971,31 @@ export async function getStudentsAnalyticsFromDb(
         .select("*, admin:profiles!feedbacks_admin_id_fkey(id, full_name)")
         .in("student_id", studentIds)
         .order("created_at", { ascending: false }),
+      adminOrUserClient
+        .from("companies")
+        .select("id, delay_alert_days"),
     ]);
+
+    // 企業別の遅れアラート閾値マップを構築（DB値 → インメモリ値 → デフォルト5日）
+    const companyDelayDaysMap = new Map<string, number>();
+    const memDelayMap =
+      (globalThis as { __demoCompanyDelayDays?: Record<string, number> })
+        .__demoCompanyDelayDays ?? {};
+    for (const [cid, days] of Object.entries(memDelayMap)) {
+      if (typeof days === "number" && days >= 1) {
+        companyDelayDaysMap.set(cid, days);
+      }
+    }
+    if (Array.isArray(companiesDelayDb)) {
+      for (const row of companiesDelayDb as Array<{
+        id: string;
+        delay_alert_days?: number | null;
+      }>) {
+        if (typeof row.delay_alert_days === "number" && row.delay_alert_days >= 1) {
+          companyDelayDaysMap.set(row.id, row.delay_alert_days);
+        }
+      }
+    }
 
     const problemsList =
       allProblemsDb && allProblemsDb.length > 0
@@ -1034,7 +1059,9 @@ export async function getStudentsAnalyticsFromDb(
         .filter((l) => l.study_date >= sevenDaysStr)
         .reduce((acc, cur) => acc + cur.minutes, 0);
 
-      // 最終ログインからの経過日数による遅れアラート判定
+      // 最終ログインからの経過日数による遅れアラート判定（企業別カスタマイズ閾値に対応）
+      const thresholdDays =
+        (st.company_id ? companyDelayDaysMap.get(st.company_id) : undefined) ?? 5;
       const lastLoginDate = st.last_login_at
         ? new Date(st.last_login_at)
         : new Date(st.created_at);
@@ -1042,10 +1069,11 @@ export async function getStudentsAnalyticsFromDb(
         (Date.now() - lastLoginDate.getTime()) / (1000 * 60 * 60 * 24)
       );
       const isDelayed =
-        daysSinceLogin >= 5 || (progressPercent < 20 && totalMinutes < 30);
+        daysSinceLogin >= thresholdDays ||
+        (progressPercent < 20 && totalMinutes < 30);
       const delayReason =
-        daysSinceLogin >= 5
-          ? `最終ログインから${daysSinceLogin}日経過`
+        daysSinceLogin >= thresholdDays
+          ? `最終ログインから${daysSinceLogin}日経過（基準: ${thresholdDays}日）`
           : isDelayed
           ? "進捗20%未満・学習時間不足"
           : undefined;

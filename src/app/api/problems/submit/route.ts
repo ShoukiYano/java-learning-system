@@ -127,7 +127,15 @@ export async function POST(request: NextRequest) {
         } = await userSupabase.auth.getUser();
 
         if (user) {
-          const userCourses = await getCoursesWithProgress(user.id);
+          const { data: prof } = await userSupabase
+            .from("profiles")
+            .select("company_id")
+            .eq("id", user.id)
+            .maybeSingle();
+          const userCourses = await getCoursesWithProgress(
+            user.id,
+            prof?.company_id ?? null
+          );
           const seedProbRef = SEED_PROBLEMS.find((p) => p.id === problemId);
           const seedChRef = seedProbRef
             ? SEED_CHAPTERS.find((ch) => ch.id === seedProbRef.chapter_id)

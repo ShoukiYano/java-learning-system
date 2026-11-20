@@ -4,7 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentProfile, isSupabaseConfigured } from "@/lib/data-service";
+import { isSupabaseConfigured } from "@/lib/data-service";
+import { requireApiAuth } from "@/lib/api-auth";
 import { createClient } from "@/lib/supabase/server";
 
 declare global {
@@ -14,6 +15,9 @@ declare global {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireApiAuth(["student", "company", "admin"]);
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const announcementId = String(body.announcementId ?? "").trim();
     if (!announcementId) {
@@ -23,7 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const profile = await getCurrentProfile();
+    const profile = auth.profile;
     if (!globalThis.__demoAnnouncementReads) {
       globalThis.__demoAnnouncementReads = {};
     }
