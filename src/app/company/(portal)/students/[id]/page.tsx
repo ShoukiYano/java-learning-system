@@ -1,9 +1,12 @@
 import React from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import {
+  getCurrentProfile,
   getStudentDetailForAdminOrCompany,
   getGraduationEvaluationFromDb,
 } from "@/lib/data-service";
+import { isSameCompanyTenant } from "@/lib/api-auth";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
 import { EvaluationCommentManager } from "@/components/dashboard/evaluation-comment-manager";
 import { StudentCourseLockManager } from "@/components/dashboard/student-course-lock-manager";
@@ -25,11 +28,24 @@ export default async function CompanyStudentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [{ student, submissions, courseLockStatuses }, savedGraduation] =
+  const [viewerProfile, { student, submissions, courseLockStatuses }, savedGraduation] =
     await Promise.all([
+      getCurrentProfile(),
       getStudentDetailForAdminOrCompany(id),
       getGraduationEvaluationFromDb(id),
     ]);
+
+  // 企業間データ分離（IDOR防止）：自社以外の受講生UUIDへ直接アクセスされた場合は404で遮断
+  if (
+    viewerProfile.role === "company" &&
+    !isSameCompanyTenant(
+      viewerProfile.role,
+      viewerProfile.company_id,
+      student.companyId
+    )
+  ) {
+    notFound();
+  }
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl space-y-6">

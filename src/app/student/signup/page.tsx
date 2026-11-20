@@ -32,6 +32,7 @@ export default function StudentSignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [companyCode, setCompanyCode] = useState("");
+  const [agreedPrivacy, setAgreedPrivacy] = useState(false);
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +43,10 @@ export default function StudentSignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isBusy) return;
+    if (!agreedPrivacy) {
+      setError("プライバシーポリシーへの同意が必要です。");
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccessMsg(null);
@@ -191,13 +196,13 @@ export default function StudentSignupPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
                   <KeyRound className="h-3.5 w-3.5 text-slate-400" />
-                  パスワード（6文字以上）
+                  パスワード（8文字以上）
                 </label>
                 <Input
                   type="password"
                   required
                   disabled={isBusy}
-                  minLength={6}
+                  minLength={8}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -220,10 +225,31 @@ export default function StudentSignupPage() {
                 />
               </div>
 
+              <label className="flex items-start gap-2 text-xs text-slate-300 cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  checked={agreedPrivacy}
+                  onChange={(e) => setAgreedPrivacy(e.target.checked)}
+                  required
+                  disabled={isBusy}
+                  className="mt-0.5 rounded border-slate-600 bg-slate-950 accent-blue-600"
+                />
+                <span>
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    className="text-blue-400 underline hover:text-blue-300 font-semibold"
+                  >
+                    プライバシーポリシー（個人情報の取扱い）
+                  </Link>
+                  を確認し、同意します（必須）
+                </span>
+              </label>
+
               <Button
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-500 text-white"
-                disabled={isBusy}
+                disabled={isBusy || !agreedPrivacy}
               >
                 {isBusy ? (
                   <>

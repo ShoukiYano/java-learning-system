@@ -17,6 +17,23 @@ export type ApiAuthResult =
   | { ok: true; profile: Profile; role: UserRole }
   | { ok: false; response: NextResponse };
 
+/**
+ * 企業間データ分離（IDOR対策）チェック：
+ * - admin は全社アクセス可
+ * - company は actorCompanyId と targetCompanyId が完全一致する場合のみ許可
+ * - それ以外は拒否
+ */
+export function isSameCompanyTenant(
+  actorRole: UserRole,
+  actorCompanyId: string | null | undefined,
+  targetCompanyId: string | null | undefined
+): boolean {
+  if (actorRole === "admin") return true;
+  if (actorRole !== "company") return false;
+  if (!actorCompanyId || !targetCompanyId) return false;
+  return actorCompanyId === targetCompanyId;
+}
+
 export async function requireApiAuth(
   allowedRoles?: UserRole[]
 ): Promise<ApiAuthResult> {

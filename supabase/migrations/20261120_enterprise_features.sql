@@ -97,19 +97,82 @@ ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.announcement_reads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.graduation_evaluations ENABLE ROW LEVEL SECURITY;
 
+-- 最小権限RLSポリシー（ロール・本人・自社テナント単位で厳格分離）
+
+-- 1) training_milestones：管理者は全操作可、受講生・企業担当者は自社または全体のみ閲覧可
 DROP POLICY IF EXISTS "Authenticated manage milestones" ON public.training_milestones;
-CREATE POLICY "Authenticated manage milestones" ON public.training_milestones FOR ALL TO authenticated USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Admin manage milestones" ON public.training_milestones;
+DROP POLICY IF EXISTS "Tenant read milestones" ON public.training_milestones;
+CREATE POLICY "Admin manage milestones" ON public.training_milestones
+  FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.role = 'admin'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+CREATE POLICY "Tenant read milestones" ON public.training_milestones
+  FOR SELECT TO authenticated
+  USING (
+    company_id IS NULL
+    OR company_id = (SELECT p.company_id FROM public.profiles p WHERE p.id = auth.uid())
+  );
 
+-- 2) student_questions：本人のみ投稿可、閲覧は本人・自社担当者・管理者のみ
 DROP POLICY IF EXISTS "Authenticated manage questions" ON public.student_questions;
-CREATE POLICY "Authenticated manage questions" ON public.student_questions FOR ALL TO authenticated USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Student insert own questions" ON public.student_questions;
+DROP POLICY IF EXISTS "Tenant read questions" ON public.student_questions;
+CREATE POLICY "Student insert own questions" ON public.student_questions
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Tenant read questions" ON public.student_questions
+  FOR SELECT TO authenticated
+  USING (
+    auth.uid() = user_id
+    OR EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND (p.role = 'admin' OR (p.role = 'company' AND p.company_id = student_questions.company_id))
+    )
+  );
 
+-- 3) audit_logs：閲覧は管理者のみ、記録は認証済みユーザー（操作イベント記録用）
 DROP POLICY IF EXISTS "Authenticated manage audit_logs" ON public.audit_logs;
-CREATE POLICY "Authenticated manage audit_logs" ON public.audit_logs FOR ALL TO authenticated USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Admin read audit_logs" ON public.audit_logs;
+DROP POLICY IF EXISTS "Authenticated insert audit_logs" ON public.audit_logs;
+CREATE POLICY "Admin read audit_logs" ON public.audit_logs
+  FOR SELECT TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+CREATE POLICY "Authenticated insert audit_logs" ON public.audit_logs
+  FOR INSERT TO authenticated
+  WITH CHECK (true);
 
+-- 4) announcement_reads：本人の既読レコードのみ操作可
 DROP POLICY IF EXISTS "Authenticated manage announcement_reads" ON public.announcement_reads;
-CREATE POLICY "Authenticated manage announcement_reads" ON public.announcement_reads FOR ALL TO authenticated USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "User manage own announcement_reads" ON public.announcement_reads;
+CREATE POLICY "User manage own announcement_reads" ON public.announcement_reads
+  FOR ALL TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
+-- 5) graduation_evaluations：管理者・自社企業担当者のみ管理可、受講生は本人のみ閲覧可
 DROP POLICY IF EXISTS "Authenticated manage graduation_evaluations" ON public.graduation_evaluations;
-CREATE POLICY "Authenticated manage graduation_evaluations" ON public.graduation_evaluations FOR ALL TO authenticated USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Admin or company manage graduation_evaluations" ON public.graduation_evaluations;
+DROP POLICY IF EXISTS "Student read own graduation_evaluations" ON public.graduation_evaluations;
+CREATE POLICY "Admin or company manage graduation_evaluations" ON public.graduation_evaluations
+  FOR ALL TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND (p.role = 'admin' OR (p.role = 'company' AND p.company_id = graduation_evaluations.company_id))
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND (p.role = 'admin' OR (p.role = 'company' AND p.company_id = graduation_evaluations.company_id))
+    )
+  );
+CREATE POLICY "Student read own graduation_evaluations" ON public.graduation_evaluations
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
 
 NOTIFY pgrst, 'reload schema';

@@ -5,7 +5,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { isSupabaseConfigured } from "@/lib/data-service";
-import { requireApiAuth } from "@/lib/api-auth";
+import { requireApiAuth, isSameCompanyTenant } from "@/lib/api-auth";
+import { DEMO_STUDENTS_ANALYTICS } from "@/lib/mock-analytics";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { evaluateGraduation } from "@/lib/curriculum/graduation";
@@ -50,6 +51,35 @@ export async function POST(request: NextRequest) {
 
     const evaluation = evaluateGraduation(scores, mandatoryPassed);
     const caller = auth.profile;
+
+    // 企業間データ分離（IDOR防止）：企業担当者は自社所属受講生のみ評価保存可
+    if (auth.role === "company") {
+      let targetCompanyId: string | null | undefined = undefined;
+      if (isSupabaseConfigured()) {
+        const dbCheck =
+          process.env.SUPABASE_SERVICE_ROLE_KEY &&
+          !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+            ? createAdminClient()
+            : await createClient();
+        const { data: targetProf } = await dbCheck
+          .from("profiles")
+          .select("company_id")
+          .eq("id", studentId)
+          .maybeSingle();
+        targetCompanyId = targetProf?.company_id ?? null;
+      } else {
+        const demoSt = DEMO_STUDENTS_ANALYTICS.find((s) => s.id === studentId);
+        // デモ環境の任意テストIDの場合は自社のダミーテストとして許可、他社実在デモ受講生は遮断
+        targetCompanyId = demoSt ? demoSt.companyId : caller.company_id;
+      }
+
+      if (!isSameCompanyTenant(auth.role, caller.company_id, targetCompanyId)) {
+        return NextResponse.json(
+          { error: "他社所属の受講生に対する修了判定は実行できません。" },
+          { status: 403 }
+        );
+      }
+    }
 
     if (!globalThis.__demoGraduationEvaluations) {
       globalThis.__demoGraduationEvaluations = {};

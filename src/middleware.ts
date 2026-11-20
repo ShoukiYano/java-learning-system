@@ -41,6 +41,20 @@ function applySecurityHeaders(
   res.headers.set("X-Frame-Options", "DENY");
   res.headers.set("X-Content-Type-Options", "nosniff");
   res.headers.set("Referrer-Policy", "same-origin");
+  res.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=()"
+  );
+  res.headers.set(
+    "Content-Security-Policy",
+    "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
+  );
+  if (process.env.NODE_ENV === "production") {
+    res.headers.set(
+      "Strict-Transport-Security",
+      "max-age=63072000; includeSubDomains; preload"
+    );
+  }
   if (isSensitivePortal) {
     res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
     res.headers.set(
