@@ -144,21 +144,21 @@ export function RoleLoginForm({
     setInfoMessage(null);
 
     try {
-      const supabase = createClient();
-      const appUrl =
-        process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        email,
-        {
-          redirectTo: `${appUrl}${targetHomePath}/login`,
-        }
-      );
-
-      if (resetError) {
-        setError(resetError.message);
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          redirectPath: `${targetHomePath}/login`,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "パスワードリセット送信に失敗しました。");
       } else {
         setInfoMessage(
-          "パスワード再設定用のメールを送信しました。メール内のリンクをご確認ください。"
+          data.message ||
+            "パスワード再設定用のメールを送信しました。メール内のリンクをご確認ください。"
         );
       }
     } catch {

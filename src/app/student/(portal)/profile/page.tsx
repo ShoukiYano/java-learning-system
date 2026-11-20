@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { UserCircle, Building2, CheckCircle2 } from "lucide-react";
+import { UserCircle, Building2, CheckCircle2, KeyRound, AlertCircle } from "lucide-react";
 
 export default function StudentProfilePage() {
   const [fullName, setFullName] = useState("山田 太郎");
@@ -19,6 +19,13 @@ export default function StudentProfilePage() {
   const [companyName, setCompanyName] = useState("株式会社ACMEテクノロジーズ");
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+
+  // パスワード変更用 state
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [pwSuccess, setPwSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -68,8 +75,44 @@ export default function StudentProfilePage() {
     }
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwError(null);
+    setPwSuccess(null);
+
+    if (newPassword.length < 8) {
+      setPwError("新しいパスワードは8文字以上で入力してください。");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPwError("確認用パスワードが一致しません。");
+      return;
+    }
+
+    setPwSaving(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPwError(data.error || "パスワード変更に失敗しました。");
+      } else {
+        setPwSuccess(data.message || "パスワードを変更しました。");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch {
+      setPwError("通信エラーが発生しました。");
+    } finally {
+      setPwSaving(false);
+    }
+  };
+
   return (
-    <div className="container mx-auto px-6 py-8 max-w-2xl space-y-6">
+    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">プロフィール編集</h1>
         <p className="text-sm text-slate-600 mt-1">
@@ -124,6 +167,63 @@ export default function StudentProfilePage() {
 
             <Button type="submit" disabled={saving}>
               {saving ? "保存中..." : "変更を保存する"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <KeyRound className="h-5 w-5 text-indigo-600" />
+            パスワード変更
+          </CardTitle>
+          <CardDescription>
+            ログイン用パスワードを8文字以上の新しいパスワードへ変更できます。
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {pwError && (
+            <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+              <span>{pwError}</span>
+            </div>
+          )}
+          {pwSuccess && (
+            <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              <span>{pwSuccess}</span>
+            </div>
+          )}
+          <form onSubmit={handlePasswordChange} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700">
+                新しいパスワード（8文字以上）
+              </label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="8文字以上で入力"
+                minLength={8}
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700">
+                新しいパスワード（確認用）
+              </label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="もう一度入力してください"
+                minLength={8}
+                required
+              />
+            </div>
+            <Button type="submit" disabled={pwSaving} variant="default">
+              {pwSaving ? "変更中..." : "パスワードを変更する"}
             </Button>
           </form>
         </CardContent>

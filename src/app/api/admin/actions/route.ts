@@ -18,7 +18,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isSupabaseConfigured, getStudentsAnalyticsFromDb } from "@/lib/data-service";
+import { isSupabaseConfigured, getStudentsAnalyticsFromDb, getMilestonesFromDb } from "@/lib/data-service";
+import { recordAuditLog } from "@/lib/audit-log";
 import { resetLoginAttemptsForEmail } from "@/lib/login-attempts";
 import {
   setInMemoryStudentCourseLock,
@@ -722,6 +723,14 @@ export async function POST(request: NextRequest) {
           }
         }
 
+        await recordAuditLog({
+          actorId: user?.id ?? null,
+          actorEmail: user?.email ?? null,
+          actorRole: callerRole,
+          action: "update_company",
+          targetSummary: `企業「${name}」の設定を更新しました（コード: ${cleanCode}）`,
+          detail: { companyId, companyCode: cleanCode },
+        });
         return NextResponse.json({
           ok: true,
           company: updatedCompany,
@@ -931,6 +940,14 @@ export async function POST(request: NextRequest) {
           }
         }
 
+        await recordAuditLog({
+          actorId: user?.id ?? null,
+          actorEmail: user?.email ?? null,
+          actorRole: callerRole,
+          action: "reset_manager_password",
+          targetSummary: `企業担当者(${email || managerId})のパスワードを再設定しました`,
+          detail: { managerId, email },
+        });
         return NextResponse.json({ ok: true });
       }
 
@@ -995,7 +1012,7 @@ export async function POST(request: NextRequest) {
       case "send_slack_digest": {
         const { webhookUrl, companyName, companyId, channelName } = payload;
         const students = await getStudentsAnalyticsFromDb(companyId);
-        const milestones = getInMemoryMilestones(companyId);
+        const milestones = await getMilestonesFromDb(companyId);
         const result = await sendCompanyDigestMessage(webhookUrl, companyName, students, milestones, channelName);
         if (!result.ok) {
           return NextResponse.json({ ok: false, error: result.error || "Slack送信に失敗しました。" }, { status: 400 });
@@ -1003,9 +1020,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true, result });
       }
 
-      // 20. 研修スケジュール（目標マイルストーン）保存
+      // 20. 研修スケジュール（目標マイルストーン）保存（Supabase永続化）
       case "save_milestone": {
-        const saved = saveInMemoryMilestone({
+        const savedLocal = saveInMemoryMilestone({
           id: payload.id,
           company_id: payload.companyId,
           title: payload.title,
@@ -1013,12 +1030,58 @@ export async function POST(request: NextRequest) {
           target_problem_count: payload.targetProblemCount,
           order_index: payload.orderIndex,
         });
-        return NextResponse.json({ ok: true, milestone: saved });
+        let savedRow = savedLocal;
+        try {
+          const rowPayload: Record<string, unknown> = {
+            company_id: payload.companyId,
+            title: String(payload.title || "").trim(),
+            target_date: payload.targetDate,
+            course_id: payload.courseId || null,
+            target_problem_count: Number(payload.targetProblemCount) || 0,
+            description: payload.description || null,
+            order_index: Number(payload.orderIndex) || 1,
+          };
+          if (payload.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(payload.id)) {
+            rowPayload.id = payload.id;
+          }
+          const { data: msData, error: msErr } = await db
+            .from("training_milestones")
+            .upsert(rowPayload, { onConflict: "id" })
+            .select("*")
+            .single();
+          if (!msErr && msData) {
+            savedRow = msData;
+          }
+        } catch {
+          // training_milestones テーブル未作成時はインメモリ保存にフォールバック
+        }
+        await recordAuditLog({
+          actorId: user?.id ?? null,
+          actorEmail: user?.email ?? null,
+          actorRole: callerRole,
+          action: "save_milestone",
+          targetSummary: `目標マイルストーン「${payload.title}」(${payload.targetDate})を保存しました`,
+          detail: { milestoneId: savedRow.id, companyId: payload.companyId },
+        });
+        return NextResponse.json({ ok: true, milestone: savedRow });
       }
 
-      // 21. 研修スケジュール（目標マイルストーン）削除
+      // 21. 研修スケジュール（目標マイルストーン）削除（Supabase永続化）
       case "delete_milestone": {
         deleteInMemoryMilestone(payload.id);
+        try {
+          await db.from("training_milestones").delete().eq("id", payload.id);
+        } catch {
+          // ignore
+        }
+        await recordAuditLog({
+          actorId: user?.id ?? null,
+          actorEmail: user?.email ?? null,
+          actorRole: callerRole,
+          action: "delete_milestone",
+          targetSummary: `目標マイルストーン(${payload.id})を削除しました`,
+          detail: { milestoneId: payload.id },
+        });
         return NextResponse.json({ ok: true });
       }
 

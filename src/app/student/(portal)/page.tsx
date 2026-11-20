@@ -13,10 +13,15 @@
 
 import React from "react";
 import Link from "next/link";
-import { getCurrentProfile, getStudentDashboardData } from "@/lib/data-service";
-import { getInMemoryMilestones } from "@/lib/seed-data";
+import {
+  getCurrentProfile,
+  getStudentDashboardData,
+  getMilestonesFromDb,
+  getReadAnnouncementIdsFromDb,
+} from "@/lib/data-service";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
 import { StudyHeatmap } from "@/components/dashboard/study-heatmap";
+import { StudentAnnouncementsCard } from "@/components/dashboard/student-announcements-card";
 import {
   Card,
   CardContent,
@@ -49,7 +54,10 @@ export default async function StudentDashboardPage() {
     profile.company_id
   );
 
-  const milestones = getInMemoryMilestones(profile.company_id ?? undefined);
+  const [milestones, readAnnouncementIds] = await Promise.all([
+    getMilestonesFromDb(profile.company_id ?? undefined),
+    getReadAnnouncementIdsFromDb(profile.id),
+  ]);
   const todayStr = new Date().toISOString().slice(0, 10);
   const activeMilestone =
     milestones.find((m) => m.target_date >= todayStr) || milestones[0];
@@ -277,32 +285,10 @@ export default async function StudentDashboardPage() {
         </div>
       </div>
 
-      {dashboard.announcements.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Megaphone className="h-4 w-4 text-amber-600" />
-              お知らせ
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="divide-y">
-            {dashboard.announcements.map((ann) => (
-              <div key={ann.id} className="py-3 first:pt-0 last:pb-0 space-y-1">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">
-                    {ann.company_id ? "テナント限定" : "全体"}
-                  </Badge>
-                  <span className="font-semibold text-sm">{ann.title}</span>
-                  <span className="text-xs text-slate-400 ml-auto">
-                    {new Date(ann.created_at).toLocaleDateString("ja-JP")}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600">{ann.content_md}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+      <StudentAnnouncementsCard
+        announcements={dashboard.announcements}
+        initialReadIds={readAnnouncementIds}
+      />
     </div>
   );
 }

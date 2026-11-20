@@ -8,7 +8,8 @@ import {
   FilePlus2,
   Users,
   Megaphone,
-  ExternalLink,
+  Table2,
+  ScrollText,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
@@ -70,11 +71,25 @@ export default function AdminPortalLayout({
               全テナント受講生・評価
             </Link>
             <Link
+              href="/admin/progress"
+              className="px-3 py-1.5 rounded-md hover:bg-slate-800 hover:text-white flex items-center gap-1.5 transition"
+            >
+              <Table2 className="h-3.5 w-3.5 text-sky-400" />
+              全体進捗表
+            </Link>
+            <Link
               href="/admin/announcements"
               className="px-3 py-1.5 rounded-md hover:bg-slate-800 hover:text-white flex items-center gap-1.5 transition"
             >
               <Megaphone className="h-3.5 w-3.5 text-rose-400" />
               お知らせ配信
+            </Link>
+            <Link
+              href="/admin/audit-logs"
+              className="px-3 py-1.5 rounded-md hover:bg-slate-800 hover:text-white flex items-center gap-1.5 transition"
+            >
+              <ScrollText className="h-3.5 w-3.5 text-teal-400" />
+              監査ログ
             </Link>
           </nav>
         </div>

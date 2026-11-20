@@ -1,6 +1,9 @@
 import React from "react";
 import Link from "next/link";
-import { getStudentDetailForAdminOrCompany } from "@/lib/data-service";
+import {
+  getStudentDetailForAdminOrCompany,
+  getGraduationEvaluationFromDb,
+} from "@/lib/data-service";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
 import { EvaluationCommentManager } from "@/components/dashboard/evaluation-comment-manager";
 import { StudentCourseLockManager } from "@/components/dashboard/student-course-lock-manager";
@@ -22,8 +25,11 @@ export default async function CompanyStudentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { student, submissions, courseLockStatuses } =
-    await getStudentDetailForAdminOrCompany(id);
+  const [{ student, submissions, courseLockStatuses }, savedGraduation] =
+    await Promise.all([
+      getStudentDetailForAdminOrCompany(id),
+      getGraduationEvaluationFromDb(id),
+    ]);
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl space-y-6">
@@ -91,19 +97,25 @@ export default async function CompanyStudentDetailPage({
         initialCourseStatuses={courseLockStatuses}
       />
 
-      {/* ★ 90日間研修 100点満点修了判定パネル */}
+      {/* ★ 90日間研修 100点満点修了判定パネル（DB永続保存対応） */}
       <GraduationEvaluationCard
+        studentId={student.id}
         studentName={student.fullName}
-        initialScores={{
-          java_oop: Math.min(20, Math.round((student.progressPercent / 100) * 20)),
-          java_api_collections: Math.min(10, Math.round((student.progressPercent / 100) * 10)),
-          sql_db: Math.min(10, Math.round((student.progressPercent / 100) * 8)),
-          spring_boot_api: 0,
-          git_workflow: 5,
-          junit_testing: 0,
-          final_project: 0,
-        }}
-        initialMandatoryPassed={false}
+        initialScores={
+          savedGraduation
+            ? savedGraduation.scores
+            : {
+                java_oop: Math.min(20, Math.round((student.progressPercent / 100) * 20)),
+                java_api_collections: Math.min(10, Math.round((student.progressPercent / 100) * 10)),
+                sql_db: Math.min(10, Math.round((student.progressPercent / 100) * 8)),
+                spring_boot_api: 0,
+                git_workflow: 5,
+                junit_testing: 0,
+                final_project: 0,
+              }
+        }
+        initialMandatoryPassed={savedGraduation?.mandatoryPassed ?? false}
+        initialComment={savedGraduation?.comment ?? ""}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

@@ -10,7 +10,11 @@
 
 import React from "react";
 import Link from "next/link";
-import { getCurrentProfile } from "@/lib/data-service";
+import {
+  getCurrentProfile,
+  getStudentDashboardData,
+  getReadAnnouncementIdsFromDb,
+} from "@/lib/data-service";
 import {
   Code2,
   LayoutDashboard,
@@ -29,6 +33,13 @@ export default async function StudentPortalLayout({
   children: React.ReactNode;
 }) {
   const profile = await getCurrentProfile();
+  const [dashboard, readIds] = await Promise.all([
+    getStudentDashboardData(profile.id, profile.company_id),
+    getReadAnnouncementIdsFromDb(profile.id),
+  ]);
+  const unreadAnnouncementCount = dashboard.announcements.filter(
+    (a) => !readIds.includes(a.id)
+  ).length;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -70,6 +81,11 @@ export default async function StudentPortalLayout({
             >
               <LayoutDashboard className="h-4 w-4 text-blue-600" />
               マイダッシュボード
+              {unreadAnnouncementCount > 0 && (
+                <span className="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-bold">
+                  {unreadAnnouncementCount}
+                </span>
+              )}
             </Link>
             <Link
               href="/student/courses"

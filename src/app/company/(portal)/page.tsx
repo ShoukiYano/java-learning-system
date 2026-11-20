@@ -3,8 +3,9 @@ import {
   getCurrentProfile,
   getStudentsAnalyticsFromDb,
   getCompanySlackSettingsFromDb,
+  getMilestonesFromDb,
+  getCompanyDelayAlertDays,
 } from "@/lib/data-service";
-import { getInMemoryMilestones } from "@/lib/seed-data";
 import { CompanyDashboardClient } from "@/components/company/company-dashboard-client";
 
 export default async function CompanyDashboardPage() {
@@ -14,11 +15,13 @@ export default async function CompanyDashboardPage() {
   const companyName =
     profile.companies?.name ?? "株式会社ACMEテクノロジーズ";
 
-  const [companyStudents, slackSettings] = await Promise.all([
-    getStudentsAnalyticsFromDb(targetCompanyId),
-    getCompanySlackSettingsFromDb(targetCompanyId),
-  ]);
-  const milestones = getInMemoryMilestones(targetCompanyId);
+  const [companyStudents, slackSettings, milestones, delayAlertDays] =
+    await Promise.all([
+      getStudentsAnalyticsFromDb(targetCompanyId),
+      getCompanySlackSettingsFromDb(targetCompanyId),
+      getMilestonesFromDb(targetCompanyId),
+      getCompanyDelayAlertDays(targetCompanyId),
+    ]);
 
   return (
     <CompanyDashboardClient
@@ -27,6 +30,7 @@ export default async function CompanyDashboardPage() {
       companyStudents={companyStudents}
       slackSettings={slackSettings}
       milestones={milestones}
+      initialDelayAlertDays={delayAlertDays}
     />
   );
 }

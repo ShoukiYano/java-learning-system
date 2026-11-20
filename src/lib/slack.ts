@@ -231,3 +231,60 @@ export async function sendCompanyDigestMessage(
 
   return sendSlackWebhook(webhookUrl, payload);
 }
+
+/**
+ * 処理概要：
+ * 受講生からの問題別質問を企業の管理者Slackチャンネルへ即時通知する
+ */
+export async function sendSlackQuestionAlert(params: {
+  webhookUrl: string;
+  companyName: string;
+  studentName: string;
+  problemTitle: string;
+  questionText: string;
+  codeSnippet?: string;
+}): Promise<SlackSendResult> {
+  const snippetPreview = params.codeSnippet
+    ? params.codeSnippet.slice(0, 600)
+    : "";
+
+  const blocks: unknown[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: `🙋 受講生からの質問が届きました（${params.companyName}）`,
+        emoji: true,
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*受講生:* ${params.studentName}` },
+        { type: "mrkdwn", text: `*対象問題:* ${params.problemTitle}` },
+      ],
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*質問内容:*\n${params.questionText}`,
+      },
+    },
+  ];
+
+  if (snippetPreview) {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*提出時点のコード抜粋:*\n\`\`\`\n${snippetPreview}\n\`\`\``,
+      },
+    });
+  }
+
+  return sendSlackWebhook(params.webhookUrl, {
+    text: `🙋 【質問】${params.studentName}（${params.problemTitle}）: ${params.questionText}`,
+    blocks,
+  });
+}

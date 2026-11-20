@@ -24,25 +24,74 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { ProgressBar } from "@/components/ui/progress";
-import { Award, CheckCircle2, AlertTriangle, ShieldAlert } from "lucide-react";
+import { Award, CheckCircle2, AlertTriangle, ShieldAlert, Save, Loader2 } from "lucide-react";
 
 interface GraduationEvaluationCardProps {
+  studentId?: string;
   studentName: string;
   initialScores: Partial<Record<GraduationCategoryKey, number>>;
   initialMandatoryPassed?: boolean;
+  initialComment?: string;
 }
 
 export function GraduationEvaluationCard({
+  studentId,
   studentName,
   initialScores,
   initialMandatoryPassed = false,
+  initialComment = "",
 }: GraduationEvaluationCardProps) {
   const [scores, setScores] =
     useState<Partial<Record<GraduationCategoryKey, number>>>(initialScores);
   const [mandatoryPassed, setMandatoryPassed] = useState<boolean>(
     initialMandatoryPassed
   );
+  const [comment, setComment] = useState<string>(initialComment);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [saveMessage, setSaveMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  const handleSave = async () => {
+    if (!studentId) return;
+    setSaving(true);
+    setSaveMessage(null);
+    try {
+      const res = await fetch("/api/company/graduation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId,
+          scores,
+          mandatoryPassed,
+          comment,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSaveMessage({
+          type: "error",
+          text: data.error || "修了判定スコアの保存に失敗しました。",
+        });
+      } else {
+        setSaveMessage({
+          type: "success",
+          text: `修了判定（${evaluation.totalScore}点 / ${evaluation.verdictLabel}）をDBに保存しました。`,
+        });
+      }
+    } catch {
+      setSaveMessage({
+        type: "error",
+        text: "通信エラーが発生しました。",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const evaluation = useMemo(
     () => evaluateGraduation(scores, mandatoryPassed),
@@ -158,6 +207,58 @@ export function GraduationEvaluationCard({
             <p className="mt-0.5">{evaluation.verdictReason}</p>
           </div>
         </div>
+
+        {/* 所見メモ＆DB永続保存ボタン */}
+        {studentId && (
+          <div className="pt-2 border-t space-y-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700">
+                修了判定メモ・総評（任意）
+              </label>
+              <Textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="例：Java基礎とSQLの理解度が高く、実務課題のコードレビューでも指摘事項を迅速に修正できていました。"
+                rows={2}
+                className="text-xs"
+              />
+            </div>
+
+            {saveMessage && (
+              <div
+                className={`p-2.5 rounded-lg text-xs border ${
+                  saveMessage.type === "success"
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                    : "bg-rose-50 border-rose-200 text-rose-800"
+                }`}
+              >
+                {saveMessage.text}
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                    保存中...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-3.5 w-3.5 mr-1.5" />
+                    この評価スコアを保存する
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

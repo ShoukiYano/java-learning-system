@@ -35,6 +35,8 @@ interface CompanyProgressMatrixClientProps {
   companyName: string;
   courses: ProgressMatrixCourse[];
   students: ProgressMatrixStudentRow[];
+  showCompanyFilter?: boolean;
+  studentDetailBasePath?: string;
 }
 
 type SortKey = "fullName" | "companyName" | "progress" | `problem:${string}`;
@@ -44,13 +46,24 @@ export function CompanyProgressMatrixClient({
   companyName,
   courses,
   students,
+  showCompanyFilter = false,
+  studentDetailBasePath = "/company/students",
 }: CompanyProgressMatrixClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState<string>("ALL");
   const [selectedCourseId, setSelectedCourseId] = useState<string>(
     courses[0]?.id ?? "ALL"
   );
   const [sortKey, setSortKey] = useState<SortKey>("progress");
   const [sortDir, setSortDir] = useState<SortDirection>("desc");
+
+  const companyNames = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of students) {
+      if (s.companyName) set.add(s.companyName);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "ja"));
+  }, [students]);
 
   // 表示対象のコース群
   const visibleCourses = useMemo(() => {
@@ -83,17 +96,21 @@ export function CompanyProgressMatrixClient({
     });
   }, [students, visibleProblemIds]);
 
-  // 名前検索＆ソート適用
+  // 名前検索＆企業フィルタ＆ソート適用
   const filteredAndSorted = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
+    const byCompany =
+      showCompanyFilter && selectedCompany !== "ALL"
+        ? enrichedStudents.filter((s) => s.companyName === selectedCompany)
+        : enrichedStudents;
     const filtered = q
-      ? enrichedStudents.filter(
+      ? byCompany.filter(
           (s) =>
             s.fullName.toLowerCase().includes(q) ||
             s.email.toLowerCase().includes(q) ||
             s.companyName.toLowerCase().includes(q)
         )
-      : enrichedStudents;
+      : byCompany;
 
     const sorted = [...filtered].sort((a, b) => {
       let cmp = 0;
@@ -117,7 +134,7 @@ export function CompanyProgressMatrixClient({
     });
 
     return sorted;
-  }, [enrichedStudents, searchQuery, sortKey, sortDir]);
+  }, [enrichedStudents, searchQuery, selectedCompany, showCompanyFilter, sortKey, sortDir]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -239,17 +256,33 @@ export function CompanyProgressMatrixClient({
           ))}
         </div>
 
-        {/* 名前検索＆ソートコントロール */}
+        {/* 名前検索＆企業フィルタ＆ソートコントロール */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <Input
-              type="text"
-              placeholder="受講生の氏名・メールアドレスで検索..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 text-sm"
-            />
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-72">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                type="text"
+                placeholder="受講生の氏名・メールアドレスで検索..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 text-sm"
+              />
+            </div>
+            {showCompanyFilter && (
+              <select
+                value={selectedCompany}
+                onChange={(e) => setSelectedCompany(e.target.value)}
+                className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="ALL">全企業（{companyNames.length}社）</option>
+                {companyNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -407,7 +440,7 @@ export function CompanyProgressMatrixClient({
                   </td>
                   <td className="md:sticky md:left-[150px] md:z-10 bg-white border border-slate-300 px-3 py-2 font-bold text-slate-900 whitespace-nowrap">
                     <Link
-                      href={`/company/students/${st.studentId}`}
+                      href={`${studentDetailBasePath}/${st.studentId}`}
                       className="text-blue-700 hover:underline"
                     >
                       {st.fullName}

@@ -1648,6 +1648,114 @@ export async function getCompanySlackSettingsFromDb(companyId: string) {
   return slackSettings;
 }
 
+export async function getMilestonesFromDb(companyId?: string) {
+  if (isSupabaseConfigured()) {
+    try {
+      const db = getServerQueryClient() ?? (await createClient());
+      let q = db
+        .from("training_milestones")
+        .select("*")
+        .order("target_date", { ascending: true });
+      if (companyId) {
+        q = q.or(`company_id.eq.${companyId},company_id.is.null`);
+      }
+      const { data } = await q;
+      if (data && data.length > 0) {
+        return data as import("@/types/database").TrainingMilestone[];
+      }
+    } catch {
+      // テーブル未作成時はインメモリフォールバック
+    }
+  }
+  return getInMemoryMilestones(companyId);
+}
+
+export async function getCompanyDelayAlertDays(companyId: string): Promise<number> {
+  if (isSupabaseConfigured()) {
+    try {
+      const db = getServerQueryClient() ?? (await createClient());
+      const { data } = await db
+        .from("companies")
+        .select("delay_alert_days")
+        .eq("id", companyId)
+        .maybeSingle();
+      if (data && typeof data.delay_alert_days === "number") {
+        return data.delay_alert_days;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return (globalThis as { __demoCompanyDelayDays?: Record<string, number> })
+    .__demoCompanyDelayDays?.[companyId] ?? 5;
+}
+
+export async function getGraduationEvaluationFromDb(studentId: string): Promise<{
+  scores: Partial<Record<import("@/types/curriculum").GraduationCategoryKey, number>>;
+  mandatoryPassed: boolean;
+  comment?: string;
+} | null> {
+  if (isSupabaseConfigured()) {
+    try {
+      const db = getServerQueryClient() ?? (await createClient());
+      const { data } = await db
+        .from("graduation_evaluations")
+        .select("*")
+        .eq("user_id", studentId)
+        .maybeSingle();
+      if (data) {
+        return {
+          scores: (data.scores_json ?? {}) as Partial<
+            Record<import("@/types/curriculum").GraduationCategoryKey, number>
+          >,
+          mandatoryPassed: Boolean(data.mandatory_final_project_passed),
+          comment: data.evaluator_comment ?? undefined,
+        };
+      }
+    } catch {
+      // ignore
+    }
+  }
+  const mem = (
+    globalThis as {
+      __demoGraduationEvaluations?: Record<
+        string,
+        {
+          scores: Partial<Record<import("@/types/curriculum").GraduationCategoryKey, number>>;
+          mandatoryPassed: boolean;
+          comment?: string;
+        }
+      >;
+    }
+  ).__demoGraduationEvaluations?.[studentId];
+  return mem ?? null;
+}
+
+export async function getReadAnnouncementIdsFromDb(
+  userId: string
+): Promise<string[]> {
+  if (isSupabaseConfigured()) {
+    try {
+      const db = getServerQueryClient() ?? (await createClient());
+      const { data } = await db
+        .from("announcement_reads")
+        .select("announcement_id")
+        .eq("user_id", userId);
+      if (data) {
+        return (data as Array<{ announcement_id: string }>).map(
+          (r) => r.announcement_id
+        );
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return (
+    (globalThis as { __demoAnnouncementReads?: Record<string, string[]> })
+      .__demoAnnouncementReads?.[userId] ?? []
+  );
+}
+
 /**
  * 管理画面用：特定テナント企業の詳細・所属受講生一覧・担当者一覧・コース公開設定を取得
  */
@@ -1690,8 +1798,10 @@ export async function getAdminCompanyDetail(companyId: string) {
     managers = getInMemoryCompanyManagers(targetCompany.id);
   }
 
-  const slackSettings = await getCompanySlackSettingsFromDb(targetCompany.id);
-  const milestones = getInMemoryMilestones(targetCompany.id);
+  const [slackSettings, milestones] = await Promise.all([
+    getCompanySlackSettingsFromDb(targetCompany.id),
+    getMilestonesFromDb(targetCompany.id),
+  ]);
 
   return {
     company: targetCompany,
@@ -1834,9 +1944,9 @@ function extractCourseShortTitle(title: string): string {
 }
 
 /**
- * 企業単位の受講生全体進捗マトリクスデータを取得する
+ * 企業単位（または companyId 省略時は全企業横断）の受講生全体進捗マトリクスデータを取得する
  */
-export async function getCompanyProgressMatrix(companyId: string): Promise<{
+export async function getCompanyProgressMatrix(companyId?: string): Promise<{
   courses: ProgressMatrixCourse[];
   students: ProgressMatrixStudentRow[];
 }> {
@@ -1844,7 +1954,7 @@ export async function getCompanyProgressMatrix(companyId: string): Promise<{
 
   // 非表示コースを除外
   const hiddenCourseIds = new Set<string>();
-  if (isSupabaseConfigured()) {
+  if (isSupabaseConfigured() && companyId) {
     try {
       const db = getServerQueryClient() ?? (await createClient());
       const { data: visRows } = await db

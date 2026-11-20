@@ -50,6 +50,8 @@ import {
   ArrowLeft,
   Terminal,
   Sparkles,
+  MessageCircleQuestion,
+  X,
 } from "lucide-react";
 
 interface ProblemWorkspaceClientProps {
@@ -100,6 +102,57 @@ export function ProblemWorkspaceClient({
   const [runningMode, setRunningMode] = useState<
     "idle" | "run" | "test" | "submit"
   >("idle");
+
+  // 講師への質問モーダル状態
+  const [questionModalOpen, setQuestionModalOpen] = useState<boolean>(false);
+  const [questionText, setQuestionText] = useState<string>("");
+  const [includeCodeInQuestion, setIncludeCodeInQuestion] = useState<boolean>(true);
+  const [questionSubmitting, setQuestionSubmitting] = useState<boolean>(false);
+  const [questionFeedback, setQuestionFeedback] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  const handleSendQuestion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!questionText.trim()) return;
+    setQuestionSubmitting(true);
+    setQuestionFeedback(null);
+    try {
+      const res = await fetch("/api/student/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problemId: problem.id,
+          problemTitle: problem.title,
+          questionText: questionText.trim(),
+          codeSnapshot: includeCodeInQuestion ? code : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setQuestionFeedback({
+          type: "error",
+          text: data.error || "質問の送信に失敗しました。",
+        });
+      } else {
+        setQuestionFeedback({
+          type: "success",
+          text:
+            data.message ||
+            "講師へ質問を送信しました（Slack連携済み企業には通知されます）。",
+        });
+        setQuestionText("");
+      }
+    } catch {
+      setQuestionFeedback({
+        type: "error",
+        text: "通信エラーが発生しました。",
+      });
+    } finally {
+      setQuestionSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -437,6 +490,21 @@ export function ProblemWorkspaceClient({
                 <span className="hidden md:inline"> (Ctrl+Shift+Enter)</span>
               </>
             )}
+          </Button>
+
+          {/* 講師に質問する */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setQuestionFeedback(null);
+              setQuestionModalOpen(true);
+            }}
+            title="この問題について講師へ質問を送信（Slack通知対応）"
+            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+          >
+            <MessageCircleQuestion className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">講師に質問</span>
           </Button>
 
           {isCleared && nextProblemId && (
@@ -1080,6 +1148,88 @@ export function ProblemWorkspaceClient({
           </PanelGroup>
         </Panel>
       </PanelGroup>
+      )}
+
+      {/* 講師へ質問するモーダル */}
+      {questionModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border max-w-lg w-full p-5 space-y-4">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <MessageCircleQuestion className="h-5 w-5 text-indigo-600" />
+                  講師へ質問する
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  対象問題: <span className="font-semibold text-slate-700">{problem.title}</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuestionModalOpen(false)}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {questionFeedback && (
+              <div
+                className={`p-3 rounded-lg text-xs border ${
+                  questionFeedback.type === "success"
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                    : "bg-rose-50 border-rose-200 text-rose-800"
+                }`}
+              >
+                {questionFeedback.text}
+              </div>
+            )}
+
+            <form onSubmit={handleSendQuestion} className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">
+                  質問内容（つまずいている箇所・エラー内容など）
+                </label>
+                <Textarea
+                  value={questionText}
+                  onChange={(e) => setQuestionText(e.target.value)}
+                  placeholder="例：ループの終了条件で1回多く出力されてしまいます。どこを直せばよいでしょうか？"
+                  rows={5}
+                  required
+                />
+              </div>
+
+              <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeCodeInQuestion}
+                  onChange={(e) => setIncludeCodeInQuestion(e.target.checked)}
+                  className="rounded border-slate-300 text-indigo-600"
+                />
+                現在エディタに書いているコードを自動で添付する
+              </label>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setQuestionModalOpen(false)}
+                >
+                  閉じる
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={questionSubmitting || !questionText.trim()}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white"
+                >
+                  {questionSubmitting ? "送信中..." : "講師へ質問を送信"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
