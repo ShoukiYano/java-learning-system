@@ -638,14 +638,30 @@ export async function POST(request: NextRequest) {
           compUpdateData.slack_channel_name = payload.slack_channel_name;
         }
 
-        const { data: updatedCompany, error: upErr } = await db
+        let updatedCompany = null;
+        const { data: upData, error: upErr } = await db
           .from("companies")
           .update(compUpdateData)
           .eq("id", companyId)
           .select("*")
           .single();
 
-        if (upErr) throw upErr;
+        if (upErr) {
+          const { data: fallbackComp, error: fallbackErr } = await db
+            .from("companies")
+            .update({
+              name: String(name).trim(),
+              company_code: cleanCode,
+              contact_email: cleanEmail,
+            })
+            .eq("id", companyId)
+            .select("*")
+            .single();
+          if (fallbackErr) throw fallbackErr;
+          updatedCompany = fallbackComp;
+        } else {
+          updatedCompany = upData;
+        }
 
         // もし新しいパスワードが指定されており、サービスロールキーがある場合は企業担当者アカウントを作成またはPW更新
         let managerUpdated = false;

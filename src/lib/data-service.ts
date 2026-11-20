@@ -1621,6 +1621,33 @@ export async function getAdminCoursesAndCompanyMatrix() {
   }
 }
 
+export async function getCompanySlackSettingsFromDb(companyId: string) {
+  let slackSettings = getInMemoryCompanySlackSettings(companyId);
+  if (isSupabaseConfigured()) {
+    try {
+      const db = getServerQueryClient() ?? (await createClient());
+      const { data: compSlack } = await db
+        .from("companies")
+        .select("slack_webhook_url, slack_channel_name")
+        .eq("id", companyId)
+        .maybeSingle();
+      if (
+        compSlack &&
+        (compSlack.slack_webhook_url !== null ||
+          compSlack.slack_channel_name !== null)
+      ) {
+        slackSettings = {
+          webhookUrl: compSlack.slack_webhook_url ?? null,
+          channelName: compSlack.slack_channel_name ?? null,
+        };
+      }
+    } catch {
+      // カラム未追加時はインメモリフォールバック
+    }
+  }
+  return slackSettings;
+}
+
 /**
  * 管理画面用：特定テナント企業の詳細・所属受講生一覧・担当者一覧・コース公開設定を取得
  */
@@ -1663,7 +1690,7 @@ export async function getAdminCompanyDetail(companyId: string) {
     managers = getInMemoryCompanyManagers(targetCompany.id);
   }
 
-  const slackSettings = getInMemoryCompanySlackSettings(targetCompany.id);
+  const slackSettings = await getCompanySlackSettingsFromDb(targetCompany.id);
   const milestones = getInMemoryMilestones(targetCompany.id);
 
   return {

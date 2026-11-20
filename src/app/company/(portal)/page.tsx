@@ -1,6 +1,10 @@
 import React from "react";
-import { getCurrentProfile, getStudentsAnalyticsFromDb } from "@/lib/data-service";
-import { getInMemoryCompanySlackSettings, getInMemoryMilestones } from "@/lib/seed-data";
+import {
+  getCurrentProfile,
+  getStudentsAnalyticsFromDb,
+  getCompanySlackSettingsFromDb,
+} from "@/lib/data-service";
+import { getInMemoryMilestones } from "@/lib/seed-data";
 import { CompanyDashboardClient } from "@/components/company/company-dashboard-client";
 
 export default async function CompanyDashboardPage() {
@@ -10,8 +14,10 @@ export default async function CompanyDashboardPage() {
   const companyName =
     profile.companies?.name ?? "株式会社ACMEテクノロジーズ";
 
-  const companyStudents = await getStudentsAnalyticsFromDb(targetCompanyId);
-  const slackSettings = getInMemoryCompanySlackSettings(targetCompanyId);
+  const [companyStudents, slackSettings] = await Promise.all([
+    getStudentsAnalyticsFromDb(targetCompanyId),
+    getCompanySlackSettingsFromDb(targetCompanyId),
+  ]);
   const milestones = getInMemoryMilestones(targetCompanyId);
 
   return (
