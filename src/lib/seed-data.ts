@@ -81,7 +81,7 @@ export const SEED_COURSES = [
       "店舗売上の二次元配列集計、オーバーロード設計、staticによる自動採番、決済インターフェースとポリモーフィズムなど実務基礎へ直結するオブジェクト指向応用を習得します。",
     order_index: 2,
     is_published: true,
-    prerequisite_course_id: null,
+    prerequisite_course_id: SEED_COURSE_ID,
   },
   {
     id: SEED_JAVA_INTERMEDIATE_COURSE_ID,
@@ -90,7 +90,7 @@ export const SEED_COURSES = [
       "実務で毎日使う ArrayList / HashMap による顧客検索・売上集計、CSVデータのパース処理、try-catch / throw を使った安全な在庫引当・例外制御を習得します。",
     order_index: 3,
     is_published: true,
-    prerequisite_course_id: null,
+    prerequisite_course_id: SEED_JAVA_BEGINNER_COURSE_ID,
   },
   {
     id: SEED_JAVA_ADVANCED_COURSE_ID,
@@ -99,7 +99,7 @@ export const SEED_COURSES = [
       "DAOリポジトリ設計、REST API入力バリデーション＆ステータス判定、顧客・案件管理システムのService層集計、境界値単体テスト検証など案件参画レベルの実践力を養います。",
     order_index: 4,
     is_published: true,
-    prerequisite_course_id: null,
+    prerequisite_course_id: SEED_JAVA_INTERMEDIATE_COURSE_ID,
   },
   {
     id: SEED_SQL_COURSE_ID,
@@ -108,7 +108,7 @@ export const SEED_COURSES = [
       "SELECT文の基本とWHERE条件指定からスタートし、GROUP BY / HAVING による集計分析、INNER JOIN / LEFT JOIN による複数テーブル結合まで実践クエリ演習で習得します。",
     order_index: 5,
     is_published: true,
-    prerequisite_course_id: SEED_COURSE_ID,
+    prerequisite_course_id: SEED_JAVA_INTERMEDIATE_COURSE_ID,
   },
   {
     id: SEED_GIT_COURSE_ID,

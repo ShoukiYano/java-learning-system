@@ -150,17 +150,28 @@ export async function getCoursesWithProgress(
 ): Promise<CourseWithStats[]> {
   // フォールバック用の計算ロジック
   const buildFallbackList = (): CourseWithStats[] => {
-    // Javaコースの進捗（デモは3問クリア）
-    const javaCompleted = 3;
-    const javaTotal = 12;
-    const isJavaCompleted = javaCompleted >= javaTotal;
+    const courseStatsMap = new Map<
+      string,
+      { totalProblems: number; completedProblems: number; inProgressProblems: number }
+    >();
 
-    return SEED_COURSES.map((c, idx) => {
+    SEED_COURSES.forEach((c, idx) => {
       const chIds = SEED_CHAPTERS.filter((ch) => ch.course_id === c.id).map((ch) => ch.id);
       const probs = SEED_PROBLEMS.filter((p) => chIds.includes(p.chapter_id));
-      const totalProblems = probs.length;
-      const completedProblems = idx === 0 ? javaCompleted : 1;
-      const inProgressProblems = 1;
+      courseStatsMap.set(c.id, {
+        totalProblems: probs.length,
+        completedProblems: idx === 0 ? 3 : 0,
+        inProgressProblems: idx === 0 ? 1 : 0,
+      });
+    });
+
+    return SEED_COURSES.map((c) => {
+      const stats = courseStatsMap.get(c.id) ?? {
+        totalProblems: 0,
+        completedProblems: 0,
+        inProgressProblems: 0,
+      };
+      const { totalProblems, completedProblems, inProgressProblems } = stats;
 
       // 手動オーバーライド状態を取得（デモインメモリ）
       const lockOverride = getInMemoryStudentCourseLock(userId, c.id);
@@ -168,10 +179,19 @@ export async function getCoursesWithProgress(
       let isLocked = false;
       let lockReason = "受講可能です";
       let prereqTitle: string | null = null;
+      let isPrereqCompleted = true;
 
       if (c.prerequisite_course_id) {
         const pre = SEED_COURSES.find((item) => item.id === c.prerequisite_course_id);
         prereqTitle = pre ? pre.title : "前提コース";
+        const preStats = courseStatsMap.get(c.prerequisite_course_id);
+        if (
+          !preStats ||
+          preStats.totalProblems === 0 ||
+          preStats.completedProblems < preStats.totalProblems
+        ) {
+          isPrereqCompleted = false;
+        }
       }
 
       if (lockOverride === "unlocked") {
@@ -182,11 +202,9 @@ export async function getCoursesWithProgress(
         lockReason = "企業担当者により受講制限されています";
       } else {
         // 'auto' または未設定
-        if (c.prerequisite_course_id) {
-          if (!isJavaCompleted) {
-            isLocked = true;
-            lockReason = `前提コース「${prereqTitle}」の全問クリアが必要です`;
-          }
+        if (c.prerequisite_course_id && !isPrereqCompleted) {
+          isLocked = true;
+          lockReason = `前提コース「${prereqTitle}」の全問クリアが必要です`;
         }
       }
 
@@ -263,7 +281,18 @@ export async function getCoursesWithProgress(
       }
     }
 
-    const dbCourses = (courses as Course[]) ?? [];
+    const seedCourseMap = new Map(SEED_COURSES.map((sc) => [sc.id, sc]));
+    const dbCourses = ((courses as Course[]) ?? []).map((c) => {
+      const seedDef = seedCourseMap.get(c.id);
+      // シード定義側の前提コース連鎖（Java入門→初級→中級→上級＆SQL）を最新状態に同期
+      return seedDef
+        ? {
+            ...c,
+            order_index: seedDef.order_index,
+            prerequisite_course_id: seedDef.prerequisite_course_id,
+          }
+        : c;
+    });
     const dbCourseIds = new Set(dbCourses.map((c) => c.id));
     const allAvailableCourses = [...dbCourses];
     for (const sc of SEED_COURSES) {

@@ -5,6 +5,14 @@ import {
   evaluateGraduation,
   detectLearningStumbles,
 } from "../graduation";
+import {
+  SEED_COURSES,
+  SEED_COURSE_ID,
+  SEED_JAVA_BEGINNER_COURSE_ID,
+  SEED_JAVA_INTERMEDIATE_COURSE_ID,
+  SEED_JAVA_ADVANCED_COURSE_ID,
+  SEED_SQL_COURSE_ID,
+} from "@/lib/seed-data";
 
 describe("90-Day Java Curriculum & Graduation Evaluation", () => {
   it("Day 1〜Day 90 まで欠番・重複なく90日分の学習計画が定義され、全90日が公開・解説教材付きであること", () => {
@@ -92,5 +100,22 @@ describe("90-Day Java Curriculum & Graduation Evaluation", () => {
     });
     expect(alerts.length).toBeGreaterThan(0);
     expect(alerts[0].recommendedDay).toBe(14);
+  });
+
+  it("コース開放の前提チェーン（Java入門→初級→中級→上級＆SQL）が正しく設定されていること", () => {
+    const byId = new Map(SEED_COURSES.map((c) => [c.id, c]));
+    expect(byId.get(SEED_COURSE_ID)?.prerequisite_course_id).toBeNull();
+    expect(byId.get(SEED_JAVA_BEGINNER_COURSE_ID)?.prerequisite_course_id).toBe(
+      SEED_COURSE_ID
+    );
+    expect(
+      byId.get(SEED_JAVA_INTERMEDIATE_COURSE_ID)?.prerequisite_course_id
+    ).toBe(SEED_JAVA_BEGINNER_COURSE_ID);
+    expect(byId.get(SEED_JAVA_ADVANCED_COURSE_ID)?.prerequisite_course_id).toBe(
+      SEED_JAVA_INTERMEDIATE_COURSE_ID
+    );
+    expect(byId.get(SEED_SQL_COURSE_ID)?.prerequisite_course_id).toBe(
+      SEED_JAVA_INTERMEDIATE_COURSE_ID
+    );
   });
 });
