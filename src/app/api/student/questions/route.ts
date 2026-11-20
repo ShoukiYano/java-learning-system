@@ -6,10 +6,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getCurrentProfile,
   getCompanySlackSettingsFromDb,
   isSupabaseConfigured,
 } from "@/lib/data-service";
+import { requireApiAuth } from "@/lib/api-auth";
 import { sendSlackQuestionAlert } from "@/lib/slack";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -17,6 +17,9 @@ import { recordAuditLog } from "@/lib/audit-log";
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireApiAuth(["student", "company", "admin"]);
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const problemId = String(body.problemId ?? "").trim();
     const problemTitle = String(body.problemTitle ?? "演習問題").trim();
@@ -30,7 +33,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const profile = await getCurrentProfile();
+    const profile = auth.profile;
     const companyId =
       profile.company_id ?? "00000000-0000-4000-8000-000000000001";
     const companyName =

@@ -107,6 +107,7 @@ export async function middleware(request: NextRequest) {
       const redirectRes = NextResponse.redirect(cleanUrl);
       redirectRes.cookies.set("dss_admin_gate", expectedAdminGate, {
         httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
         maxAge: 60 * 60 * 24 * 30, // 30日間有効
@@ -135,6 +136,7 @@ export async function middleware(request: NextRequest) {
       const redirectRes = NextResponse.redirect(cleanUrl);
       redirectRes.cookies.set("dss_company_gate", expectedCompanyGate, {
         httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
         maxAge: 60 * 60 * 24 * 30,
@@ -278,30 +280,41 @@ export async function middleware(request: NextRequest) {
         ? "/company"
         : "/student";
 
-    // 既にログイン済みでログイン/サインアップ画面に訪れた場合は、該当ロールのホームへ誘導
+    // 既にログイン済みで「自ロールと同じ」ログイン/サインアップ画面に訪れた場合のみホームへ誘導。
+    // 別ロールのログイン画面（例: 企業ログイン中に /admin/login?gate=...）へ来た場合は
+    // ログイン画面を表示し、画面上の「別ロールログイン中」バナーから安全に切り替えられるようにする。
     if (isAuthPage) {
-      const url = request.nextUrl.clone();
-      url.pathname = roleHome;
-      return applySecurityHeaders(
-        NextResponse.redirect(url),
-        isSensitivePortal
-      );
+      const isOwnAuthPage =
+        (role === "admin" && pathname === "/admin/login") ||
+        (role === "company" && pathname === "/company/login") ||
+        (role === "student" &&
+          (pathname === "/student/login" || pathname === "/student/signup"));
+      if (isOwnAuthPage) {
+        const url = request.nextUrl.clone();
+        url.pathname = roleHome;
+        return applySecurityHeaders(
+          NextResponse.redirect(url),
+          isSensitivePortal
+        );
+      }
+      return applySecurityHeaders(supabaseResponse, isSensitivePortal);
     }
 
     // 他ロールポータルへの不正アクセス時の強制リダイレクト（権限外ポータルからの追い出し）
+    // ※管理者も含め、各ロールは厳格に自ロールポータルのみへ分離（管理者が /company に入ってACME社フォールバックを踏む事故を防止）
     if (isAdminPortal && role !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = roleHome;
       return applySecurityHeaders(NextResponse.redirect(url), true);
     }
 
-    if (isCompanyPortal && role !== "company" && role !== "admin") {
+    if (isCompanyPortal && role !== "company") {
       const url = request.nextUrl.clone();
       url.pathname = roleHome;
       return applySecurityHeaders(NextResponse.redirect(url), true);
     }
 
-    if (isStudentPortal && role !== "student" && role !== "admin") {
+    if (isStudentPortal && role !== "student") {
       const url = request.nextUrl.clone();
       url.pathname = roleHome;
       return applySecurityHeaders(NextResponse.redirect(url), false);

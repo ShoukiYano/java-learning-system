@@ -27,13 +27,25 @@ export function SignOutButton({
     if (signingOut) return;
     setSigningOut(true);
     try {
+      // 1. サーバー側ログアウトAPIでセッションCookie破棄＆監査ログ記録
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // ignore
+    }
+    try {
+      // 2. ブラウザ側のSupabaseセッションも確実に破棄
       const supabase = createClient();
       await supabase.auth.signOut();
     } catch {
       // 未接続時でも指定画面へ遷移
     }
-    router.push(redirectPath);
-    router.refresh();
+    // 3. Next.jsクライアントルーターキャッシュを残さないようハード遷移
+    if (typeof window !== "undefined") {
+      window.location.href = redirectPath;
+    } else {
+      router.push(redirectPath);
+      router.refresh();
+    }
   };
 
   return (

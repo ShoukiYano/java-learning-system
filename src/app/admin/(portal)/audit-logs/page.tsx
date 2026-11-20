@@ -13,6 +13,18 @@ import { ScrollText, ShieldCheck } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 const ACTION_LABEL_MAP: Record<string, { label: string; color: string }> = {
+  login_success: {
+    label: "ログイン成功",
+    color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  },
+  login_failed: {
+    label: "ログイン失敗",
+    color: "bg-rose-100 text-rose-800 border-rose-200",
+  },
+  logout: {
+    label: "ログアウト",
+    color: "bg-slate-100 text-slate-700 border-slate-300",
+  },
   update_company: {
     label: "企業設定更新",
     color: "bg-indigo-100 text-indigo-800 border-indigo-200",

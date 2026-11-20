@@ -4,7 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { isSupabaseConfigured, getCurrentProfile } from "@/lib/data-service";
+import { isSupabaseConfigured } from "@/lib/data-service";
+import { requireApiAuth } from "@/lib/api-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { recordAuditLog } from "@/lib/audit-log";
@@ -16,12 +17,18 @@ declare global {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireApiAuth(["company", "admin"]);
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
-    const profile = await getCurrentProfile();
+    const profile = auth.profile;
+    // 企業担当者は必ず自社テナントIDに固定（他社設定の書き換えを防止）
     const companyId =
-      String(body.companyId ?? "").trim() ||
-      profile.company_id ||
-      "00000000-0000-4000-8000-000000000001";
+      auth.role === "company"
+        ? profile.company_id || "00000000-0000-4000-8000-000000000001"
+        : String(body.companyId ?? "").trim() ||
+          profile.company_id ||
+          "00000000-0000-4000-8000-000000000001";
     const delayAlertDays = Math.max(
       1,
       Math.min(30, Number(body.delayAlertDays ?? 5))
@@ -55,7 +62,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const caller = await getCurrentProfile();
+    const caller = auth.profile;
     await recordAuditLog({
       actorId: caller.id,
       actorEmail: caller.email,

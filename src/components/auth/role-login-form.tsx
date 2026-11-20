@@ -16,7 +16,7 @@
  * - 企業ログイン時は企業コード照合、管理者ログイン時はマスターPIN照合が必須となります。
  */
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -72,6 +72,45 @@ export function RoleLoginForm({
   const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [otherSession, setOtherSession] = useState<{
+    role: UserRole;
+    email: string;
+  } | null>(null);
+  const [switchingOut, setSwitchingOut] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/session", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (active && d?.authenticated && d.role && d.role !== expectedRole) {
+          setOtherSession({ role: d.role, email: d.email || "" });
+        }
+      })
+      .catch(() => {
+        // ignore
+      });
+    return () => {
+      active = false;
+    };
+  }, [expectedRole]);
+
+  const roleLabel = (r: UserRole) =>
+    r === "admin" ? "システム管理者" : r === "company" ? "企業担当者" : "受講生";
+
+  const handleLogoutCurrentSession = async () => {
+    setSwitchingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {
+      // ignore
+    } finally {
+      setOtherSession(null);
+      setSwitchingOut(false);
+    }
+  };
 
   const isBusy = loading || redirecting || isPending;
 
@@ -126,10 +165,14 @@ export function RoleLoginForm({
       }
 
       setRedirecting(true);
-      startTransition(() => {
-        router.push(targetHomePath);
-        router.refresh();
-      });
+      if (typeof window !== "undefined") {
+        window.location.href = targetHomePath;
+      } else {
+        startTransition(() => {
+          router.push(targetHomePath);
+          router.refresh();
+        });
+      }
     } catch {
       setError("ログイン処理中に通信エラーが発生しました。");
       setLoading(false);
@@ -258,6 +301,33 @@ export function RoleLoginForm({
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {otherSession && (
+              <div className="mb-4 p-3 rounded-lg bg-amber-950/80 border border-amber-700/80 text-amber-200 text-xs space-y-2">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" />
+                  <div>
+                    <p className="font-bold text-amber-100">
+                      現在「{roleLabel(otherSession.role)}」としてログイン中です
+                      {otherSession.email ? `（${otherSession.email}）` : ""}
+                    </p>
+                    <p className="mt-0.5 text-amber-200/90">
+                      このまま別ロールでログインすると、現在のセッションは自動的に切り替わります。
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={switchingOut}
+                  onClick={handleLogoutCurrentSession}
+                  className="text-[11px] font-semibold underline text-amber-300 hover:text-white"
+                >
+                  {switchingOut
+                    ? "ログアウト中..."
+                    : "現在のアカウントから先にログアウトする"}
+                </button>
+              </div>
+            )}
+
             {error && (
               <div className="mb-4 p-3 rounded-lg bg-rose-950/80 border border-rose-800 text-rose-200 text-xs flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-400" />

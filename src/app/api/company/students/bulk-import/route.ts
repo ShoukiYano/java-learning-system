@@ -5,7 +5,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { isSupabaseConfigured, getCurrentProfile } from "@/lib/data-service";
+import { isSupabaseConfigured } from "@/lib/data-service";
+import { requireApiAuth } from "@/lib/api-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { recordAuditLog } from "@/lib/audit-log";
 
@@ -22,6 +23,9 @@ function generateInitialPassword(): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireApiAuth(["company", "admin"]);
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const rows: ImportRow[] = Array.isArray(body.rows) ? body.rows : [];
     const companyId = String(body.companyId ?? "").trim();
@@ -39,8 +43,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const caller = await getCurrentProfile();
-    const targetCompanyId = companyId || caller.company_id || null;
+    const caller = auth.profile;
+    // 企業担当者は必ず自社テナントに強制固定（他社への越境登録を防止）
+    const targetCompanyId =
+      auth.role === "company"
+        ? caller.company_id || null
+        : companyId || caller.company_id || null;
 
     const results: Array<{
       fullName: string;

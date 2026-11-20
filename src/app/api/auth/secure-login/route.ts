@@ -24,6 +24,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { UserRole } from "@/types/database";
 import { verifyInMemoryCompanyManagerLogin } from "@/lib/seed-data";
+import { isSupabaseConfigured } from "@/lib/data-service";
+import { recordAuditLog } from "@/lib/audit-log";
 import {
   MAX_ACCOUNT_FAILED_ATTEMPTS,
   MAX_BOT_IP_FAILED_ATTEMPTS,
@@ -103,8 +105,8 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = (email || "").trim().toLowerCase();
     const normalizedCompanyCode = (companyCode || "").trim().toUpperCase();
 
-    // ★ テナント・アカウント単位の独立キー（他企業・他アカウントには一切影響しない）
-    const tenantAccountKey = `${clientIp}:${expectedRole}:${normalizedCompanyCode}:${normalizedEmail}`;
+    // ★ アカウント単位の独立キー（企業コードを変えても同一メールへの5回連続失敗を確実にロック）
+    const tenantAccountKey = `${clientIp}:${expectedRole}:${normalizedEmail}`;
     // 無差別ボット検知用キー（同一IPから30回以上連続失敗した場合のみそのIPを遮断）
     const botIpKey = `bot_ip:${clientIp}:${expectedRole}`;
 
@@ -171,6 +173,51 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 4.5. Supabase未設定（ローカルデモ環境）時の安全なデモ認証ハンドリング
+    if (!isSupabaseConfigured()) {
+      if (expectedRole === "company") {
+        const verifiedLocalManager = verifyInMemoryCompanyManagerLogin(
+          normalizedEmail,
+          password
+        );
+        const demoValidCode =
+          verifiedLocalManager?.company_id === "00000000-0000-4000-8000-000000000002"
+            ? "TECH2025"
+            : "ACME2025";
+        if (!verifiedLocalManager) {
+          const att = recordFailedAttempt(
+            tenantAccountKey,
+            MAX_ACCOUNT_FAILED_ATTEMPTS
+          );
+          recordFailedAttempt(botIpKey, MAX_BOT_IP_FAILED_ATTEMPTS);
+          const remain = Math.max(0, MAX_ACCOUNT_FAILED_ATTEMPTS - att.count);
+          return NextResponse.json(
+            {
+              error: `認証に失敗しました。メールアドレスまたはパスワードを確認してください。（残り試行回数: ${remain}回）`,
+            },
+            { status: 401 }
+          );
+        }
+        if (normalizedCompanyCode !== demoValidCode) {
+          const att = recordFailedAttempt(
+            tenantAccountKey,
+            MAX_ACCOUNT_FAILED_ATTEMPTS
+          );
+          const remain = Math.max(0, MAX_ACCOUNT_FAILED_ATTEMPTS - att.count);
+          return NextResponse.json(
+            {
+              error: `企業コードが所属テナントと一致しません。（残り試行回数: ${remain}回）`,
+            },
+            { status: 403 }
+          );
+        }
+        clearAttempts(tenantAccountKey);
+        return NextResponse.json({ ok: true, role: "company", demo: true });
+      }
+      clearAttempts(tenantAccountKey);
+      return NextResponse.json({ ok: true, role: expectedRole, demo: true });
+    }
+
     // 5. Supabase Auth によるメール＋パスワード認証
     const supabase = await createClient();
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -179,28 +226,19 @@ export async function POST(request: NextRequest) {
     });
 
     if (signInError || !data.user) {
-      // 企業担当者の場合、管理者画面でローカル登録・パスワード再設定されたアカウントとの一致を確認
-      if (expectedRole === "company") {
-        const verifiedLocalManager = verifyInMemoryCompanyManagerLogin(
-          normalizedEmail,
-          password
-        );
-        if (verifiedLocalManager) {
-          clearAttempts(tenantAccountKey);
-          return NextResponse.json({
-            ok: true,
-            role: "company",
-            demo: true,
-          });
-        }
-      }
-
       const att = recordFailedAttempt(
         tenantAccountKey,
         MAX_ACCOUNT_FAILED_ATTEMPTS
       );
       recordFailedAttempt(botIpKey, MAX_BOT_IP_FAILED_ATTEMPTS);
       const remain = Math.max(0, MAX_ACCOUNT_FAILED_ATTEMPTS - att.count);
+      await recordAuditLog({
+        actorId: null,
+        actorEmail: normalizedEmail || null,
+        actorRole: expectedRole,
+        action: "login_failed",
+        targetSummary: `${expectedRole} ポータルへのログイン失敗（メール: ${normalizedEmail}）`,
+      });
       return NextResponse.json(
         {
           error: `認証に失敗しました。メールアドレスまたはパスワードを確認してください。（残り試行回数: ${remain}回）`,
@@ -277,13 +315,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 7. 認証成功：該当アカウントの失敗カウンタをリセット
+    // 7. 認証成功：該当アカウントの失敗カウンタをリセット＆監査ログ記録
     clearAttempts(tenantAccountKey);
 
     await dbClient
       .from("profiles")
       .update({ last_login_at: new Date().toISOString() })
       .eq("id", data.user.id);
+
+    await recordAuditLog({
+      actorId: data.user.id,
+      actorEmail: data.user.email ?? normalizedEmail,
+      actorRole: actualRole,
+      action: "login_success",
+      targetSummary: `${actualRole} ポータルへログインしました（${data.user.email ?? normalizedEmail}）`,
+    });
 
     return NextResponse.json({
       ok: true,

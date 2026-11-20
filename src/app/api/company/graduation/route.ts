@@ -4,7 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { isSupabaseConfigured, getCurrentProfile } from "@/lib/data-service";
+import { isSupabaseConfigured } from "@/lib/data-service";
+import { requireApiAuth } from "@/lib/api-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { evaluateGraduation } from "@/lib/curriculum/graduation";
@@ -28,6 +29,9 @@ declare global {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireApiAuth(["company", "admin"]);
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const studentId = String(body.studentId ?? "").trim();
     const studentName = String(body.studentName ?? studentId);
@@ -45,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const evaluation = evaluateGraduation(scores, mandatoryPassed);
-    const caller = await getCurrentProfile();
+    const caller = auth.profile;
 
     if (!globalThis.__demoGraduationEvaluations) {
       globalThis.__demoGraduationEvaluations = {};
