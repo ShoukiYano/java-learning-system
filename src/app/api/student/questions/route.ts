@@ -58,12 +58,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 所属企業のSlack Webhookが設定されていれば自動通知
+    // 所属企業の「質問専用Slack Webhook」を優先し、未設定の場合は進捗用Slack Webhookへフォールバック通知
     let slackNotified = false;
     const slackSettings = await getCompanySlackSettingsFromDb(companyId);
-    if (slackSettings.webhookUrl) {
+    const targetWebhookUrl =
+      slackSettings.questionWebhookUrl || slackSettings.webhookUrl;
+    if (targetWebhookUrl) {
       const slackRes = await sendSlackQuestionAlert({
-        webhookUrl: slackSettings.webhookUrl,
+        webhookUrl: targetWebhookUrl,
         companyName,
         studentName: profile.full_name,
         problemTitle,

@@ -73,6 +73,10 @@ export interface Company {
   slack_webhook_url?: string | null;
   /** 管理者Slack通知先チャンネル名メモ（例: #client-acme2025） */
   slack_channel_name?: string | null;
+  /** 受講生質問通知専用 Slack Incoming Webhook URL */
+  question_slack_webhook_url?: string | null;
+  /** 受講生質問通知専用 Slack チャンネル名メモ（例: #qa-acme2025） */
+  question_slack_channel_name?: string | null;
   /** レコード作成日時（ISO 8601文字列） */
   created_at: string;
 }

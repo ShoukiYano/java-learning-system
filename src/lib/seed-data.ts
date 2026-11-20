@@ -163,16 +163,22 @@ const INITIAL_DEMO_MANAGERS: DemoManagerWithPassword[] = [
 export interface DemoCompanySlackSettings {
   webhookUrl?: string | null;
   channelName?: string | null;
+  questionWebhookUrl?: string | null;
+  questionChannelName?: string | null;
 }
 
 const INITIAL_DEMO_SLACK_SETTINGS: Record<string, DemoCompanySlackSettings> = {
   "00000000-0000-4000-8000-000000000001": {
     webhookUrl: "",
     channelName: "#client-acme2025",
+    questionWebhookUrl: "",
+    questionChannelName: "#qa-acme2025",
   },
   "00000000-0000-4000-8000-000000000002": {
     webhookUrl: "",
     channelName: "#client-nextsys2025",
+    questionWebhookUrl: "",
+    questionChannelName: "#qa-nextsys2025",
   },
 };
 
@@ -245,14 +251,25 @@ export function getInMemoryCompanySlackSettings(companyId: string): DemoCompanyS
 export function updateInMemoryCompanySlackSettings(
   companyId: string,
   webhookUrl?: string | null,
-  channelName?: string | null
+  channelName?: string | null,
+  questionWebhookUrl?: string | null,
+  questionChannelName?: string | null
 ) {
   if (!globalThis.__demoCompanySlack) {
     globalThis.__demoCompanySlack = { ...INITIAL_DEMO_SLACK_SETTINGS };
   }
+  const prev = globalThis.__demoCompanySlack[companyId] ?? {};
   globalThis.__demoCompanySlack[companyId] = {
-    webhookUrl: webhookUrl ?? null,
-    channelName: channelName ?? null,
+    webhookUrl: webhookUrl !== undefined ? webhookUrl : prev.webhookUrl ?? null,
+    channelName: channelName !== undefined ? channelName : prev.channelName ?? null,
+    questionWebhookUrl:
+      questionWebhookUrl !== undefined
+        ? questionWebhookUrl
+        : prev.questionWebhookUrl ?? null,
+    questionChannelName:
+      questionChannelName !== undefined
+        ? questionChannelName
+        : prev.questionChannelName ?? null,
   };
 }
 

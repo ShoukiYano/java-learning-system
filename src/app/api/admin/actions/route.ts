@@ -115,11 +115,18 @@ export async function POST(request: NextRequest) {
           ? String(payload.contact_email).trim()
           : null;
         let managerUpdated = false;
-        if (payload.slack_webhook_url !== undefined || payload.slack_channel_name !== undefined) {
+        if (
+          payload.slack_webhook_url !== undefined ||
+          payload.slack_channel_name !== undefined ||
+          payload.question_slack_webhook_url !== undefined ||
+          payload.question_slack_channel_name !== undefined
+        ) {
           updateInMemoryCompanySlackSettings(
             payload.companyId,
             payload.slack_webhook_url,
-            payload.slack_channel_name
+            payload.slack_channel_name,
+            payload.question_slack_webhook_url,
+            payload.question_slack_channel_name
           );
         }
         if (cleanEmail && payload.new_manager_password) {
@@ -619,11 +626,18 @@ export async function POST(request: NextRequest) {
         const cleanCode = String(company_code).trim().toUpperCase();
         const cleanEmail = contact_email ? String(contact_email).trim() : null;
 
-        if (payload.slack_webhook_url !== undefined || payload.slack_channel_name !== undefined) {
+        if (
+          payload.slack_webhook_url !== undefined ||
+          payload.slack_channel_name !== undefined ||
+          payload.question_slack_webhook_url !== undefined ||
+          payload.question_slack_channel_name !== undefined
+        ) {
           updateInMemoryCompanySlackSettings(
             companyId,
             payload.slack_webhook_url,
-            payload.slack_channel_name
+            payload.slack_channel_name,
+            payload.question_slack_webhook_url,
+            payload.question_slack_channel_name
           );
         }
 
@@ -637,6 +651,12 @@ export async function POST(request: NextRequest) {
         }
         if (payload.slack_channel_name !== undefined) {
           compUpdateData.slack_channel_name = payload.slack_channel_name;
+        }
+        if (payload.question_slack_webhook_url !== undefined) {
+          compUpdateData.question_slack_webhook_url = payload.question_slack_webhook_url;
+        }
+        if (payload.question_slack_channel_name !== undefined) {
+          compUpdateData.question_slack_channel_name = payload.question_slack_channel_name;
         }
 
         const { data: updatedCompany, error: upErr } = await db

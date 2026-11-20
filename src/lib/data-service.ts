@@ -1626,20 +1626,46 @@ export async function getCompanySlackSettingsFromDb(companyId: string) {
   if (isSupabaseConfigured()) {
     try {
       const db = getServerQueryClient() ?? (await createClient());
-      const { data: compSlack } = await db
+      const { data: compSlack, error } = await db
         .from("companies")
-        .select("slack_webhook_url, slack_channel_name")
+        .select(
+          "slack_webhook_url, slack_channel_name, question_slack_webhook_url, question_slack_channel_name"
+        )
         .eq("id", companyId)
         .maybeSingle();
-      if (
-        compSlack &&
-        (compSlack.slack_webhook_url !== null ||
-          compSlack.slack_channel_name !== null)
-      ) {
-        slackSettings = {
-          webhookUrl: compSlack.slack_webhook_url ?? null,
-          channelName: compSlack.slack_channel_name ?? null,
-        };
+
+      if (!error && compSlack) {
+        if (
+          compSlack.slack_webhook_url !== null ||
+          compSlack.slack_channel_name !== null ||
+          compSlack.question_slack_webhook_url !== null ||
+          compSlack.question_slack_channel_name !== null
+        ) {
+          slackSettings = {
+            webhookUrl: compSlack.slack_webhook_url ?? null,
+            channelName: compSlack.slack_channel_name ?? null,
+            questionWebhookUrl: compSlack.question_slack_webhook_url ?? null,
+            questionChannelName: compSlack.question_slack_channel_name ?? null,
+          };
+        }
+      } else {
+        // question_slack_* カラム未適用環境への後方互換フォールバック
+        const { data: legacySlack } = await db
+          .from("companies")
+          .select("slack_webhook_url, slack_channel_name")
+          .eq("id", companyId)
+          .maybeSingle();
+        if (
+          legacySlack &&
+          (legacySlack.slack_webhook_url !== null ||
+            legacySlack.slack_channel_name !== null)
+        ) {
+          slackSettings = {
+            ...slackSettings,
+            webhookUrl: legacySlack.slack_webhook_url ?? null,
+            channelName: legacySlack.slack_channel_name ?? null,
+          };
+        }
       }
     } catch {
       // カラム未追加時はインメモリフォールバック

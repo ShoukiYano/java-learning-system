@@ -7,9 +7,11 @@
 -- 5. お知らせ既読管理テーブル（announcement_reads）
 -- =============================================================================
 
--- 1. 企業別 遅れアラート日数閾値（デフォルト5日）
+-- 1. 企業別 遅れアラート日数閾値（デフォルト5日）＆ 質問通知専用Slack Webhook設定
 ALTER TABLE public.companies
-  ADD COLUMN IF NOT EXISTS delay_alert_days INTEGER NOT NULL DEFAULT 5;
+  ADD COLUMN IF NOT EXISTS delay_alert_days INTEGER NOT NULL DEFAULT 5,
+  ADD COLUMN IF NOT EXISTS question_slack_webhook_url TEXT,
+  ADD COLUMN IF NOT EXISTS question_slack_channel_name TEXT;
 
 -- 2. 研修スケジュール（目標マイルストーン）
 CREATE TABLE IF NOT EXISTS public.training_milestones (

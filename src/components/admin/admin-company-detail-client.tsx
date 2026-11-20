@@ -89,7 +89,7 @@ export function AdminCompanyDetailClient({
   const [editMgrName, setEditMgrName] = useState("");
   const [editMgrEmail, setEditMgrEmail] = useState("");
 
-  // Slack連携用の state
+  // Slack連携用の state（進捗・遅れアラート用）
   const [slackWebhookUrl, setSlackWebhookUrl] = useState(
     initialSlackSettings?.webhookUrl || ""
   );
@@ -98,6 +98,16 @@ export function AdminCompanyDetailClient({
   );
   const [slackTesting, setSlackTesting] = useState(false);
   const [slackSending, setSlackSending] = useState(false);
+
+  // Slack連携用の state（受講生からの質問通知専用）
+  const [questionSlackWebhookUrl, setQuestionSlackWebhookUrl] = useState(
+    initialSlackSettings?.questionWebhookUrl || ""
+  );
+  const [questionSlackChannelName, setQuestionSlackChannelName] = useState(
+    initialSlackSettings?.questionChannelName ||
+      `#qa-${company.company_code.toLowerCase()}`
+  );
+  const [questionSlackTesting, setQuestionSlackTesting] = useState(false);
 
   // マイルストーン用の state
   const [milestones, setMilestones] = useState<TrainingMilestone[]>(initialMilestones);
@@ -319,6 +329,42 @@ export function AdminCompanyDetailClient({
     }
   };
 
+  // 質問専用Slackテスト通知
+  const handleTestQuestionSlack = async () => {
+    if (!questionSlackWebhookUrl.trim() || questionSlackTesting) return;
+    setQuestionSlackTesting(true);
+    setNotice(null);
+    setErrorMsg(null);
+    try {
+      const res = await fetch("/api/admin/actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "test_slack_notification",
+          payload: {
+            webhookUrl: questionSlackWebhookUrl.trim(),
+            companyName: `${name}（質問通知専用）`,
+            channelName: questionSlackChannelName.trim(),
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setErrorMsg(
+          data.result?.error || data.error || "質問用Slack送信に失敗しました。"
+        );
+      } else {
+        setNotice(
+          `💬 質問専用Slackチャンネル「${questionSlackChannelName || "指定チャンネル"}」へテスト通知を送信しました！`
+        );
+      }
+    } catch {
+      setErrorMsg("Slack通信エラーが発生しました。");
+    } finally {
+      setQuestionSlackTesting(false);
+    }
+  };
+
   // Slackへ今すぐ進捗ダイジェスト送信
   const handleSendSlackDigest = async () => {
     if (!slackWebhookUrl.trim() || slackSending) return;
@@ -438,6 +484,8 @@ export function AdminCompanyDetailClient({
             new_manager_password: newManagerPassword.trim() || undefined,
             slack_webhook_url: slackWebhookUrl.trim() || null,
             slack_channel_name: slackChannelName.trim() || null,
+            question_slack_webhook_url: questionSlackWebhookUrl.trim() || null,
+            question_slack_channel_name: questionSlackChannelName.trim() || null,
           },
         }),
       });
@@ -729,6 +777,70 @@ export function AdminCompanyDetailClient({
                         </>
                       )}
                     </Button>
+                  </div>
+
+                  {/* ★ 質問通知専用Slack Webhook設定（受講生の「講師に質問する」専用） */}
+                  <div className="pt-3 mt-2 border-t border-slate-200 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                        <Hash className="h-4 w-4 text-indigo-600" />
+                        受講生質問通知専用 Slack Webhook設定
+                      </label>
+                      <Badge variant="outline" className="text-[10px] text-indigo-700 bg-indigo-50 border-indigo-200">
+                        質問用チャンネル分離
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      受講生が問題画面から「講師に質問する」を送信した際の通知先Webhookを別チャンネル（例: <code>#qa-acme2025</code>）で指定できます。未設定の場合は上の進捗通知用Webhookへ送信されます。
+                    </p>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700">
+                        質問通知先チャンネル名（メモ用）
+                      </label>
+                      <Input
+                        value={questionSlackChannelName}
+                        onChange={(e) => setQuestionSlackChannelName(e.target.value)}
+                        placeholder="#qa-acme2025"
+                        className="font-mono text-xs bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700">
+                        質問通知専用 Slack Incoming Webhook URL
+                      </label>
+                      <Input
+                        type="url"
+                        value={questionSlackWebhookUrl}
+                        onChange={(e) => setQuestionSlackWebhookUrl(e.target.value)}
+                        placeholder="https://hooks.slack.com/services/..."
+                        className="font-mono text-xs bg-white"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={!questionSlackWebhookUrl.trim() || questionSlackTesting}
+                        onClick={handleTestQuestionSlack}
+                        className="text-xs h-8 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                      >
+                        {questionSlackTesting ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                            送信中...
+                          </>
+                        ) : (
+                          <>
+                            <Bell className="h-3.5 w-3.5 mr-1 text-indigo-600" />
+                            質問用テスト通知を送信
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
