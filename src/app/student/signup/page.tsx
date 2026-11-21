@@ -53,10 +53,12 @@ export default function StudentSignupPage() {
 
     try {
       const supabase = createClient();
+      const emailRedirectTo = `${window.location.origin}/auth/callback?next=/student`;
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
+          emailRedirectTo,
           data: {
             full_name: fullName.trim(),
             company_code: companyCode.trim().toUpperCase(),
@@ -66,7 +68,23 @@ export default function StudentSignupPage() {
       });
 
       if (signUpError) {
-        setError(signUpError.message);
+        const msg = signUpError.message || "";
+        const lower = msg.toLowerCase();
+        if (lower.includes("is invalid") || lower.includes("invalid email")) {
+          setError(
+            "入力されたメールアドレスは登録できません（@example.com 等のテスト用ドメインは使用できません）。実在するメールアドレスを入力してください。"
+          );
+        } else if (lower.includes("already registered")) {
+          setError(
+            "このメールアドレスはすでに登録されています。ログイン画面からログインしてください。"
+          );
+        } else if (lower.includes("rate limit")) {
+          setError(
+            "確認メールの送信上限に達しました。しばらく時間をおいてから再度お試しください。"
+          );
+        } else {
+          setError(msg);
+        }
         setLoading(false);
         return;
       }

@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     if (isSupabaseConfigured()) {
       const supabase = await createClient();
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${origin}/student/profile`,
+        redirectTo: `${origin}/auth/callback?next=/student/profile`,
       });
       if (error) {
         return NextResponse.json(
