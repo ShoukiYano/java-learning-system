@@ -47,11 +47,33 @@ export default function StudentSignupPage() {
       setError("プライバシーポリシーへの同意が必要です。");
       return;
     }
+    const cleanCompanyCode = companyCode.trim().toUpperCase();
+    if (!cleanCompanyCode) {
+      setError("所属企業から配布された企業コードを入力してください。");
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccessMsg(null);
 
     try {
+      // 1. 入力された企業コードが登録済み企業と一致するか事前検証
+      const verifyRes = await fetch("/api/auth/verify-company-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyCode: cleanCompanyCode }),
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok || !verifyData.valid) {
+        setError(
+          verifyData.error ||
+            "入力された企業コードは登録されていません。所属企業の担当者へご確認ください。"
+        );
+        setLoading(false);
+        return;
+      }
+
+      // 2. 企業コード検証OKの場合のみ Supabase Auth でアカウント作成
       const supabase = createClient();
       const emailRedirectTo = `${window.location.origin}/auth/callback?next=/student`;
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -61,7 +83,7 @@ export default function StudentSignupPage() {
           emailRedirectTo,
           data: {
             full_name: fullName.trim(),
-            company_code: companyCode.trim().toUpperCase(),
+            company_code: cleanCompanyCode,
             role: "student",
           },
         },
@@ -160,7 +182,7 @@ export default function StudentSignupPage() {
           <CardHeader>
             <CardTitle className="text-xl">新規受講登録</CardTitle>
             <CardDescription className="text-slate-400">
-              所属企業から配布された「企業コード」をお持ちの場合は入力してください。
+              所属企業から配布された「企業コード」を入力してアカウントを作成してください。
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -204,7 +226,7 @@ export default function StudentSignupPage() {
                   type="email"
                   required
                   disabled={isBusy}
-                  placeholder="taro.yamada@example.com"
+                  placeholder="taro.yamada@your-company.co.jp"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-slate-950 border-slate-700 text-white"
@@ -231,12 +253,13 @@ export default function StudentSignupPage() {
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
                   <Building2 className="h-3.5 w-3.5 text-emerald-400" />
-                  企業コード（任意・法人研修の方は入力）
+                  企業コード（必須・所属企業から配布されたコード）
                 </label>
                 <Input
                   type="text"
+                  required
                   disabled={isBusy}
-                  placeholder="例: ACME2025"
+                  placeholder="例: SAMPLE2026"
                   value={companyCode}
                   onChange={(e) => setCompanyCode(e.target.value)}
                   className="bg-slate-950 border-slate-700 text-white uppercase"
@@ -267,7 +290,7 @@ export default function StudentSignupPage() {
               <Button
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-500 text-white"
-                disabled={isBusy || !agreedPrivacy}
+                disabled={isBusy || !agreedPrivacy || !companyCode.trim()}
               >
                 {isBusy ? (
                   <>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Announcement } from "@/types/database";
 import {
   Card,
@@ -21,6 +22,7 @@ export function StudentAnnouncementsCard({
   announcements,
   initialReadIds,
 }: Props) {
+  const router = useRouter();
   const [readIds, setReadIds] = useState<string[]>(initialReadIds);
   const [markingId, setMarkingId] = useState<string | null>(null);
 
@@ -34,11 +36,15 @@ export function StudentAnnouncementsCard({
     // 楽観的更新
     setReadIds((prev) => [...prev, announcementId]);
     try {
-      await fetch("/api/student/announcements/read", {
+      const res = await fetch("/api/student/announcements/read", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ announcementId }),
       });
+      if (res.ok) {
+        // ヘッダーの未読件数バッジ（Server Component）を即座に再取得・同期
+        router.refresh();
+      }
     } catch {
       // 失敗してもUI上は維持（再読込で再同期）
     } finally {
