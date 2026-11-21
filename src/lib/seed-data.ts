@@ -12,6 +12,10 @@ import {
   EXTRA_JAVA_CHAPTERS,
   EXTRA_JAVA_PROBLEMS,
 } from "@/lib/java-curriculum-problems";
+import {
+  EXTRA_SQL_CHAPTERS,
+  EXTRA_SQL_PROBLEMS,
+} from "@/lib/sql-curriculum-problems";
 
 export {
   SEED_JAVA_BEGINNER_COURSE_ID,
@@ -522,6 +526,7 @@ export const SEED_CHAPTERS: SeedChapter[] = [
     lesson_title: "2-1. マージとRebaseの実践",
   },
   ...EXTRA_JAVA_CHAPTERS,
+  ...EXTRA_SQL_CHAPTERS,
 ];
 
 export const SEED_PROBLEMS: SeedProblem[] = [
@@ -2271,6 +2276,7 @@ Gitの最も基本的な操作であるコミット（\`git commit\`）を作成
     ],
   },
   ...EXTRA_JAVA_PROBLEMS,
+  ...EXTRA_SQL_PROBLEMS,
 ];
 
 export function detectProblemLanguage(problem: {

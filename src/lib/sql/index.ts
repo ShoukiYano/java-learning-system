@@ -357,12 +357,72 @@ function executeSingleSql(
 // =============================================================================
 // SELECT クエリ評価器
 // =============================================================================
+function toSqlLiteral(val: string | number | null | undefined): string {
+  if (val === null || val === undefined) return "NULL";
+  if (typeof val === "number") return String(val);
+  return `'${String(val).replace(/'/g, "''")}'`;
+}
+
+/**
+ * 括弧内のサブクエリ (SELECT ...) を先に評価し、リテラル値またはリテラルリストへ展開する
+ * （IN (SELECT ...) / NOT IN (SELECT ...) / スカラー比較 = > < (SELECT ...) に対応）
+ */
+function resolveSubqueries(db: InMemoryDatabase, sql: string): string {
+  let result = sql;
+  let guard = 0;
+  while (guard++ < 10) {
+    const match = result.match(/\(\s*SELECT\s+/i);
+    if (!match || match.index === undefined) break;
+
+    const startIdx = match.index;
+    let depth = 0;
+    let inSingle = false;
+    let endIdx = -1;
+    for (let i = startIdx; i < result.length; i++) {
+      const ch = result[i];
+      if (ch === "'") inSingle = !inSingle;
+      if (!inSingle) {
+        if (ch === "(") depth++;
+        else if (ch === ")") {
+          depth--;
+          if (depth === 0) {
+            endIdx = i;
+            break;
+          }
+        }
+      }
+    }
+    if (endIdx === -1) break;
+
+    const innerSql = result.slice(startIdx + 1, endIdx).trim();
+    const innerTable = executeSelectQuery(db, innerSql);
+
+    const before = result.slice(0, startIdx).trimEnd();
+    const isInList = /\bIN$/i.test(before);
+
+    let replacement: string;
+    if (isInList) {
+      const vals = innerTable.rows.map((r) => toSqlLiteral(r[0]));
+      replacement = vals.length > 0 ? `(${vals.join(", ")})` : "(NULL)";
+    } else {
+      const scalar = innerTable.rows[0]?.[0] ?? null;
+      replacement = toSqlLiteral(scalar);
+    }
+
+    result = result.slice(0, startIdx) + replacement + result.slice(endIdx + 1);
+  }
+  return result;
+}
+
 function executeSelectQuery(
   db: InMemoryDatabase,
-  sql: string
+  rawSql: string
 ): SqlTableResult {
-  // 改行を空白に正規化（文字列リテラル内を除く）
-  const normalized = normalizeWhitespaceOutsideStrings(sql);
+  // 改行を空白に正規化（文字列リテラル内を除く）＋サブクエリ事前展開
+  const normalized = resolveSubqueries(
+    db,
+    normalizeWhitespaceOutsideStrings(rawSql)
+  );
 
   // 主要句の抽出（SELECT ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY ... LIMIT ...）
   const clauseRegex =
@@ -763,7 +823,16 @@ function evalWhereCondition(cond: string, row: SqlRow): boolean {
     return v >= low && v <= high;
   }
 
-  // IN (...)
+  // NOT IN (...) / IN (...)
+  const notInMatch = trimmed.match(/^([\s\S]+?)\s+NOT\s+IN\s*\(([^)]+)\)$/i);
+  if (notInMatch) {
+    const leftVal = evalScalarExpr(notInMatch[1], row);
+    const list = splitTopLevelComma(notInMatch[2]).map((x) =>
+      evalScalarExpr(x.trim(), row)
+    );
+    return !list.includes(leftVal);
+  }
+
   const inMatch = trimmed.match(/^([\s\S]+?)\s+IN\s*\(([^)]+)\)$/i);
   if (inMatch) {
     const leftVal = evalScalarExpr(inMatch[1], row);
@@ -838,6 +907,23 @@ function evalScalarExpr(
   }
   if (/^[+-]?\d+(\.\d+)?$/.test(t)) {
     return Number(t);
+  }
+
+  // CASE WHEN <cond> THEN <val> [WHEN ...] [ELSE <val>] END
+  const caseMatch = t.match(/^CASE\s+([\s\S]+)\s+END$/i);
+  if (caseMatch) {
+    const body = caseMatch[1].trim();
+    const elseSplit = body.split(/\s+ELSE\s+/i);
+    const whenPart = elseSplit[0];
+    const elseExpr = elseSplit.length > 1 ? elseSplit.slice(1).join(" ELSE ").trim() : null;
+    const branchRegex = /WHEN\s+([\s\S]+?)\s+THEN\s+([\s\S]+?)(?=\s+WHEN\s+|$)/gi;
+    let bm: RegExpExecArray | null;
+    while ((bm = branchRegex.exec(whenPart)) !== null) {
+      if (evalWhereCondition(bm[1].trim(), row)) {
+        return evalScalarExpr(bm[2].trim(), row);
+      }
+    }
+    return elseExpr !== null ? evalScalarExpr(elseExpr, row) : null;
   }
 
   // COALESCE(a, b)
