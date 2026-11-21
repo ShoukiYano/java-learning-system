@@ -197,7 +197,9 @@ export function StudentQuestionsClient({
                       )}
                     </div>
                     <span className="text-[10px] text-slate-400">
-                      {new Date(q.created_at).toLocaleDateString("ja-JP")}
+                      {new Date(q.created_at).toLocaleDateString("ja-JP", {
+                        timeZone: "Asia/Tokyo",
+                      })}
                     </span>
                   </div>
                   <div className="text-xs font-bold text-slate-900 truncate">
@@ -226,7 +228,9 @@ export function StudentQuestionsClient({
                       </CardTitle>
                       <p className="text-xs text-slate-500 mt-0.5">
                         質問日時：
-                        {new Date(selected.created_at).toLocaleString("ja-JP")}
+                        {new Date(selected.created_at).toLocaleString("ja-JP", {
+                          timeZone: "Asia/Tokyo",
+                        })}
                       </p>
                     </div>
                     {selected.problem_id && (
@@ -295,7 +299,8 @@ export function StudentQuestionsClient({
                               </span>
                               <span className="text-[11px] text-slate-400">
                                 {new Date(rep.created_at).toLocaleString(
-                                  "ja-JP"
+                                  "ja-JP",
+                                  { timeZone: "Asia/Tokyo" }
                                 )}
                               </span>
                             </div>

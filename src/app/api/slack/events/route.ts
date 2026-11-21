@@ -90,7 +90,9 @@ export async function POST(request: NextRequest) {
       !ev ||
       ev.type !== "message" ||
       ev.bot_id ||
-      (ev.subtype && ev.subtype !== "file_share") ||
+      (ev.subtype &&
+        ev.subtype !== "file_share" &&
+        ev.subtype !== "thread_broadcast") ||
       !ev.channel ||
       !ev.thread_ts ||
       !ev.ts ||
@@ -118,6 +120,9 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (!question) {
+      console.warn(
+        `[POST /api/slack/events] thread_not_linked channel=${ev.channel} thread_ts=${ev.thread_ts}`
+      );
       return NextResponse.json({ ok: true, ignored: "thread_not_linked" });
     }
 
