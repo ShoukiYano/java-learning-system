@@ -1027,7 +1027,7 @@ export async function POST(request: NextRequest) {
             const { data: existUser } = await adminClient
               .from("profiles")
               .select("id")
-              .eq("email", cleanEmail)
+              .ilike("email", cleanEmail)
               .maybeSingle();
             if (existUser?.id) {
               existingUid = existUser.id;
@@ -1066,7 +1066,7 @@ export async function POST(request: NextRequest) {
               throw authErr;
             }
           } else if (authUser?.user) {
-            await adminClient.from("profiles").upsert(
+            const { error: profErr } = await adminClient.from("profiles").upsert(
               {
                 id: authUser.user.id,
                 email: cleanEmail,
@@ -1076,6 +1076,8 @@ export async function POST(request: NextRequest) {
               },
               { onConflict: "id" }
             );
+            if (profErr) throw profErr;
+            localMgr.id = authUser.user.id;
           }
         }
 
@@ -1288,14 +1290,25 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (err) {
-    return NextResponse.json(
-      {
-        error:
-          err instanceof Error
-            ? err.message
-            : "データベース保存中にエラーが発生しました。",
-      },
-      { status: 500 }
-    );
+    let errorMessage = "データベース保存中にエラーが発生しました。";
+    if (err instanceof Error && err.message) {
+      errorMessage = err.message;
+    } else if (err && typeof err === "object" && "message" in err) {
+      const e = err as {
+        message?: string;
+        code?: string;
+        details?: string;
+        hint?: string;
+      };
+      const parts = [
+        e.code ? `[${e.code}]` : "",
+        e.message || "",
+        e.details ? `(${e.details})` : "",
+        e.hint ? `Hint: ${e.hint}` : "",
+      ].filter(Boolean);
+      if (parts.length > 0) errorMessage = parts.join(" ");
+    }
+    console.error("[POST /api/admin/actions] error:", err);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
