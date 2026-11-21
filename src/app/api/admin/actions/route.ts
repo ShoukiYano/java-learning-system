@@ -163,6 +163,13 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await userSupabase.auth.getUser();
 
+    if (!user) {
+      return NextResponse.json(
+        { error: "認証が必要です。ログインしてから再度お試しください。" },
+        { status: 401 }
+      );
+    }
+
     // サービスロールキーがある場合は特権クライアントを使用（auth.admin.createUser等にも対応）
     const db =
       process.env.SUPABASE_SERVICE_ROLE_KEY &&
@@ -170,12 +177,12 @@ export async function POST(request: NextRequest) {
         ? createAdminClient()
         : userSupabase;
 
-    // 権限の確認（admin または 評価コメント操作を行う company ロール）
-    let callerRole = "admin";
+    // 権限の確認（admin または 許可された操作を行う company ロール）
+    let callerRole = "student";
     let callerCompanyId: string | null = null;
     let callerName = "担当者";
 
-    if (user) {
+    {
       const { data: profile } = await db
         .from("profiles")
         .select("role, company_id, full_name")
@@ -636,6 +643,27 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ ok: true });
         }
 
+        if (callerRole === "company") {
+          const { data: fbOwner } = await db
+            .from("feedbacks")
+            .select("student_id")
+            .eq("id", feedback_id)
+            .maybeSingle();
+          const { data: stProf } = fbOwner?.student_id
+            ? await db
+                .from("profiles")
+                .select("company_id")
+                .eq("id", fbOwner.student_id)
+                .maybeSingle()
+            : { data: null };
+          if (!callerCompanyId || !stProf || stProf.company_id !== callerCompanyId) {
+            return NextResponse.json(
+              { error: "他社の受講生に対する評価・コメントは編集できません。" },
+              { status: 403 }
+            );
+          }
+        }
+
         const { data: updatedFb, error: upFbErr } = await db
           .from("feedbacks")
           .update({
@@ -655,6 +683,26 @@ export async function POST(request: NextRequest) {
         const { feedback_id } = payload;
         if (String(feedback_id).startsWith("eval-")) {
           return NextResponse.json({ ok: true });
+        }
+        if (callerRole === "company") {
+          const { data: fbOwner } = await db
+            .from("feedbacks")
+            .select("student_id")
+            .eq("id", feedback_id)
+            .maybeSingle();
+          const { data: stProf } = fbOwner?.student_id
+            ? await db
+                .from("profiles")
+                .select("company_id")
+                .eq("id", fbOwner.student_id)
+                .maybeSingle()
+            : { data: null };
+          if (!callerCompanyId || !stProf || stProf.company_id !== callerCompanyId) {
+            return NextResponse.json(
+              { error: "他社の受講生に対する評価・コメントは削除できません。" },
+              { status: 403 }
+            );
+          }
         }
         const { error: delFbErr } = await db
           .from("feedbacks")
@@ -1202,8 +1250,17 @@ export async function POST(request: NextRequest) {
       // 19. 研修進捗ダイジェストSlack送信
       case "send_slack_digest": {
         const { webhookUrl, companyName, companyId, channelName } = payload;
-        const students = await getStudentsAnalyticsFromDb(companyId);
-        const milestones = await getMilestonesFromDb(companyId);
+        if (callerRole === "company") {
+          if (!callerCompanyId || companyId !== callerCompanyId) {
+            return NextResponse.json(
+              { error: "他社の進捗ダイジェストは送信できません。" },
+              { status: 403 }
+            );
+          }
+        }
+        const targetCompanyId = callerRole === "company" ? callerCompanyId! : companyId;
+        const students = await getStudentsAnalyticsFromDb(targetCompanyId);
+        const milestones = await getMilestonesFromDb(targetCompanyId);
         const result = await sendCompanyDigestMessage(webhookUrl, companyName, students, milestones, channelName);
         if (!result.ok) {
           return NextResponse.json({ ok: false, error: result.error || "Slack送信に失敗しました。" }, { status: 400 });

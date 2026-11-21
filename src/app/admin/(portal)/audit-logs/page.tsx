@@ -29,6 +29,14 @@ const ACTION_LABEL_MAP: Record<string, { label: string; color: string }> = {
     label: "企業設定更新",
     color: "bg-indigo-100 text-indigo-800 border-indigo-200",
   },
+  create_company: {
+    label: "企業新規登録",
+    color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  },
+  delete_student: {
+    label: "受講生削除",
+    color: "bg-rose-100 text-rose-800 border-rose-200",
+  },
   reset_manager_password: {
     label: "担当者PW再設定",
     color: "bg-amber-100 text-amber-800 border-amber-200",
@@ -61,11 +69,23 @@ const ACTION_LABEL_MAP: Record<string, { label: string; color: string }> = {
     label: "遅れアラート基準変更",
     color: "bg-orange-100 text-orange-800 border-orange-200",
   },
+  update_delay_alert_threshold: {
+    label: "遅れアラート基準変更",
+    color: "bg-orange-100 text-orange-800 border-orange-200",
+  },
   student_question_asked: {
     label: "受講生から質問送信",
     color: "bg-cyan-100 text-cyan-800 border-cyan-200",
   },
+  student_question: {
+    label: "受講生から質問送信",
+    color: "bg-cyan-100 text-cyan-800 border-cyan-200",
+  },
   cron_weekly_slack_digest: {
+    label: "Slack週次定期配信",
+    color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  },
+  cron_slack_digest: {
     label: "Slack週次定期配信",
     color: "bg-emerald-100 text-emerald-800 border-emerald-200",
   },

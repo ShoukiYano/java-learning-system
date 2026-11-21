@@ -328,6 +328,7 @@ export async function POST(request: NextRequest) {
     // 3. Supabase が設定されている場合、submissions / progress / study_logs / profiles を更新
     let savedSubmissionId: string | null = null;
     let updatedAttemptsCount = 1;
+    let dbSaved = !isSupabaseConfigured();
 
     if (isSupabaseConfigured()) {
       try {
@@ -344,7 +345,7 @@ export async function POST(request: NextRequest) {
 
         if (user) {
           // 3-1. submissions に保存
-          const { data: subRow } = await dbClient
+          const { data: subRow, error: subErr } = await dbClient
             .from("submissions")
             .insert({
               user_id: user.id,
@@ -361,7 +362,11 @@ export async function POST(request: NextRequest) {
             .select("id")
             .single();
 
-          savedSubmissionId = subRow?.id ?? null;
+          if (subErr) {
+            console.error("[POST /api/problems/submit] submissions insert error:", subErr);
+          } else {
+            savedSubmissionId = subRow?.id ?? null;
+          }
 
           // 3-2. progress の挑戦回数・所要時間・ステータスを更新
           const { data: existingProg } = await dbClient
@@ -381,7 +386,7 @@ export async function POST(request: NextRequest) {
               ? "completed"
               : "in_progress";
 
-          await dbClient.from("progress").upsert(
+          const { error: progErr } = await dbClient.from("progress").upsert(
             {
               user_id: user.id,
               problem_id: problemId,
@@ -399,6 +404,9 @@ export async function POST(request: NextRequest) {
             },
             { onConflict: "user_id,problem_id" }
           );
+          if (progErr) {
+            console.error("[POST /api/problems/submit] progress upsert error:", progErr);
+          }
 
           // 3-3. study_logs（学習カレンダー用）を更新
           const todayStr = new Date().toISOString().slice(0, 10);
@@ -411,7 +419,7 @@ export async function POST(request: NextRequest) {
             .eq("study_date", todayStr)
             .maybeSingle();
 
-          await dbClient.from("study_logs").upsert(
+          const { error: logErr } = await dbClient.from("study_logs").upsert(
             {
               user_id: user.id,
               study_date: todayStr,
@@ -421,6 +429,9 @@ export async function POST(request: NextRequest) {
             },
             { onConflict: "user_id,study_date" }
           );
+          if (logErr) {
+            console.error("[POST /api/problems/submit] study_logs upsert error:", logErr);
+          }
 
           // 3-4. profiles の連続学習日数（streak_days）と last_study_date を自動更新
           const { data: prof } = await dbClient
@@ -447,17 +458,22 @@ export async function POST(request: NextRequest) {
               newStreak = 1;
             }
 
-            await dbClient
+            const { error: profErr } = await dbClient
               .from("profiles")
               .update({
                 streak_days: newStreak,
                 last_study_date: todayStr,
               })
               .eq("id", user.id);
+            if (profErr) {
+              console.error("[POST /api/problems/submit] profiles update error:", profErr);
+            }
           }
+
+          dbSaved = !subErr && !progErr && !logErr;
         }
-      } catch {
-        // DB未接続時も採点結果自体は返す
+      } catch (dbEx) {
+        console.error("[POST /api/problems/submit] DB persistence error:", dbEx);
       }
     }
 
@@ -473,6 +489,7 @@ export async function POST(request: NextRequest) {
       results,
       submissionId: savedSubmissionId,
       attemptsCount: updatedAttemptsCount,
+      dbSaved,
     });
   } catch (err) {
     return NextResponse.json(

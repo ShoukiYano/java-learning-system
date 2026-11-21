@@ -42,12 +42,16 @@ import {
 interface ProblemEditorFormProps {
   initialProblem?: SeedProblem;
   mode: "create" | "edit";
+  chapters?: Array<{ id: string; title: string }>;
 }
 
 export function ProblemEditorForm({
   initialProblem,
   mode,
+  chapters,
 }: ProblemEditorFormProps) {
+  const chapterOptions =
+    chapters && chapters.length > 0 ? chapters : SEED_CHAPTERS;
   const [problemLanguage, setProblemLanguage] = useState<ProblemLanguage>(
     initialProblem ? detectProblemLanguage(initialProblem) : "java"
   );
@@ -55,7 +59,7 @@ export function ProblemEditorForm({
     initialProblem?.title ?? "新規演習問題"
   );
   const [chapterId, setChapterId] = useState(
-    initialProblem?.chapter_id ?? SEED_CHAPTERS[0].id
+    initialProblem?.chapter_id ?? chapterOptions[0].id
   );
   const [difficulty, setDifficulty] = useState<Difficulty>(
     initialProblem?.difficulty ?? "easy"
@@ -396,7 +400,7 @@ export function ProblemEditorForm({
                 onChange={(e) => setChapterId(e.target.value)}
                 className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm"
               >
-                {SEED_CHAPTERS.map((c) => (
+                {chapterOptions.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.title}
                   </option>

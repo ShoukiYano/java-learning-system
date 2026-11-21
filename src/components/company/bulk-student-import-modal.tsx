@@ -120,10 +120,21 @@ export function BulkStudentImportModal({ open, onClose, companyName }: Props) {
 
   const handleDownloadCredentials = () => {
     if (!results) return;
+    const safeCell = (val: string) => {
+      const s = String(val ?? "");
+      const neutralized = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+      return `"${neutralized.replace(/"/g, '""')}"`;
+    };
     const header = "氏名,メールアドレス,初期パスワード,結果,詳細";
     const lines = results.map(
       (r) =>
-        `"${r.fullName.replace(/"/g, '""')}","${r.email}","${r.password ?? ""}","${r.status}","${r.message.replace(/"/g, '""')}"`
+        [
+          safeCell(r.fullName),
+          safeCell(r.email),
+          safeCell(r.password ?? ""),
+          safeCell(r.status),
+          safeCell(r.message),
+        ].join(",")
     );
     const bom = "\uFEFF";
     const blob = new Blob([bom + [header, ...lines].join("\r\n")], {

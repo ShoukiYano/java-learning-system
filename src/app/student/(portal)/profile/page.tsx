@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import {
 import { UserCircle, Building2, CheckCircle2, KeyRound, AlertCircle } from "lucide-react";
 
 export default function StudentProfilePage() {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -77,6 +79,7 @@ export default function StudentProfilePage() {
           setSaveErr(`保存に失敗しました: ${upErr.message}`);
           return;
         }
+        router.refresh();
       }
       setSavedMsg("プロフィール情報を保存しました。");
     } catch {

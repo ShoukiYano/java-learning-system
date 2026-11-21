@@ -15,6 +15,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
 import {
   GitState,
@@ -78,6 +79,7 @@ export function GitWorkspaceClient({
   nextProblemId,
   courseId,
 }: GitWorkspaceClientProps) {
+  const router = useRouter();
   const initialBaseState = useMemoInitialState(problem.starter_code);
   const goalTargetState = useMemoGoalState(problem.solution_code);
   const diff = difficultyLabel(problem.difficulty);
@@ -132,7 +134,33 @@ export function GitWorkspaceClient({
             problemId: problem.id,
             code: commands.join("\n"),
           }),
-        }).catch((e) => console.error("Submit error:", e));
+        })
+          .then(async (res) => {
+            if (!res.ok) {
+              const errData = await res.json().catch(() => ({}));
+              setLogs((prev) => [
+                ...prev,
+                {
+                  id: `err-${Date.now()}`,
+                  isError: true,
+                  output: `進捗の保存に失敗しました: ${errData.error || `HTTP ${res.status}`}`,
+                },
+              ]);
+              return;
+            }
+            router.refresh();
+          })
+          .catch((e) => {
+            console.error("Submit error:", e);
+            setLogs((prev) => [
+              ...prev,
+              {
+                id: `err-${Date.now()}`,
+                isError: true,
+                output: "進捗保存の通信中にエラーが発生しました。",
+              },
+            ]);
+          });
 
         setLogs((prev) => [
           ...prev,
@@ -145,7 +173,7 @@ export function GitWorkspaceClient({
         ]);
       }
     },
-    [goalTargetState, isGoalAchieved, problem.id]
+    [goalTargetState, isGoalAchieved, problem.id, router]
   );
 
   const handleExecute = (e?: React.FormEvent) => {

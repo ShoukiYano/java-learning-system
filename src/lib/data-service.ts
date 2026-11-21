@@ -2152,4 +2152,231 @@ export async function getCompanyProgressMatrix(companyId?: string): Promise<{
   return { courses, students };
 }
 
+export interface AdminEditableChapterItem {
+  id: string;
+  course_id: string;
+  title: string;
+  description: string;
+  order_index: number;
+  is_published: boolean;
+  lesson_title: string;
+}
+
+export interface AdminCourseProblemSummary {
+  id: string;
+  chapter_id: string;
+  title: string;
+  description_md: string;
+  difficulty: "easy" | "medium" | "hard";
+  estimated_minutes: number;
+  tags: string[];
+  starter_code: string;
+  order_index: number;
+}
+
+export async function getAllChaptersForAdmin(): Promise<
+  Array<{ id: string; course_id: string; title: string; order_index: number }>
+> {
+  const seedList = SEED_CHAPTERS.map((c) => ({
+    id: c.id,
+    course_id: c.course_id,
+    title: c.title,
+    order_index: c.order_index,
+  }));
+
+  if (!isSupabaseConfigured()) return seedList;
+
+  try {
+    const db = getServerQueryClient() ?? (await createClient());
+    const { data, error } = await db
+      .from("chapters")
+      .select("id, course_id, title, order_index")
+      .order("order_index", { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      const dbIds = new Set(data.map((r: { id: string }) => r.id));
+      const merged = [
+        ...(data as Array<{
+          id: string;
+          course_id: string;
+          title: string;
+          order_index: number;
+        }>),
+        ...seedList.filter((s) => !dbIds.has(s.id)),
+      ];
+      return merged;
+    }
+  } catch {
+    // fallback
+  }
+  return seedList;
+}
+
+export async function getAdminCourseDetailFromDb(courseId: string): Promise<{
+  course: { id: string; title: string; description: string };
+  chapters: AdminEditableChapterItem[];
+  problems: AdminCourseProblemSummary[];
+}> {
+  const seedCourse =
+    SEED_COURSES.find((c) => c.id === courseId) ?? SEED_COURSES[0];
+  const seedChapters: AdminEditableChapterItem[] = SEED_CHAPTERS.filter(
+    (c) => c.course_id === seedCourse.id
+  ).map((c) => ({
+    id: c.id,
+    course_id: c.course_id,
+    title: c.title,
+    description: c.description,
+    order_index: c.order_index,
+    is_published: true,
+    lesson_title: c.lesson_title,
+  }));
+  const seedChapterIds = new Set(seedChapters.map((c) => c.id));
+  const seedProblems: AdminCourseProblemSummary[] = SEED_PROBLEMS.filter((p) =>
+    seedChapterIds.has(p.chapter_id)
+  ).map((p) => ({
+    id: p.id,
+    chapter_id: p.chapter_id,
+    title: p.title,
+    description_md: p.description_md,
+    difficulty: p.difficulty,
+    estimated_minutes: p.estimated_minutes,
+    tags: p.tags,
+    starter_code: p.starter_code,
+    order_index: p.order_index,
+  }));
+
+  if (!isSupabaseConfigured()) {
+    return {
+      course: {
+        id: seedCourse.id,
+        title: seedCourse.title,
+        description: seedCourse.description,
+      },
+      chapters: seedChapters,
+      problems: seedProblems,
+    };
+  }
+
+  try {
+    const db = getServerQueryClient() ?? (await createClient());
+    const { data: courseRow } = await db
+      .from("courses")
+      .select("id, title, description")
+      .eq("id", courseId)
+      .maybeSingle();
+
+    const targetCourse = courseRow ?? {
+      id: seedCourse.id,
+      title: seedCourse.title,
+      description: seedCourse.description,
+    };
+
+    const { data: chRows } = await db
+      .from("chapters")
+      .select("id, course_id, title, description, order_index, is_published")
+      .eq("course_id", targetCourse.id)
+      .order("order_index", { ascending: true });
+
+    if (!chRows || chRows.length === 0) {
+      // 新規作成したばかりのコース（まだ章0件）の場合は空配列を返す
+      if (courseRow && !SEED_COURSES.some((s) => s.id === courseRow.id)) {
+        return { course: targetCourse, chapters: [], problems: [] };
+      }
+      return {
+        course: targetCourse,
+        chapters: seedChapters,
+        problems: seedProblems,
+      };
+    }
+
+    const chIds = chRows.map((c: { id: string }) => c.id);
+    const { data: lesRows } = await db
+      .from("lessons")
+      .select("id, chapter_id, title, order_index")
+      .in("chapter_id", chIds)
+      .order("order_index", { ascending: true });
+
+    const lesByChapter = new Map<string, string>();
+    const lesToChapter = new Map<string, string>();
+    for (const l of (lesRows ?? []) as Array<{
+      id: string;
+      chapter_id: string;
+      title: string;
+    }>) {
+      if (!lesByChapter.has(l.chapter_id)) {
+        lesByChapter.set(l.chapter_id, l.title);
+      }
+      lesToChapter.set(l.id, l.chapter_id);
+    }
+
+    const chapters: AdminEditableChapterItem[] = (
+      chRows as Array<{
+        id: string;
+        course_id: string;
+        title: string;
+        description: string | null;
+        order_index: number;
+        is_published: boolean;
+      }>
+    ).map((c) => ({
+      id: c.id,
+      course_id: c.course_id,
+      title: c.title,
+      description: c.description ?? "",
+      order_index: c.order_index,
+      is_published: c.is_published,
+      lesson_title: lesByChapter.get(c.id) ?? "実践演習",
+    }));
+
+    const lesIds = Array.from(lesToChapter.keys());
+    let problems: AdminCourseProblemSummary[] = [];
+    if (lesIds.length > 0) {
+      const { data: probRows } = await db
+        .from("problems")
+        .select(
+          "id, lesson_id, title, description_md, difficulty, estimated_minutes, tags, starter_code, order_index"
+        )
+        .in("lesson_id", lesIds)
+        .order("order_index", { ascending: true });
+
+      problems = (
+        (probRows ?? []) as Array<{
+          id: string;
+          lesson_id: string;
+          title: string;
+          description_md: string;
+          difficulty: "easy" | "medium" | "hard";
+          estimated_minutes: number;
+          tags: string[];
+          starter_code: string;
+          order_index: number;
+        }>
+      ).map((p) => ({
+        id: p.id,
+        chapter_id: lesToChapter.get(p.lesson_id) ?? "",
+        title: p.title,
+        description_md: p.description_md ?? "",
+        difficulty: p.difficulty ?? "easy",
+        estimated_minutes: p.estimated_minutes ?? 15,
+        tags: Array.isArray(p.tags) ? p.tags : [],
+        starter_code: p.starter_code ?? "",
+        order_index: p.order_index ?? 1,
+      }));
+    }
+
+    return { course: targetCourse, chapters, problems };
+  } catch {
+    return {
+      course: {
+        id: seedCourse.id,
+        title: seedCourse.title,
+        description: seedCourse.description,
+      },
+      chapters: seedChapters,
+      problems: seedProblems,
+    };
+  }
+}
+
+
 

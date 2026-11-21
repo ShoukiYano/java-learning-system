@@ -19,8 +19,14 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    // CRON_SECRET が設定されている本番環境では認証ヘッダーを検証
+    // CRON_SECRET による認証（本番環境で未設定の場合はフェイルクローズで401拒否）
     const cronSecret = process.env.CRON_SECRET;
+    if (process.env.NODE_ENV === "production" && !cronSecret) {
+      return NextResponse.json(
+        { error: "CRON_SECRET が設定されていないため実行できません。" },
+        { status: 401 }
+      );
+    }
     if (cronSecret) {
       const authHeader = request.headers.get("authorization");
       if (authHeader !== `Bearer ${cronSecret}`) {

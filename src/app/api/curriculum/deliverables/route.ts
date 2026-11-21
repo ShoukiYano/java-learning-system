@@ -46,6 +46,22 @@ export async function POST(request: NextRequest) {
           !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
             ? createAdminClient()
             : await createClient();
+
+        // 企業担当者の場合、自社所属受講生の成果物か検証（IDOR防止）
+        if (auth.role === "company") {
+          const { data: targetSub } = await db
+            .from("deliverable_submissions")
+            .select("company_id")
+            .eq("id", submissionId)
+            .maybeSingle();
+          if (!companyId || !targetSub || targetSub.company_id !== companyId) {
+            return NextResponse.json(
+              { error: "他社所属の受講生の成果物はレビューできません。" },
+              { status: 403 }
+            );
+          }
+        }
+
         const { data: dbUpdated, error: revErr } = await db
           .from("deliverable_submissions")
           .update({

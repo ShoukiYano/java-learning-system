@@ -7,10 +7,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurriculumDay } from "@/lib/curriculum/days-plan";
 import { saveInMemoryQuizAttempt } from "@/lib/curriculum/graduation";
 import { isSupabaseConfigured } from "@/lib/data-service";
+import { requireApiAuth } from "@/lib/api-auth";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireApiAuth(["student", "company", "admin"]);
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const dayNum = Number(body.day);
     const answers: Record<string, number> = body.answers ?? {};
@@ -40,37 +45,31 @@ export async function POST(request: NextRequest) {
     const totalCount = dayPlan.quizzes.length;
     const scorePercent = Math.round((correctCount / totalCount) * 100);
 
-    let userId = "demo-student";
-    let companyId: string | null = null;
+    const userId = auth.profile.id;
+    const companyId: string | null = auth.profile.company_id ?? null;
 
     if (isSupabaseConfigured()) {
-      try {
-        const supabase = await createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) {
-          userId = user.id;
-          const { data: prof } = await supabase
-            .from("profiles")
-            .select("company_id")
-            .eq("id", user.id)
-            .maybeSingle();
-          companyId = prof?.company_id ?? null;
+      const db =
+        process.env.SUPABASE_SERVICE_ROLE_KEY &&
+        !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+          ? createAdminClient()
+          : await createClient();
 
-          // テーブルがマイグレーション済みであれば保存（未作成時は安全にスキップ）
-          await supabase.from("quiz_attempts").insert({
-            user_id: userId,
-            company_id: companyId,
-            day_number: dayNum,
-            correct_count: correctCount,
-            total_count: totalCount,
-            score_percent: scorePercent,
-            answers_json: details,
-          });
-        }
-      } catch {
-        // マイグレーション未適用時はインメモリ保存にフォールバック
+      const { error: quizErr } = await db.from("quiz_attempts").insert({
+        user_id: userId,
+        company_id: companyId,
+        day_number: dayNum,
+        correct_count: correctCount,
+        total_count: totalCount,
+        score_percent: scorePercent,
+        answers_json: details,
+      });
+
+      if (quizErr) {
+        return NextResponse.json(
+          { error: `理解度テスト結果のDB保存に失敗しました: ${quizErr.message}` },
+          { status: 500 }
+        );
       }
     }
 

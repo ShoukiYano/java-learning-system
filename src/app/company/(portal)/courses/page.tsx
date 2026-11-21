@@ -1,12 +1,11 @@
 import React from "react";
 import Link from "next/link";
-import { getCurrentProfile, getCoursesWithProgress } from "@/lib/data-service";
 import {
-  SEED_CHAPTERS,
-  SEED_COURSES,
-  SEED_PROBLEMS,
-  detectProblemLanguage,
-} from "@/lib/seed-data";
+  getCurrentProfile,
+  getCoursesWithProgress,
+  getAdminCourseDetailFromDb,
+} from "@/lib/data-service";
+import { detectProblemLanguage } from "@/lib/seed-data";
 import { difficultyLabel } from "@/lib/utils";
 import {
   Card,
@@ -21,11 +20,14 @@ import {
   BookOpen,
   Code2,
   Database,
+  GitBranch,
   Clock,
   Layers,
   Tag,
   Lock,
 } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 
 export default async function CompanyCurriculumViewPage() {
   const profile = await getCurrentProfile();
@@ -33,8 +35,10 @@ export default async function CompanyCurriculumViewPage() {
     profile.id,
     profile.company_id ?? "00000000-0000-4000-8000-000000000001"
   );
-  const visibleIds = new Set(visibleCourseList.map((c) => c.id));
-  const targetCourses = SEED_COURSES.filter((c) => visibleIds.has(c.id));
+
+  const courseTrees = await Promise.all(
+    visibleCourseList.map((c) => getAdminCourseDetailFromDb(c.id))
+  );
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl space-y-8">
@@ -54,25 +58,30 @@ export default async function CompanyCurriculumViewPage() {
       </div>
 
       <div className="space-y-8">
-        {targetCourses.map((course) => {
-          const isSql = course.title.toUpperCase().includes("SQL");
-          const chapters = SEED_CHAPTERS.filter(
-            (ch) => ch.course_id === course.id
-          );
-          const courseProblems = SEED_PROBLEMS.filter((p) =>
-            chapters.some((c) => c.id === p.chapter_id)
-          );
+        {courseTrees.map(({ course, chapters, problems }) => {
+          const upperTitle = course.title.toUpperCase();
+          const isGit = upperTitle.includes("GIT");
+          const isSql = upperTitle.includes("SQL");
+          const trackLabel = isGit
+            ? "Git Version Control Track"
+            : isSql
+            ? "SQL Database Track"
+            : "Java Programming Track";
 
           return (
             <Card key={course.id} className="border-slate-300 shadow-sm">
               <CardHeader className="bg-slate-900 text-white rounded-t-xl">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Badge variant={isSql ? "warning" : "default"}>
-                      {isSql ? "SQL Database Track" : "Java Programming Track"}
+                    <Badge
+                      variant={
+                        isGit ? "secondary" : isSql ? "warning" : "default"
+                      }
+                    >
+                      {trackLabel}
                     </Badge>
                     <span className="text-xs text-slate-300">
-                      全 {chapters.length} 章 ／ 演習 {courseProblems.length} 問
+                      全 {chapters.length} 章 ／ 演習 {problems.length} 問
                     </span>
                   </div>
                   <Link
@@ -83,7 +92,9 @@ export default async function CompanyCurriculumViewPage() {
                   </Link>
                 </div>
                 <CardTitle className="text-xl mt-2 flex items-center gap-2">
-                  {isSql ? (
+                  {isGit ? (
+                    <GitBranch className="h-5 w-5 text-emerald-400" />
+                  ) : isSql ? (
                     <Database className="h-5 w-5 text-amber-400" />
                   ) : (
                     <Code2 className="h-5 w-5 text-blue-400" />
@@ -97,9 +108,7 @@ export default async function CompanyCurriculumViewPage() {
 
               <CardContent className="p-6 space-y-6">
                 {chapters.map((ch) => {
-                  const probs = SEED_PROBLEMS.filter(
-                    (p) => p.chapter_id === ch.id
-                  );
+                  const probs = problems.filter((p) => p.chapter_id === ch.id);
                   return (
                     <div
                       key={ch.id}
@@ -131,10 +140,18 @@ export default async function CompanyCurriculumViewPage() {
                                 <div className="flex items-center gap-2">
                                   <Badge
                                     variant={
-                                      lang === "git" ? "secondary" : lang === "sql" ? "warning" : "default"
+                                      lang === "git"
+                                        ? "secondary"
+                                        : lang === "sql"
+                                        ? "warning"
+                                        : "default"
                                     }
                                   >
-                                    {lang === "git" ? "Git" : lang === "sql" ? "SQL" : "Java"}
+                                    {lang === "git"
+                                      ? "Git"
+                                      : lang === "sql"
+                                      ? "SQL"
+                                      : "Java"}
                                   </Badge>
                                   <span className="font-bold text-sm text-slate-900">
                                     {prob.title}

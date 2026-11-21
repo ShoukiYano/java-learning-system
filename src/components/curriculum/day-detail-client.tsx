@@ -154,7 +154,7 @@ export function DayDetailClient({
       {/* ナビゲーション */}
       <div className="flex items-center justify-between">
         <Link
-          href="/student/roadmap"
+          href="/student/courses"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-blue-600"
         >
           <ArrowLeft className="w-4 h-4" />
