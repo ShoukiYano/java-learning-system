@@ -199,10 +199,11 @@ export async function POST(request: NextRequest) {
 
       const isLockAction = action === "set_student_course_lock";
       const isSlackDigestAction = action === "send_slack_digest";
+      const isDeleteStudentAction = action === "delete_student";
 
       if (
         callerRole !== "admin" &&
-        !(callerRole === "company" && (isFeedbackAction || isLockAction || isSlackDigestAction))
+        !(callerRole === "company" && (isFeedbackAction || isLockAction || isSlackDigestAction || isDeleteStudentAction))
       ) {
         return NextResponse.json(
           { error: "この操作を行う権限がありません。" },
@@ -1281,6 +1282,85 @@ export async function POST(request: NextRequest) {
           detail: { milestoneId: payload.id },
         });
         return NextResponse.json({ ok: true });
+      }
+
+      // 22. 受講生アカウントの完全削除（管理者：全受講生 / 企業担当者：自社受講生のみ）
+      case "delete_student": {
+        const studentId = String(payload?.studentId ?? "").trim();
+        if (!studentId) {
+          return NextResponse.json(
+            { error: "削除対象の studentId が指定されていません。" },
+            { status: 400 }
+          );
+        }
+
+        const { data: targetProf, error: fetchErr } = await db
+          .from("profiles")
+          .select("id, email, full_name, role, company_id")
+          .eq("id", studentId)
+          .maybeSingle();
+
+        if (fetchErr) throw fetchErr;
+
+        if (!targetProf) {
+          return NextResponse.json(
+            { error: "対象の受講生が見つかりませんでした。" },
+            { status: 404 }
+          );
+        }
+
+        if (targetProf.role !== "student") {
+          return NextResponse.json(
+            { error: "受講生アカウント以外はここからは削除できません。" },
+            { status: 400 }
+          );
+        }
+
+        if (
+          callerRole === "company" &&
+          (!callerCompanyId || targetProf.company_id !== callerCompanyId)
+        ) {
+          return NextResponse.json(
+            { error: "他社所属の受講生は削除できません。" },
+            { status: 403 }
+          );
+        }
+
+        if (
+          !process.env.SUPABASE_SERVICE_ROLE_KEY ||
+          process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+        ) {
+          return NextResponse.json(
+            {
+              error:
+                "SUPABASE_SERVICE_ROLE_KEY が未設定のため受講生アカウントを削除できません。",
+            },
+            { status: 500 }
+          );
+        }
+
+        const adminClient = createAdminClient();
+        const { error: delAuthErr } = await adminClient.auth.admin.deleteUser(studentId);
+        if (delAuthErr && !delAuthErr.message.toLowerCase().includes("not found")) {
+          throw delAuthErr;
+        }
+
+        const { error: delProfErr } = await adminClient
+          .from("profiles")
+          .delete()
+          .eq("id", studentId);
+        if (delProfErr) throw delProfErr;
+
+        await recordAuditLog({
+          actorId: user?.id ?? null,
+          actorEmail: user?.email ?? null,
+          actorRole: callerRole,
+          action: "delete_student",
+          targetSummary: `受講生「${targetProf.full_name}（${targetProf.email}）」を削除しました`,
+          detail: { studentId, companyId: targetProf.company_id },
+        });
+
+        return NextResponse.json({ ok: true, deletedId: studentId });
       }
 
       default:

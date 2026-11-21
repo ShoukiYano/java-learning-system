@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress";
+import { DeleteStudentButton } from "@/components/dashboard/delete-student-button";
 import {
   Users,
   AlertTriangle,
@@ -38,12 +39,13 @@ export function AdminStudentsListClient({
 }: {
   students: StudentAnalyticsRecord[];
 }) {
+  const [studentList, setStudentList] = useState<StudentAnalyticsRecord[]>(students);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("ALL");
 
   // 企業リストの重複排除
   const companyOptions = Array.from(
     new Map(
-      students
+      studentList
         .filter((s) => s.companyId)
         .map((s) => [s.companyId, { id: s.companyId, name: s.companyName }])
     ).values()
@@ -51,8 +53,8 @@ export function AdminStudentsListClient({
 
   const filteredStudents =
     selectedCompanyId === "ALL"
-      ? students
-      : students.filter((s) => s.companyId === selectedCompanyId);
+      ? studentList
+      : studentList.filter((s) => s.companyId === selectedCompanyId);
 
   const handleExportCsv = () => {
     const label =
@@ -85,7 +87,7 @@ export function AdminStudentsListClient({
             className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 shadow-sm"
           >
             <option value="ALL">
-              すべての企業（全テナント合計 {students.length} 名）
+              すべての企業（全テナント合計 {studentList.length} 名）
             </option>
             {companyOptions.map((c) => (
               <option key={c.id} value={c.id}>
@@ -166,13 +168,24 @@ export function AdminStudentsListClient({
                 </div>
               </div>
 
-              <Link
-                href={`/admin/students/${st.id}`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
-              >
-                詳細・フィードバック
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/admin/students/${st.id}`}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
+                >
+                  詳細・フィードバック
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+                <DeleteStudentButton
+                  studentId={st.id}
+                  studentName={st.fullName}
+                  studentEmail={st.email}
+                  compact
+                  onDeleted={(deletedId) =>
+                    setStudentList((prev) => prev.filter((item) => item.id !== deletedId))
+                  }
+                />
+              </div>
             </div>
           ))}
         </CardContent>

@@ -10,6 +10,7 @@ import { isSameCompanyTenant } from "@/lib/api-auth";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
 import { EvaluationCommentManager } from "@/components/dashboard/evaluation-comment-manager";
 import { StudentCourseLockManager } from "@/components/dashboard/student-course-lock-manager";
+import { DeleteStudentButton } from "@/components/dashboard/delete-student-button";
 import { GraduationEvaluationCard } from "@/components/company/graduation-evaluation-card";
 import {
   Card,
@@ -57,6 +58,12 @@ export default async function CompanyStudentDetailPage({
           <ArrowLeft className="h-4 w-4" />
           自社受講生一覧へ戻る
         </Link>
+        <DeleteStudentButton
+          studentId={student.id}
+          studentName={student.fullName}
+          studentEmail={student.email}
+          redirectTo="/company"
+        />
       </div>
 
       <Card>

@@ -8,6 +8,7 @@ import { SEED_PROBLEMS } from "@/lib/seed-data";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
 import { EvaluationCommentManager } from "@/components/dashboard/evaluation-comment-manager";
 import { StudentCourseLockManager } from "@/components/dashboard/student-course-lock-manager";
+import { DeleteStudentButton } from "@/components/dashboard/delete-student-button";
 import {
   Card,
   CardContent,
@@ -51,10 +52,18 @@ export function AdminStudentDetailClient({
             所属テナント：{student.companyName} ／ メール：{student.email}
           </p>
         </div>
-        <Badge variant={student.isDelayed ? "destructive" : "success"}>
-          全体進捗 {student.progressPercent}% ({student.completedProblems}/
-          {student.totalProblems}問)
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Badge variant={student.isDelayed ? "destructive" : "success"}>
+            全体進捗 {student.progressPercent}% ({student.completedProblems}/
+            {student.totalProblems}問)
+          </Badge>
+          <DeleteStudentButton
+            studentId={student.id}
+            studentName={student.fullName}
+            studentEmail={student.email}
+            redirectTo="/admin/students"
+          />
+        </div>
       </div>
 
       {/* ★ 管理者による教材コースの個別受講制限・特別解放管理 */}
