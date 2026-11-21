@@ -27,6 +27,8 @@ import {
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { MobileNavMenu } from "@/components/layout/mobile-nav-menu";
 
+export const dynamic = "force-dynamic";
+
 export default async function StudentPortalLayout({
   children,
 }: {

@@ -12,6 +12,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,6 +29,7 @@ import {
   Mail,
   Plus,
   CheckCircle2,
+  AlertTriangle,
   Settings,
   ArrowRight,
 } from "lucide-react";
@@ -45,6 +47,7 @@ export function AdminCompaniesClient({
 }: {
   initialCompanies: CompanyListItem[];
 }) {
+  const router = useRouter();
   const [companies, setCompanies] =
     useState<CompanyListItem[]>(initialCompanies);
   const [name, setName] = useState("");
@@ -52,6 +55,7 @@ export function AdminCompaniesClient({
   const [contactEmail, setContactEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const generateRandomCode = () => {
     const prefix = name
@@ -66,6 +70,7 @@ export function AdminCompaniesClient({
     if (!name.trim() || !code.trim() || saving) return;
     setSaving(true);
     setNotice(null);
+    setErrorMsg(null);
 
     try {
       const res = await fetch("/api/admin/actions", {
@@ -83,24 +88,39 @@ export function AdminCompaniesClient({
       });
       const data = await res.json();
 
+      if (!res.ok || !data.ok) {
+        setErrorMsg(
+          data.error ||
+            "テナント企業のDB登録に失敗しました。企業コードの重複や権限設定を確認してください。"
+        );
+        return;
+      }
+
       const item: CompanyListItem = {
         id: data.company?.id ?? `comp-${Date.now()}`,
-        name: name.trim(),
-        company_code: code.trim().toUpperCase(),
-        contact_email: contactEmail.trim(),
+        name: data.company?.name ?? name.trim(),
+        company_code: data.company?.company_code ?? code.trim().toUpperCase(),
+        contact_email: data.company?.contact_email ?? contactEmail.trim(),
         studentCount: 0,
       };
       setCompanies((prev) => [item, ...prev]);
       setName("");
       setCode("");
       setContactEmail("");
-      setNotice(
-        data.accountCreated
-          ? `✅ テナント企業「${item.name}」（企業コード: ${item.company_code}）をDBに登録し、企業担当者アカウント（${item.contact_email} / 初期パスワード: Password123!）を自動発行しました！`
-          : `✅ テナント企業「${item.name}」（企業コード: ${item.company_code}）をデータベースに登録しました。`
-      );
+      if (data.accountError) {
+        setErrorMsg(
+          `テナント企業「${item.name}」は登録されましたが、企業担当者アカウントの自動発行に失敗しました：${data.accountError}（企業詳細画面から担当者アカウントを追加してください）`
+        );
+      } else {
+        setNotice(
+          data.accountCreated
+            ? `✅ テナント企業「${item.name}」（企業コード: ${item.company_code}）をDBに登録し、企業担当者アカウント（${item.contact_email} / 初期パスワード: Password123!）を自動発行しました！`
+            : `✅ テナント企業「${item.name}」（企業コード: ${item.company_code}）をデータベースに登録しました。`
+        );
+      }
+      router.refresh();
     } catch {
-      setNotice("企業登録中にエラーが発生しました。");
+      setErrorMsg("企業登録中に通信エラーが発生しました。");
     } finally {
       setSaving(false);
     }
@@ -116,6 +136,13 @@ export function AdminCompaniesClient({
           新規テナントの登録や、既存テナントの詳細確認・基本情報編集・企業別カリキュラム表示設定・所属受講生の確認を行えます。
         </p>
       </div>
+
+      {errorMsg && (
+        <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
 
       {notice && (
         <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center gap-2">

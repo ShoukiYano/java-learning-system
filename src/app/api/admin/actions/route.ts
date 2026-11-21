@@ -436,56 +436,121 @@ export async function POST(request: NextRequest) {
       // 7. テナント企業の登録・企業コード発行・企業担当者アカウントの自動作成
       case "create_company": {
         const { name, company_code, contact_email, initial_password } = payload;
-        const cleanCode = String(company_code).trim().toUpperCase();
+        const cleanName = String(name || "").trim();
+        const cleanCode = String(company_code || "").trim().toUpperCase();
+        const cleanEmail = contact_email ? String(contact_email).trim().toLowerCase() : null;
+        const cleanPass = String(initial_password || "Password123!").trim();
 
         const { data: company, error: compErr } = await db
           .from("companies")
           .insert({
-            name: String(name).trim(),
+            name: cleanName,
             company_code: cleanCode,
-            contact_email: contact_email ? String(contact_email).trim() : null,
+            contact_email: cleanEmail,
           })
           .select("*")
           .single();
 
-        if (compErr) throw compErr;
+        if (compErr) {
+          const isDup = compErr.code === "23505" || compErr.message?.includes("duplicate");
+          return NextResponse.json(
+            {
+              ok: false,
+              error: isDup
+                ? `企業コード「${cleanCode}」はすでに登録されています。別の企業コードを指定してください。`
+                : `DB登録エラー: ${compErr.message}`,
+            },
+            { status: isDup ? 409 : 500 }
+          );
+        }
 
-        // サービスロールキーがある場合、企業担当者ログイン用アカウント（role='company'）も同時に作成
+        // サービスロールキーがある場合、企業担当者ログイン用アカウント（role='company'）も確実に作成・紐付け
         let accountCreated = false;
-        if (
-          contact_email &&
-          process.env.SUPABASE_SERVICE_ROLE_KEY &&
-          !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
-        ) {
-          const adminClient = createAdminClient();
-          const { data: createdAuth, error: authErr } =
-            await adminClient.auth.admin.createUser({
-              email: String(contact_email).trim(),
-              password: initial_password || "Password123!",
-              email_confirm: true,
-              user_metadata: {
-                full_name: `${name} 研修担当者`,
-                role: "company",
-                company_code: cleanCode,
-              },
-            });
+        let accountError: string | null = null;
+        if (cleanEmail) {
+          if (
+            process.env.SUPABASE_SERVICE_ROLE_KEY &&
+            !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+          ) {
+            const adminClient = createAdminClient();
+            const { data: createdAuth, error: authErr } =
+              await adminClient.auth.admin.createUser({
+                email: cleanEmail,
+                password: cleanPass,
+                email_confirm: true,
+                user_metadata: {
+                  full_name: `${cleanName} 研修担当者`,
+                  role: "company",
+                  company_code: cleanCode,
+                },
+              });
 
-          if (!authErr && createdAuth.user) {
-            accountCreated = true;
-            await adminClient
-              .from("profiles")
-              .update({
-                role: "company",
-                company_id: company.id,
-              })
-              .eq("id", createdAuth.user.id);
+            if (!authErr && createdAuth.user) {
+              const { error: profErr } = await adminClient
+                .from("profiles")
+                .upsert(
+                  {
+                    id: createdAuth.user.id,
+                    email: cleanEmail,
+                    full_name: `${cleanName} 研修担当者`,
+                    role: "company",
+                    company_id: company.id,
+                  },
+                  { onConflict: "id" }
+                );
+              if (profErr) {
+                accountError = `プロファイル保存エラー: ${profErr.message}`;
+              } else {
+                accountCreated = true;
+              }
+            } else if (authErr) {
+              // 既存メールアドレスがAuthに存在する場合はパスワードと所属企業を同期
+              const { data: existProf } = await adminClient
+                .from("profiles")
+                .select("id")
+                .eq("email", cleanEmail)
+                .maybeSingle();
+              if (existProf?.id) {
+                const { error: updAuthErr } = await adminClient.auth.admin.updateUserById(existProf.id, {
+                  password: cleanPass,
+                  user_metadata: {
+                    full_name: `${cleanName} 研修担当者`,
+                    role: "company",
+                    company_code: cleanCode,
+                  },
+                });
+                await adminClient
+                  .from("profiles")
+                  .update({ role: "company", company_id: company.id })
+                  .eq("id", existProf.id);
+                if (!updAuthErr) {
+                  accountCreated = true;
+                } else {
+                  accountError = updAuthErr.message;
+                }
+              } else {
+                accountError = authErr.message;
+              }
+            }
+          } else {
+            accountError = "SUPABASE_SERVICE_ROLE_KEY が未設定のため担当者アカウントを自動発行できませんでした。";
           }
         }
+
+        await recordAuditLog({
+          actorId: user?.id ?? null,
+          actorEmail: user?.email ?? null,
+          actorRole: callerRole,
+          action: "create_company",
+          targetSummary: `テナント企業「${cleanName}」（コード: ${cleanCode}）を新規登録しました`,
+          detail: { companyId: company.id, accountCreated },
+        });
 
         return NextResponse.json({
           ok: true,
           company,
           accountCreated,
+          accountError,
         });
       }
 

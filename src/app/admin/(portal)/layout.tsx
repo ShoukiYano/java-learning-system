@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
+export const dynamic = "force-dynamic";
+
 export default function AdminPortalLayout({
   children,
 }: {

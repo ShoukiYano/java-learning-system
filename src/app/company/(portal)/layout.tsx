@@ -5,6 +5,8 @@ import { Building2, Users, BookOpen, ShieldCheck, Table2, FileText } from "lucid
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { MobileNavMenu } from "@/components/layout/mobile-nav-menu";
 
+export const dynamic = "force-dynamic";
+
 export default async function CompanyPortalLayout({
   children,
 }: {
