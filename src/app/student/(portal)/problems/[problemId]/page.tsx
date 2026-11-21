@@ -115,6 +115,7 @@ export default async function StudentProblemPage({
 
   return (
     <ProblemWorkspaceClient
+      userId={profile.id}
       problem={detail.problem}
       publicTestCases={detail.publicTestCases}
       hints={detail.hints}

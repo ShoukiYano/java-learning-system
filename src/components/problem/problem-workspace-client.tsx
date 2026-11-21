@@ -56,6 +56,7 @@ import {
 } from "lucide-react";
 
 interface ProblemWorkspaceClientProps {
+  userId: string;
   problem: Problem;
   publicTestCases: TestCase[];
   hints: Hint[];
@@ -65,6 +66,7 @@ interface ProblemWorkspaceClientProps {
 }
 
 export function ProblemWorkspaceClient({
+  userId,
   problem,
   publicTestCases,
   hints,
@@ -72,7 +74,7 @@ export function ProblemWorkspaceClient({
   nextProblemId,
   courseId,
 }: ProblemWorkspaceClientProps) {
-  const storageKey = `code_draft_${problem.id}`;
+  const storageKey = `code_draft_${userId}_${problem.id}`;
   const problemLanguage = detectProblemLanguage(problem);
 
   const [code, setCode] = useState<string>(problem.starter_code);
