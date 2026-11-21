@@ -131,47 +131,53 @@ export default async function AdminDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {overview.stumblingTop5.map((item, idx) => (
-              <div
-                key={item.id}
-                className="p-3 rounded-xl border bg-slate-50/70 flex items-center justify-between gap-3"
-              >
-                <div className="space-y-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="h-5 w-5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold flex items-center justify-center shrink-0">
-                      {idx + 1}
-                    </span>
-                    <Badge
-                      variant={item.track === "SQL" ? "warning" : "default"}
-                      className="text-[10px] px-1.5 py-0"
-                    >
-                      {item.track}
-                    </Badge>
-                    <span className="font-semibold text-xs text-slate-900 truncate">
-                      {item.title}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 flex items-center gap-3 pl-7">
-                    <span>
-                      平均挑戦: <strong>{item.avgAttempts}回</strong>
-                    </span>
-                    <span>
-                      不通過率:{" "}
-                      <strong className="text-rose-600">{item.failRate}%</strong>
-                    </span>
-                    <span>平均所要: {item.avgMinutes}分</span>
-                  </div>
-                </div>
-
-                <Link
-                  href={`/admin/problems/${item.id}/edit`}
-                  className="px-2.5 py-1.5 rounded border bg-white hover:bg-slate-100 text-xs font-medium inline-flex items-center gap-1 shrink-0"
-                >
-                  <Edit3 className="h-3 w-3" />
-                  編集
-                </Link>
+            {overview.stumblingTop5.length === 0 ? (
+              <div className="p-6 rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-xs text-slate-500">
+                まだ演習の挑戦データがありません。受講生が課題を提出すると自動集計されます。
               </div>
-            ))}
+            ) : (
+              overview.stumblingTop5.map((item, idx) => (
+                <div
+                  key={item.id}
+                  className="p-3 rounded-xl border bg-slate-50/70 flex items-center justify-between gap-3"
+                >
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="h-5 w-5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold flex items-center justify-center shrink-0">
+                        {idx + 1}
+                      </span>
+                      <Badge
+                        variant={item.track === "SQL" ? "warning" : "default"}
+                        className="text-[10px] px-1.5 py-0"
+                      >
+                        {item.track}
+                      </Badge>
+                      <span className="font-semibold text-xs text-slate-900 truncate">
+                        {item.title}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 flex items-center gap-3 pl-7">
+                      <span>
+                        平均挑戦: <strong>{item.avgAttempts}回</strong>
+                      </span>
+                      <span>
+                        不通過率:{" "}
+                        <strong className="text-rose-600">{item.failRate}%</strong>
+                      </span>
+                      <span>平均所要: {item.avgMinutes}分</span>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/admin/problems/${item.id}/edit`}
+                    className="px-2.5 py-1.5 rounded border bg-white hover:bg-slate-100 text-xs font-medium inline-flex items-center gap-1 shrink-0"
+                  >
+                    <Edit3 className="h-3 w-3" />
+                    編集
+                  </Link>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
 
@@ -186,40 +192,46 @@ export default async function AdminDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {overview.recentSubmissions.map((sub) => (
-              <div
-                key={sub.id}
-                className="p-3 rounded-xl border bg-white flex items-center justify-between gap-3"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-xs text-slate-900">
-                      {sub.studentName}
-                    </span>
-                    <span className="text-[11px] text-slate-500">
-                      （{sub.companyName}）
-                    </span>
-                    {sub.status === "passed" ? (
-                      <Badge variant="success">AC (合格)</Badge>
-                    ) : (
-                      <Badge variant="warning">WA (再挑戦中)</Badge>
-                    )}
-                  </div>
-                  <div className="text-xs text-slate-600">
-                    問題: {sub.problemTitle} ・{" "}
-                    <span className="text-slate-400">{sub.submittedAt}</span>
-                  </div>
-                </div>
-
-                <Link
-                  href={`/admin/students/${sub.studentId}`}
-                  className="text-xs text-indigo-600 hover:underline font-semibold inline-flex items-center gap-1 shrink-0"
-                >
-                  コード確認・評価
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
+            {overview.recentSubmissions.length === 0 ? (
+              <div className="p-6 rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-xs text-slate-500">
+                まだ提出履歴がありません。受講生がコードを提出するとリアルタイムに表示されます。
               </div>
-            ))}
+            ) : (
+              overview.recentSubmissions.map((sub) => (
+                <div
+                  key={sub.id}
+                  className="p-3 rounded-xl border bg-white flex items-center justify-between gap-3"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-slate-900">
+                        {sub.studentName}
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        （{sub.companyName}）
+                      </span>
+                      {sub.status === "passed" ? (
+                        <Badge variant="success">AC (合格)</Badge>
+                      ) : (
+                        <Badge variant="warning">WA (再挑戦中)</Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-600">
+                      問題: {sub.problemTitle} ・{" "}
+                      <span className="text-slate-400">{sub.submittedAt}</span>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/admin/students/${sub.studentId}`}
+                    className="text-xs text-indigo-600 hover:underline font-semibold inline-flex items-center gap-1 shrink-0"
+                  >
+                    コード確認・評価
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>

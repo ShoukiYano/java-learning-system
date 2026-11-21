@@ -132,7 +132,7 @@ export default async function CompanyStudentDetailPage({
                 java_api_collections: Math.min(10, Math.round((student.progressPercent / 100) * 10)),
                 sql_db: Math.min(10, Math.round((student.progressPercent / 100) * 8)),
                 spring_boot_api: 0,
-                git_workflow: 5,
+                git_workflow: 0,
                 junit_testing: 0,
                 final_project: 0,
               }

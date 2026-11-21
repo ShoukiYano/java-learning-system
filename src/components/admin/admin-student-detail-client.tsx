@@ -4,7 +4,6 @@ import React from "react";
 import Link from "next/link";
 import { StudentAnalyticsRecord } from "@/lib/mock-analytics";
 import { Submission, StudentCourseStatusItem } from "@/types/database";
-import { SEED_PROBLEMS } from "@/lib/seed-data";
 import { SkillRadarChart } from "@/components/dashboard/skill-radar-chart";
 import { EvaluationCommentManager } from "@/components/dashboard/evaluation-comment-manager";
 import { StudentCourseLockManager } from "@/components/dashboard/student-course-lock-manager";
@@ -28,10 +27,9 @@ export function AdminStudentDetailClient({
   submissions: Submission[];
   courseLockStatuses?: StudentCourseStatusItem[];
 }) {
-  const latestCode =
-    submissions[0]?.code ?? SEED_PROBLEMS[4].solution_code;
-  const latestProblemTitle =
-    submissions[0]?.problems?.title ?? SEED_PROBLEMS[4].title;
+  const latestSubmission = submissions[0] ?? null;
+  const latestCode = latestSubmission?.code ?? null;
+  const latestProblemTitle = latestSubmission?.problems?.title ?? null;
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-6xl space-y-6">
@@ -120,13 +118,21 @@ export function AdminStudentDetailClient({
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Code2 className="h-4 w-4 text-blue-600" />
-                直近の提出コード（{latestProblemTitle}）
+                {latestProblemTitle
+                  ? `直近の提出コード（${latestProblemTitle}）`
+                  : "直近の提出コード"}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <pre className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto">
-                {latestCode}
-              </pre>
+              {latestCode ? (
+                <pre className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto">
+                  {latestCode}
+                </pre>
+              ) : (
+                <div className="p-6 rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-xs text-slate-500">
+                  まだ提出されたコードはありません。受講生が課題を提出すると、ここに最新のコードが表示されます。
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -934,9 +934,13 @@ export async function getStudentsAnalyticsFromDb(
     const { data: students } = await query;
 
     if (!students || students.length === 0) {
-      return companyIdFilter
-        ? DEMO_STUDENTS_ANALYTICS.filter((s) => s.companyId === companyIdFilter)
-        : DEMO_STUDENTS_ANALYTICS;
+      // 1企業のみ（株式会社ACMEテクノロジーズ）デモ用データへフォールバック
+      if (companyIdFilter === "00000000-0000-4000-8000-000000000001") {
+        return DEMO_STUDENTS_ANALYTICS.filter(
+          (s) => s.companyId === companyIdFilter
+        );
+      }
+      return [];
     }
 
     const studentIds = students.map((s: Profile) => s.id);
@@ -1165,64 +1169,69 @@ export async function getStudentsAnalyticsFromDb(
 export async function getAdminOverviewFromDb() {
   const students = await getStudentsAnalyticsFromDb();
 
-  let companyCount = 2;
+  const isDemoMode = !isSupabaseConfigured();
+  let companyCount = isDemoMode ? 2 : 0;
   let courseCount = SEED_COURSES.length;
   let problemCount = SEED_PROBLEMS.length;
-  let stumblingTop5 = [
-    {
-      id: SEED_PROBLEMS[17].id,
-      title: SEED_PROBLEMS[17].title,
-      track: "SQL",
-      avgAttempts: 4.5,
-      failRate: 61,
-      avgMinutes: 22,
-    },
-    {
-      id: SEED_PROBLEMS[11].id,
-      title: SEED_PROBLEMS[11].title,
-      track: "Java",
-      avgAttempts: 4.2,
-      failRate: 58,
-      avgMinutes: 24,
-    },
-    {
-      id: SEED_PROBLEMS[8].id,
-      title: SEED_PROBLEMS[8].title,
-      track: "Java",
-      avgAttempts: 3.6,
-      failRate: 49,
-      avgMinutes: 19,
-    },
-    {
-      id: SEED_PROBLEMS[15].id,
-      title: SEED_PROBLEMS[15].title,
-      track: "SQL",
-      avgAttempts: 3.2,
-      failRate: 44,
-      avgMinutes: 17,
-    },
-    {
-      id: SEED_PROBLEMS[10].id,
-      title: SEED_PROBLEMS[10].title,
-      track: "Java",
-      avgAttempts: 3.1,
-      failRate: 42,
-      avgMinutes: 18,
-    },
-  ];
+  let stumblingTop5 = isDemoMode
+    ? [
+        {
+          id: SEED_PROBLEMS[17].id,
+          title: SEED_PROBLEMS[17].title,
+          track: "SQL",
+          avgAttempts: 4.5,
+          failRate: 61,
+          avgMinutes: 22,
+        },
+        {
+          id: SEED_PROBLEMS[11].id,
+          title: SEED_PROBLEMS[11].title,
+          track: "Java",
+          avgAttempts: 4.2,
+          failRate: 58,
+          avgMinutes: 24,
+        },
+        {
+          id: SEED_PROBLEMS[8].id,
+          title: SEED_PROBLEMS[8].title,
+          track: "Java",
+          avgAttempts: 3.6,
+          failRate: 49,
+          avgMinutes: 19,
+        },
+        {
+          id: SEED_PROBLEMS[15].id,
+          title: SEED_PROBLEMS[15].title,
+          track: "SQL",
+          avgAttempts: 3.2,
+          failRate: 44,
+          avgMinutes: 17,
+        },
+        {
+          id: SEED_PROBLEMS[10].id,
+          title: SEED_PROBLEMS[10].title,
+          track: "Java",
+          avgAttempts: 3.1,
+          failRate: 42,
+          avgMinutes: 18,
+        },
+      ]
+    : [];
 
-  let recentSubmissions = [
-    {
-      id: "adm-sub-1",
-      studentId: students[0]?.id ?? "demo-student-1",
-      studentName: students[0]?.fullName ?? "山田 太郎",
-      companyName: students[0]?.companyName ?? "株式会社ACMEテクノロジーズ",
-      problemId: SEED_PROBLEMS[12].id,
-      problemTitle: SEED_PROBLEMS[12].title,
-      status: "passed",
-      submittedAt: "直近",
-    },
-  ];
+  let recentSubmissions = isDemoMode
+    ? [
+        {
+          id: "adm-sub-1",
+          studentId: students[0]?.id ?? "demo-student-1",
+          studentName: students[0]?.fullName ?? "山田 太郎",
+          companyName: students[0]?.companyName ?? "株式会社ACMEテクノロジーズ",
+          problemId: SEED_PROBLEMS[12].id,
+          problemTitle: SEED_PROBLEMS[12].title,
+          status: "passed",
+          submittedAt: "直近",
+        },
+      ]
+    : [];
 
   if (isSupabaseConfigured()) {
     try {
@@ -1713,9 +1722,16 @@ export async function getMilestonesFromDb(companyId?: string) {
       if (companyId) {
         q = q.or(`company_id.eq.${companyId},company_id.is.null`);
       }
-      const { data } = await q;
-      if (data && data.length > 0) {
-        return data as import("@/types/database").TrainingMilestone[];
+      const { data, error } = await q;
+      if (!error && data) {
+        if (data.length > 0) {
+          return data as import("@/types/database").TrainingMilestone[];
+        }
+        // 1企業のみ（株式会社ACMEテクノロジーズ）デモ用マイルストーンへフォールバック
+        if (companyId === "00000000-0000-4000-8000-000000000001") {
+          return getInMemoryMilestones(companyId);
+        }
+        return [];
       }
     } catch {
       // テーブル未作成時はインメモリフォールバック
@@ -1842,8 +1858,10 @@ export async function getAdminCompanyDetail(companyId: string) {
         .order("created_at", { ascending: true });
       if (profs && profs.length > 0) {
         managers = profs as CompanyManager[];
-      } else {
+      } else if (targetCompany.id === "00000000-0000-4000-8000-000000000001") {
         managers = getInMemoryCompanyManagers(targetCompany.id);
+      } else {
+        managers = [];
       }
     } catch {
       managers = getInMemoryCompanyManagers(targetCompany.id);
