@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentProfile } from "@/lib/data-service";
 import { Building2, Users, BookOpen, ShieldCheck, Table2, FileText } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { IdleAutoLogout } from "@/components/auth/idle-auto-logout";
 import { MobileNavMenu } from "@/components/layout/mobile-nav-menu";
 
 export const dynamic = "force-dynamic";
@@ -82,6 +83,7 @@ export default async function CompanyPortalLayout({
         </div>
       </header>
 
+      <IdleAutoLogout redirectPath="/company/login" timeoutMinutes={60} />
       <main className="flex-1">{children}</main>
     </div>
   );

@@ -80,6 +80,16 @@ export function RoleLoginForm({
 
   useEffect(() => {
     let active = true;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("reason") === "idle_timeout") {
+        setInfoMessage(
+          "1時間操作がなかったため、セキュリティ保護のため自動ログアウトしました。再度ログインしてください。"
+        );
+      }
+    } catch {
+      // ignore
+    }
     fetch("/api/auth/session", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {

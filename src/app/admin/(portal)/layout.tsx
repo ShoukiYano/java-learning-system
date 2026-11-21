@@ -12,6 +12,7 @@ import {
   ScrollText,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { IdleAutoLogout } from "@/components/auth/idle-auto-logout";
 
 export const dynamic = "force-dynamic";
 
@@ -101,6 +102,7 @@ export default function AdminPortalLayout({
         </div>
       </header>
 
+      <IdleAutoLogout redirectPath="/admin/login" timeoutMinutes={60} />
       <main className="flex-1">{children}</main>
     </div>
   );

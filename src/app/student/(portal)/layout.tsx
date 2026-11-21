@@ -29,6 +29,7 @@ import {
   Building2,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { IdleAutoLogout } from "@/components/auth/idle-auto-logout";
 import { MobileNavMenu } from "@/components/layout/mobile-nav-menu";
 import { StudentQaNotifier } from "@/components/dashboard/student-qa-notifier";
 
@@ -183,6 +184,7 @@ export default async function StudentPortalLayout({
         </div>
       </header>
 
+      <IdleAutoLogout redirectPath="/student/login" timeoutMinutes={60} />
       <StudentQaNotifier
         initialUnreadCount={qaSummary.unreadCount}
         initialLatestUnread={qaSummary.latestUnread}
