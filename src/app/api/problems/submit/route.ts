@@ -118,6 +118,47 @@ export async function POST(request: NextRequest) {
     }
     recentSubmitMap.set(`${clientIp}:${problemId}`, now);
 
+    const seedProb = SEED_PROBLEMS.find((p) => p.id === problemId);
+
+    // シード外（管理画面で新規作成された問題）のメタデータをDBから取得
+    let dbProblemMeta: {
+      tags: string[];
+      starter_code: string;
+      solution_code: string;
+      course_id: string | null;
+    } | null = null;
+
+    if (!seedProb && isSupabaseConfigured()) {
+      try {
+        const metaClient =
+          process.env.SUPABASE_SERVICE_ROLE_KEY &&
+          !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+            ? createAdminClient()
+            : await createClient();
+        const { data: probRow } = await metaClient
+          .from("problems")
+          .select("tags, starter_code, solution_code, lessons(chapters(course_id))")
+          .eq("id", problemId)
+          .maybeSingle();
+        if (probRow) {
+          const typed = probRow as unknown as {
+            tags?: string[];
+            starter_code?: string;
+            solution_code?: string;
+            lessons?: { chapters?: { course_id?: string } };
+          };
+          dbProblemMeta = {
+            tags: Array.isArray(typed.tags) ? typed.tags : [],
+            starter_code: typed.starter_code ?? "",
+            solution_code: typed.solution_code ?? "",
+            course_id: typed.lessons?.chapters?.course_id ?? null,
+          };
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     // コース受講制限（ロック）のサーバー側ガード
     if (isSupabaseConfigured()) {
       try {
@@ -136,16 +177,18 @@ export async function POST(request: NextRequest) {
             user.id,
             prof?.company_id ?? null
           );
-          const seedProbRef = SEED_PROBLEMS.find((p) => p.id === problemId);
-          const seedChRef = seedProbRef
-            ? SEED_CHAPTERS.find((ch) => ch.id === seedProbRef.chapter_id)
+          const seedChRef = seedProb
+            ? SEED_CHAPTERS.find((ch) => ch.id === seedProb.chapter_id)
             : undefined;
+          const metaTags = seedProb?.tags ?? dbProblemMeta?.tags ?? [];
           const isGit =
-            seedProbRef?.language === "git" ||
-            seedProbRef?.tags.some((t) => t.toUpperCase().includes("GIT"));
+            seedProb?.language === "git" ||
+            metaTags.some((t) => t.toUpperCase().includes("GIT"));
           const isSql =
-            seedProbRef?.language === "sql" || seedProbRef?.tags.includes("SQL");
+            seedProb?.language === "sql" ||
+            metaTags.some((t) => t.toUpperCase().includes("SQL"));
           const targetCourseId =
+            dbProblemMeta?.course_id ??
             seedChRef?.course_id ??
             (isGit
               ? SEED_GIT_COURSE_ID
@@ -172,7 +215,6 @@ export async function POST(request: NextRequest) {
     // サービスロールキーが設定されている場合は特権クライアントで全テストケースを取得し、
     // 未設定時はシード定義から取得する
     let allTestCases: TestCase[] = [];
-    const seedProb = SEED_PROBLEMS.find((p) => p.id === problemId);
 
     if (
       isSupabaseConfigured() &&
@@ -206,11 +248,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. 問題言語（Java または SQL）を判定し、全テストケースを実行・判定
+    // 2. 問題言語（Java / SQL / Git）を判定し、全テストケースを実行・判定
     const problemLanguage = detectProblemLanguage({
       language: seedProb?.language,
-      tags: seedProb?.tags,
-      starter_code: code,
+      tags: seedProb?.tags ?? dbProblemMeta?.tags,
+      starter_code: seedProb?.starter_code ?? dbProblemMeta?.starter_code ?? code,
     });
 
     const results: TestCaseClientJudgeResult[] = [];
