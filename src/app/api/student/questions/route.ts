@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
     const problemId = String(body.problemId ?? "").trim();
     const problemTitle = String(body.problemTitle ?? "演習問題").trim();
     const questionText = String(body.questionText ?? "").trim();
-    const codeSnippet = body.codeSnippet ? String(body.codeSnippet) : undefined;
+    const rawSnippet = body.codeSnippet ?? body.codeSnapshot;
+    const codeSnippet = rawSnippet ? String(rawSnippet) : undefined;
 
     if (!questionText) {
       return NextResponse.json(

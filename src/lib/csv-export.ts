@@ -99,15 +99,18 @@ export function exportStudentsProgressToCsv(
     ];
   });
 
+  // Excel数式インジェクション対策（=,+,-,@,\t,\r 始まりにシングルクォートを前置）＋ダブルクォートエスケープ
+  const sanitizeCsvCell = (raw: unknown): string => {
+    const str = String(raw ?? "");
+    const safe = /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+    return `"${safe.replace(/"/g, '""')}"`;
+  };
+
   // Excel文字化け防止のため、先頭にUTF-8 BOM (\uFEFF) を付与
   const csvContent =
     "\uFEFF" +
     [headers, ...rows]
-      .map((row) =>
-        row
-          .map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`)
-          .join(",")
-      )
+      .map((row) => row.map((cell) => sanitizeCsvCell(cell)).join(","))
       .join("\r\n");
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });

@@ -126,7 +126,7 @@ export function EvaluationCommentManager({
     setNotice(null);
 
     try {
-      await fetch("/api/admin/actions", {
+      const res = await fetch("/api/admin/actions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -138,6 +138,11 @@ export function EvaluationCommentManager({
           },
         }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        setNotice(`⚠️ 更新に失敗しました: ${errData.error || "権限またはDB設定を確認してください。"}`);
+        return;
+      }
 
       setEvaluations((prev) =>
         prev.map((ev) =>
@@ -158,8 +163,9 @@ export function EvaluationCommentManager({
   // 3. 評価・コメントの削除
   const handleDelete = async (id: string) => {
     setNotice(null);
+    const prevList = evaluations;
     setEvaluations((prev) => prev.filter((ev) => ev.id !== id));
-    await fetch("/api/admin/actions", {
+    const res = await fetch("/api/admin/actions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -167,6 +173,12 @@ export function EvaluationCommentManager({
         payload: { feedback_id: id },
       }),
     });
+    if (!res.ok) {
+      setEvaluations(prevList);
+      const errData = await res.json().catch(() => ({}));
+      setNotice(`⚠️ 削除に失敗しました: ${errData.error || "権限またはDB設定を確認してください。"}`);
+      return;
+    }
     setNotice("評価・コメントを削除しました。");
   };
 

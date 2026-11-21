@@ -14,11 +14,13 @@ import {
 import { UserCircle, Building2, CheckCircle2, KeyRound, AlertCircle } from "lucide-react";
 
 export default function StudentProfilePage() {
-  const [fullName, setFullName] = useState("山田 太郎");
-  const [email, setEmail] = useState("student@acme-tech.example.com");
-  const [companyName, setCompanyName] = useState("株式会社ACMEテクノロジーズ");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [saveErr, setSaveErr] = useState<string | null>(null);
 
   // パスワード変更用 state
   const [newPassword, setNewPassword] = useState("");
@@ -46,7 +48,11 @@ export default function StudentProfilePage() {
           setCompanyName(profile.companies?.name ?? "未所属（個人受講）");
         }
       } catch {
-        // デモ設定値を維持
+        setFullName("山田 太郎");
+        setEmail("student@acme-tech.example.com");
+        setCompanyName("株式会社ACMEテクノロジーズ");
+      } finally {
+        setLoadingProfile(false);
       }
     };
     load();
@@ -56,20 +62,25 @@ export default function StudentProfilePage() {
     e.preventDefault();
     setSaving(true);
     setSavedMsg(null);
+    setSaveErr(null);
     try {
       const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
-        await supabase
+        const { error: upErr } = await supabase
           .from("profiles")
           .update({ full_name: fullName.trim() })
           .eq("id", user.id);
+        if (upErr) {
+          setSaveErr(`保存に失敗しました: ${upErr.message}`);
+          return;
+        }
       }
       setSavedMsg("プロフィール情報を保存しました。");
     } catch {
-      setSavedMsg("保存しました。");
+      setSaveErr("保存中に通信エラーが発生しました。");
     } finally {
       setSaving(false);
     }
@@ -131,6 +142,12 @@ export default function StudentProfilePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {saveErr && (
+            <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+              <span>{saveErr}</span>
+            </div>
+          )}
           {savedMsg && (
             <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
@@ -165,7 +182,7 @@ export default function StudentProfilePage() {
               <Input value={companyName} disabled className="bg-slate-100" />
             </div>
 
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={saving || loadingProfile}>
               {saving ? "保存中..." : "変更を保存する"}
             </Button>
           </form>

@@ -42,12 +42,12 @@ export async function sendSlackWebhook(
     };
   }
 
-  // デモやローカル検証用（実際のSlack URLではない場合）
-  if (!cleanUrl.startsWith("https://hooks.slack.com/")) {
+  // 有効なSlack Incoming Webhook URLのみ許可（SSRF防止＆URL貼り間違い検知）
+  if (!cleanUrl.startsWith("https://hooks.slack.com/services/")) {
     return {
-      ok: true,
-      simulated: true,
-      statusText: "テスト用URLのため送信シミュレーション成功と判定しました。",
+      ok: false,
+      error:
+        "有効なSlack Incoming Webhook URL（https://hooks.slack.com/services/...）を指定してください。",
     };
   }
 

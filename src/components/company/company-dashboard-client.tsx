@@ -16,6 +16,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { StudentAnalyticsRecord } from "@/lib/mock-analytics";
 import { TrainingMilestone } from "@/types/database";
 import { DemoCompanySlackSettings } from "@/lib/seed-data";
@@ -66,6 +67,7 @@ export function CompanyDashboardClient({
   milestones?: TrainingMilestone[];
   initialDelayAlertDays?: number;
 }) {
+  const router = useRouter();
   const [slackSending, setSlackSending] = React.useState(false);
   const [slackNotice, setSlackNotice] = React.useState<string | null>(null);
   const [slackError, setSlackError] = React.useState<string | null>(null);
@@ -86,11 +88,15 @@ export function CompanyDashboardClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ delayAlertDays: days }),
       });
+      const data = await res.json();
       if (res.ok) {
         setDelaySaveMsg(`遅れアラート基準を「${days}日未ログイン」に保存しました`);
+        router.refresh();
+      } else {
+        setDelaySaveMsg(`エラー: ${data.error || "設定の保存に失敗しました"}`);
       }
     } catch {
-      // ignore
+      setDelaySaveMsg("エラー: 通信エラーが発生しました");
     } finally {
       setSavingDelayDays(false);
     }

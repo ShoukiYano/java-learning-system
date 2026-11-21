@@ -74,7 +74,7 @@ export default function AdminCourseChaptersPage({
     setChapters(reindexed);
     setDragIndex(null);
 
-    await fetch("/api/admin/actions", {
+    const res = await fetch("/api/admin/actions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -87,7 +87,11 @@ export default function AdminCourseChaptersPage({
         },
       }),
     });
-    setToast("ドラッグ＆ドロップで章の並び順をデータベースに保存しました。");
+    setToast(
+      res.ok
+        ? "ドラッグ＆ドロップで章の並び順をデータベースに保存しました。"
+        : "⚠️ 章の並び順の保存に失敗しました。"
+    );
   };
 
   const handleAddChapter = async (e: React.FormEvent) => {
@@ -110,6 +114,10 @@ export default function AdminCourseChaptersPage({
       }),
     });
     const data = await res.json();
+    if (!res.ok || !data.ok) {
+      setToast(`⚠️ 章の追加に失敗しました: ${data.error || "エラー"}`);
+      return;
+    }
 
     setChapters((prev) => [
       ...prev,
@@ -134,7 +142,7 @@ export default function AdminCourseChaptersPage({
     setChapters((prev) =>
       prev.map((c) => (c.id === id ? { ...c, is_published: nextState } : c))
     );
-    await fetch("/api/admin/actions", {
+    const res = await fetch("/api/admin/actions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -142,6 +150,12 @@ export default function AdminCourseChaptersPage({
         payload: { chapterId: id, is_published: nextState },
       }),
     });
+    if (!res.ok) {
+      setChapters((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, is_published: !nextState } : c))
+      );
+      setToast("⚠️ 章の公開設定の保存に失敗しました。");
+    }
   };
 
   return (

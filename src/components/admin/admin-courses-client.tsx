@@ -123,7 +123,7 @@ export function AdminCoursesClient({
     setCourses((prev) =>
       prev.map((c) => (c.id === id ? { ...c, is_published: nextState } : c))
     );
-    await fetch("/api/admin/actions", {
+    const res = await fetch("/api/admin/actions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -131,6 +131,13 @@ export function AdminCoursesClient({
         payload: { courseId: id, is_published: nextState },
       }),
     });
+    if (!res.ok) {
+      setCourses((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, is_published: !nextState } : c))
+      );
+      setMessage("⚠️ コース公開ステータスの更新に失敗しました。");
+      return;
+    }
     setMessage(
       `コース「${target.title}」の全体ステータスを${
         nextState ? "公開" : "非公開"
@@ -156,7 +163,7 @@ export function AdminCoursesClient({
       },
     }));
 
-    await fetch("/api/admin/actions", {
+    const res = await fetch("/api/admin/actions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -168,6 +175,17 @@ export function AdminCoursesClient({
         },
       }),
     });
+    if (!res.ok) {
+      setVisibilityMap((prev) => ({
+        ...prev,
+        [courseId]: {
+          ...(prev[courseId] ?? {}),
+          [companyId]: currentVal,
+        },
+      }));
+      setMessage("⚠️ 企業別コース表示設定の保存に失敗しました。");
+      return;
+    }
 
     setMessage(
       `「${companyName}」に対する「${courseTitle}」の表示を【${

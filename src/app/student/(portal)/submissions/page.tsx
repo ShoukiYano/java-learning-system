@@ -1,6 +1,10 @@
 import React from "react";
 import Link from "next/link";
-import { getCurrentProfile, getStudentDashboardData } from "@/lib/data-service";
+import {
+  getCurrentProfile,
+  getStudentDashboardData,
+  isSupabaseConfigured,
+} from "@/lib/data-service";
 import { SEED_PROBLEMS } from "@/lib/seed-data";
 import {
   Card,
@@ -23,7 +27,7 @@ export default async function StudentSubmissionsPage() {
   const dashboard = await getStudentDashboardData(profile.id);
 
   const submissions =
-    dashboard.recentSubmissions.length > 0
+    dashboard.recentSubmissions.length > 0 || isSupabaseConfigured()
       ? dashboard.recentSubmissions
       : [
           {
@@ -78,7 +82,27 @@ export default async function StudentSubmissionsPage() {
       </div>
 
       <div className="space-y-4">
-        {submissions.map((sub) => (
+        {submissions.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center space-y-3">
+              <p className="text-sm font-semibold text-slate-700">
+                まだ提出履歴はありません
+              </p>
+              <p className="text-xs text-slate-500">
+                カリキュラムから問題に挑戦してコードを提出すると、採点結果とコード履歴がここに記録されます。
+              </p>
+              <div>
+                <Link
+                  href="/student/courses"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition"
+                >
+                  カリキュラム一覧へ進む
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+        submissions.map((sub) => (
           <Card key={sub.id}>
             <CardHeader className="pb-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -128,7 +152,8 @@ export default async function StudentSubmissionsPage() {
               </div>
             </CardContent>
           </Card>
-        ))}
+        ))
+        )}
       </div>
     </div>
   );

@@ -519,7 +519,7 @@ export function AdminCompanyDetailClient({
       [courseId]: nextVal,
     }));
 
-    await fetch("/api/admin/actions", {
+    const res = await fetch("/api/admin/actions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -531,6 +531,11 @@ export function AdminCompanyDetailClient({
         },
       }),
     });
+    if (!res.ok) {
+      setCourseVisibility((prev) => ({ ...prev, [courseId]: current }));
+      setErrorMsg("コース表示設定の保存に失敗しました。");
+      return;
+    }
 
     setNotice(
       `「${name}」に対する「${courseTitle}」の表示設定を【${

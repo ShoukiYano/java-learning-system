@@ -126,7 +126,7 @@ export function ProblemWorkspaceClient({
           problemId: problem.id,
           problemTitle: problem.title,
           questionText: questionText.trim(),
-          codeSnapshot: includeCodeInQuestion ? code : undefined,
+          codeSnippet: includeCodeInQuestion ? code : undefined,
         }),
       });
       const data = await res.json();
