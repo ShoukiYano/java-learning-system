@@ -504,29 +504,46 @@ export async function POST(request: NextRequest) {
                 accountCreated = true;
               }
             } else if (authErr) {
-              // 既存メールアドレスがAuthに存在する場合はパスワードと所属企業を同期
+              // 既存メールアドレスがAuthに存在する場合は profiles または listUsers からID特定して修復・同期
+              let existingUid: string | null = null;
               const { data: existProf } = await adminClient
                 .from("profiles")
                 .select("id")
                 .eq("email", cleanEmail)
                 .maybeSingle();
               if (existProf?.id) {
-                const { error: updAuthErr } = await adminClient.auth.admin.updateUserById(existProf.id, {
+                existingUid = existProf.id;
+              } else {
+                const { data: listed } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+                const matched = listed?.users?.find(
+                  (u) => (u.email || "").toLowerCase() === cleanEmail
+                );
+                if (matched?.id) existingUid = matched.id;
+              }
+              if (existingUid) {
+                const { error: updAuthErr } = await adminClient.auth.admin.updateUserById(existingUid, {
                   password: cleanPass,
+                  email_confirm: true,
                   user_metadata: {
                     full_name: `${cleanName} 研修担当者`,
                     role: "company",
                     company_code: cleanCode,
                   },
                 });
-                await adminClient
-                  .from("profiles")
-                  .update({ role: "company", company_id: company.id })
-                  .eq("id", existProf.id);
-                if (!updAuthErr) {
+                const { error: profUpErr } = await adminClient.from("profiles").upsert(
+                  {
+                    id: existingUid,
+                    email: cleanEmail,
+                    full_name: `${cleanName} 研修担当者`,
+                    role: "company",
+                    company_id: company.id,
+                  },
+                  { onConflict: "id" }
+                );
+                if (!updAuthErr && !profUpErr) {
                   accountCreated = true;
                 } else {
-                  accountError = updAuthErr.message;
+                  accountError = updAuthErr?.message || profUpErr?.message || null;
                 }
               } else {
                 accountError = authErr.message;
@@ -941,30 +958,46 @@ export async function POST(request: NextRequest) {
             });
 
           if (authErr) {
-            // すでに存在している場合は update
+            // すでにAuthに存在する場合は profiles または auth.admin.listUsers からIDを特定して修復・紐付け
+            let existingUid: string | null = null;
             const { data: existUser } = await adminClient
               .from("profiles")
               .select("id")
               .eq("email", cleanEmail)
               .maybeSingle();
-
             if (existUser?.id) {
-              await adminClient.auth.admin.updateUserById(existUser.id, {
+              existingUid = existUser.id;
+            } else {
+              const { data: listed } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+              const matched = listed?.users?.find(
+                (u) => (u.email || "").toLowerCase() === cleanEmail
+              );
+              if (matched?.id) existingUid = matched.id;
+            }
+
+            if (existingUid) {
+              const { error: updErr } = await adminClient.auth.admin.updateUserById(existingUid, {
                 password: cleanPass,
+                email_confirm: true,
                 user_metadata: {
                   full_name: cleanName,
                   role: "company",
                   company_code: compCode,
                 },
               });
-              await adminClient
-                .from("profiles")
-                .update({
+              if (updErr) throw updErr;
+              const { error: profErr } = await adminClient.from("profiles").upsert(
+                {
+                  id: existingUid,
+                  email: cleanEmail,
                   full_name: cleanName,
                   role: "company",
                   company_id: companyId,
-                })
-                .eq("id", existUser.id);
+                },
+                { onConflict: "id" }
+              );
+              if (profErr) throw profErr;
+              localMgr.id = existingUid;
             } else {
               throw authErr;
             }
