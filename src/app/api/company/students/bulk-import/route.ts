@@ -63,6 +63,16 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY &&
       !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key");
 
+    if (isSupabaseConfigured() && !hasServiceKey) {
+      return NextResponse.json(
+        {
+          error:
+            "SUPABASE_SERVICE_ROLE_KEY が設定されていないため、受講生アカウントの一括発行を実行できません。環境変数を確認してください。",
+        },
+        { status: 500 }
+      );
+    }
+
     const adminClient = hasServiceKey ? createAdminClient() : null;
 
     for (const row of rows) {
@@ -107,13 +117,27 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
-          await adminClient.from("profiles").upsert({
-            id: created.user.id,
-            email,
-            full_name: fullName,
-            role: "student",
-            company_id: targetCompanyId,
-          });
+          const { error: profErr } = await adminClient.from("profiles").upsert(
+            {
+              id: created.user.id,
+              email,
+              full_name: fullName,
+              role: "student",
+              company_id: targetCompanyId,
+            },
+            { onConflict: "id" }
+          );
+
+          if (profErr) {
+            results.push({
+              fullName,
+              email,
+              password: "",
+              status: "error",
+              message: `プロファイル保存失敗: ${profErr.message}`,
+            });
+            continue;
+          }
 
           results.push({
             fullName,

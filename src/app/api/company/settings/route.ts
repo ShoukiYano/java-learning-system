@@ -47,18 +47,22 @@ export async function POST(request: NextRequest) {
     globalThis.__demoCompanyDelayDays[companyId] = delayAlertDays;
 
     if (isSupabaseConfigured()) {
-      try {
-        const db =
-          process.env.SUPABASE_SERVICE_ROLE_KEY &&
-          !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
-            ? createAdminClient()
-            : await createClient();
-        await db
-          .from("companies")
-          .update({ delay_alert_days: delayAlertDays })
-          .eq("id", companyId);
-      } catch {
-        // カラム未追加時はインメモリのみで継続
+      const db =
+        process.env.SUPABASE_SERVICE_ROLE_KEY &&
+        !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+          ? createAdminClient()
+          : await createClient();
+      const { error: upErr } = await db
+        .from("companies")
+        .update({ delay_alert_days: delayAlertDays })
+        .eq("id", companyId);
+      if (upErr) {
+        return NextResponse.json(
+          {
+            error: `設定のDB保存に失敗しました: ${upErr.message}`,
+          },
+          { status: 500 }
+        );
       }
     }
 

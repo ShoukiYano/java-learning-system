@@ -277,10 +277,11 @@ export async function POST(request: NextRequest) {
         const { orderedChapters }: { orderedChapters: { id: string; order_index: number }[] } =
           payload;
         for (const item of orderedChapters) {
-          await db
+          const { error: ordErr } = await db
             .from("chapters")
             .update({ order_index: item.order_index })
             .eq("id", item.id);
+          if (ordErr) throw ordErr;
         }
         return NextResponse.json({ ok: true });
       }
@@ -766,48 +767,39 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // もし新しいパスワードが指定されており、サービスロールキーがある場合は企業担当者アカウントを作成またはPW更新
+        // もし新しいパスワードが指定されている場合、企業担当者アカウントを作成またはPW更新
         let managerUpdated = false;
         if (cleanEmail && new_manager_password) {
+          const normalizedEmail = cleanEmail.toLowerCase();
           const pass = String(new_manager_password).trim();
-          updateInMemoryCompanyManagerPassword(cleanEmail, pass);
-          resetLoginAttemptsForEmail(cleanEmail);
-          managerUpdated = true;
-        }
+          if (
+            !process.env.SUPABASE_SERVICE_ROLE_KEY ||
+            process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+          ) {
+            return NextResponse.json(
+              {
+                error:
+                  "企業情報は保存しましたが、SUPABASE_SERVICE_ROLE_KEY が未設定のため担当者パスワードを更新できませんでした。",
+              },
+              { status: 500 }
+            );
+          }
 
-        if (
-          cleanEmail &&
-          new_manager_password &&
-          process.env.SUPABASE_SERVICE_ROLE_KEY &&
-          !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
-        ) {
           const adminClient = createAdminClient();
+          let targetUid: string | null = null;
           const { data: existingProf } = await adminClient
             .from("profiles")
             .select("id")
-            .eq("email", cleanEmail)
+            .eq("email", normalizedEmail)
             .maybeSingle();
 
           if (existingProf?.id) {
-            const { error: pwErr } =
-              await adminClient.auth.admin.updateUserById(existingProf.id, {
-                password: String(new_manager_password),
-                user_metadata: {
-                  full_name: `${name} 研修担当者`,
-                  role: "company",
-                  company_code: cleanCode,
-                },
-              });
-            await adminClient
-              .from("profiles")
-              .update({ role: "company", company_id: companyId })
-              .eq("id", existingProf.id);
-            if (!pwErr) managerUpdated = true;
+            targetUid = existingProf.id;
           } else {
             const { data: createdAuth, error: createErr } =
               await adminClient.auth.admin.createUser({
-                email: cleanEmail,
-                password: String(new_manager_password),
+                email: normalizedEmail,
+                password: pass,
                 email_confirm: true,
                 user_metadata: {
                   full_name: `${name} 研修担当者`,
@@ -816,12 +808,85 @@ export async function POST(request: NextRequest) {
                 },
               });
             if (!createErr && createdAuth.user) {
-              await adminClient
+              const { error: profErr } = await adminClient
                 .from("profiles")
-                .update({ role: "company", company_id: companyId })
-                .eq("id", createdAuth.user.id);
+                .upsert(
+                  {
+                    id: createdAuth.user.id,
+                    email: normalizedEmail,
+                    full_name: `${name} 研修担当者`,
+                    role: "company",
+                    company_id: companyId,
+                  },
+                  { onConflict: "id" }
+                );
+              if (profErr) {
+                return NextResponse.json(
+                  { error: `担当者プロファイル保存エラー: ${profErr.message}` },
+                  { status: 500 }
+                );
+              }
               managerUpdated = true;
+            } else {
+              // Auth側に孤立ユーザーが残っている場合は listUsers からIDを特定して修復
+              const { data: listed } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+              const matched = listed?.users?.find(
+                (u) => (u.email || "").toLowerCase() === normalizedEmail
+              );
+              if (matched?.id) {
+                targetUid = matched.id;
+              } else {
+                return NextResponse.json(
+                  {
+                    error: `担当者アカウント作成エラー: ${createErr?.message ?? "不明なエラー"}`,
+                  },
+                  { status: 500 }
+                );
+              }
             }
+          }
+
+          if (targetUid) {
+            const { error: pwErr } =
+              await adminClient.auth.admin.updateUserById(targetUid, {
+                password: pass,
+                email_confirm: true,
+                user_metadata: {
+                  full_name: `${name} 研修担当者`,
+                  role: "company",
+                  company_code: cleanCode,
+                },
+              });
+            if (pwErr) {
+              return NextResponse.json(
+                { error: `担当者パスワード更新エラー: ${pwErr.message}` },
+                { status: 500 }
+              );
+            }
+            const { error: profUpErr } = await adminClient
+              .from("profiles")
+              .upsert(
+                {
+                  id: targetUid,
+                  email: normalizedEmail,
+                  full_name: `${name} 研修担当者`,
+                  role: "company",
+                  company_id: companyId,
+                },
+                { onConflict: "id" }
+              );
+            if (profUpErr) {
+              return NextResponse.json(
+                { error: `担当者プロファイル更新エラー: ${profUpErr.message}` },
+                { status: 500 }
+              );
+            }
+            managerUpdated = true;
+          }
+
+          if (managerUpdated) {
+            updateInMemoryCompanyManagerPassword(normalizedEmail, pass);
+            resetLoginAttemptsForEmail(normalizedEmail);
           }
         }
 
@@ -880,25 +945,24 @@ export async function POST(request: NextRequest) {
         // インメモリにも保存
         setInMemoryStudentCourseLock(userId, courseId, validStatus);
 
-        try {
-          const { error: lockErr } = await db
-            .from("student_course_locks")
-            .upsert(
-              {
-                user_id: userId,
-                course_id: courseId,
-                status: validStatus,
-                note: note ?? null,
-                updated_by: user?.id ?? null,
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: "user_id,course_id" }
-            );
-          if (lockErr) {
-            console.warn("student_course_locks upsert warning:", lockErr.message);
-          }
-        } catch (dbErr) {
-          console.warn("student_course_locks table might not exist yet:", dbErr);
+        const { error: lockErr } = await db
+          .from("student_course_locks")
+          .upsert(
+            {
+              user_id: userId,
+              course_id: courseId,
+              status: validStatus,
+              note: note ?? null,
+              updated_by: user?.id ?? null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,course_id" }
+          );
+        if (lockErr) {
+          return NextResponse.json(
+            { error: `コース受講ロックのDB保存に失敗しました: ${lockErr.message}` },
+            { status: 500 }
+          );
         }
 
         return NextResponse.json({
@@ -1082,14 +1146,17 @@ export async function POST(request: NextRequest) {
           !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
         ) {
           const adminClient = createAdminClient();
-          await adminClient.auth.admin.updateUserById(managerId, {
+          const { error: authUpdErr } = await adminClient.auth.admin.updateUserById(managerId, {
             email: cleanEmail,
+            email_confirm: true,
             user_metadata: { full_name: cleanName },
           });
-          await adminClient
+          if (authUpdErr) throw authUpdErr;
+          const { error: profUpdErr } = await adminClient
             .from("profiles")
             .update({ email: cleanEmail, full_name: cleanName })
             .eq("id", managerId);
+          if (profUpdErr) throw profUpdErr;
         }
 
         return NextResponse.json({ ok: true });
@@ -1105,12 +1172,15 @@ export async function POST(request: NextRequest) {
           !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
         ) {
           const adminClient = createAdminClient();
-          try {
-            await adminClient.auth.admin.deleteUser(managerId);
-          } catch {
-            // ignore
+          const { error: delAuthErr } = await adminClient.auth.admin.deleteUser(managerId);
+          if (delAuthErr && !delAuthErr.message.toLowerCase().includes("not found")) {
+            throw delAuthErr;
           }
-          await adminClient.from("profiles").delete().eq("id", managerId);
+          const { error: delProfErr } = await adminClient
+            .from("profiles")
+            .delete()
+            .eq("id", managerId);
+          if (delProfErr) throw delProfErr;
         }
 
         return NextResponse.json({ ok: true });
@@ -1148,31 +1218,34 @@ export async function POST(request: NextRequest) {
           target_problem_count: payload.targetProblemCount,
           order_index: payload.orderIndex,
         });
-        let savedRow = savedLocal;
-        try {
-          const rowPayload: Record<string, unknown> = {
-            company_id: payload.companyId,
-            title: String(payload.title || "").trim(),
-            target_date: payload.targetDate,
-            course_id: payload.courseId || null,
-            target_problem_count: Number(payload.targetProblemCount) || 0,
-            description: payload.description || null,
-            order_index: Number(payload.orderIndex) || 1,
-          };
-          if (payload.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(payload.id)) {
-            rowPayload.id = payload.id;
-          }
-          const { data: msData, error: msErr } = await db
-            .from("training_milestones")
-            .upsert(rowPayload, { onConflict: "id" })
-            .select("*")
-            .single();
-          if (!msErr && msData) {
-            savedRow = msData;
-          }
-        } catch {
-          // training_milestones テーブル未作成時はインメモリ保存にフォールバック
+        const milestoneId =
+          payload.id && String(payload.id).trim()
+            ? String(payload.id).trim()
+            : crypto.randomUUID();
+        const rowPayload: Record<string, unknown> = {
+          id: milestoneId,
+          company_id: payload.companyId || null,
+          title: String(payload.title || "").trim(),
+          target_date: payload.targetDate,
+          course_id: payload.courseId || null,
+          target_problem_count: Number(payload.targetProblemCount) || 0,
+          description: payload.description || null,
+          order_index: Number(payload.orderIndex) || 1,
+        };
+        const { data: msData, error: msErr } = await db
+          .from("training_milestones")
+          .upsert(rowPayload, { onConflict: "id" })
+          .select("*")
+          .single();
+        if (msErr) {
+          return NextResponse.json(
+            {
+              error: `目標マイルストーンのDB保存に失敗しました: ${msErr.message}`,
+            },
+            { status: 500 }
+          );
         }
+        const savedRow = msData ?? savedLocal;
         await recordAuditLog({
           actorId: user?.id ?? null,
           actorEmail: user?.email ?? null,
@@ -1187,10 +1260,15 @@ export async function POST(request: NextRequest) {
       // 21. 研修スケジュール（目標マイルストーン）削除（Supabase永続化）
       case "delete_milestone": {
         deleteInMemoryMilestone(payload.id);
-        try {
-          await db.from("training_milestones").delete().eq("id", payload.id);
-        } catch {
-          // ignore
+        const { error: delMsErr } = await db
+          .from("training_milestones")
+          .delete()
+          .eq("id", payload.id);
+        if (delMsErr) {
+          return NextResponse.json(
+            { error: `目標マイルストーンの削除に失敗しました: ${delMsErr.message}` },
+            { status: 500 }
+          );
         }
         await recordAuditLog({
           actorId: user?.id ?? null,

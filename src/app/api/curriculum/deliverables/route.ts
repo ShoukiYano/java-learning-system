@@ -12,6 +12,7 @@ import {
 import { isSupabaseConfigured } from "@/lib/data-service";
 import { requireApiAuth } from "@/lib/api-auth";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,12 +29,45 @@ export async function POST(request: NextRequest) {
 
     if (action === "review") {
       const { submissionId, reviewStatus, reviewerComment, score } = body;
+      const numericScore =
+        score !== undefined && score !== null && score !== ""
+          ? Number(score)
+          : undefined;
       const updated = reviewInMemoryDeliverable(
         submissionId,
         reviewStatus,
         reviewerComment,
-        score !== undefined ? Number(score) : undefined
+        numericScore
       );
+
+      if (isSupabaseConfigured()) {
+        const db =
+          process.env.SUPABASE_SERVICE_ROLE_KEY &&
+          !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+            ? createAdminClient()
+            : await createClient();
+        const { data: dbUpdated, error: revErr } = await db
+          .from("deliverable_submissions")
+          .update({
+            review_status: reviewStatus,
+            reviewer_id: userId,
+            reviewer_comment: reviewerComment ? String(reviewerComment).trim() : null,
+            score: numericScore ?? null,
+            reviewed_at: new Date().toISOString(),
+          })
+          .eq("id", submissionId)
+          .select("*")
+          .maybeSingle();
+
+        if (revErr) {
+          return NextResponse.json(
+            { error: `レビュー結果のDB保存に失敗しました: ${revErr.message}` },
+            { status: 500 }
+          );
+        }
+        return NextResponse.json({ ok: true, submission: dbUpdated ?? updated });
+      }
+
       return NextResponse.json({ ok: true, submission: updated });
     }
 
@@ -64,10 +98,16 @@ export async function POST(request: NextRequest) {
       testEvidence: testEvidence || undefined,
     });
 
+    let persistedSubmission: unknown = saved;
     if (isSupabaseConfigured()) {
-      try {
-        const supabase = await createClient();
-        await supabase.from("deliverable_submissions").insert({
+      const db =
+        process.env.SUPABASE_SERVICE_ROLE_KEY &&
+        !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+          ? createAdminClient()
+          : await createClient();
+      const { data: inserted, error: insErr } = await db
+        .from("deliverable_submissions")
+        .insert({
           user_id: userId,
           company_id: companyId,
           day_number: dayNum,
@@ -75,15 +115,23 @@ export async function POST(request: NextRequest) {
           code_or_notes: saved.codeOrNotes,
           test_evidence: testEvidence || null,
           review_status: "submitted",
-        });
-      } catch {
-        // テーブル未マイグレーション時はインメモリで継続
+        })
+        .select("*")
+        .single();
+      if (insErr) {
+        return NextResponse.json(
+          { error: `成果物のDB保存に失敗しました: ${insErr.message}` },
+          { status: 500 }
+        );
+      }
+      if (inserted) {
+        persistedSubmission = inserted;
       }
     }
 
     return NextResponse.json({
       ok: true,
-      submission: saved,
+      submission: persistedSubmission,
       message: `Day ${dayNum} の成果物を提出しました。研修担当者のレビューをお待ちください。`,
     });
   } catch (err) {
