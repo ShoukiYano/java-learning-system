@@ -13,6 +13,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { SqlResultGrid } from "@/components/problem/sql-result-grid";
 import {
   Code2,
   Database,
@@ -58,13 +59,11 @@ Step 3: ポリモーフィズム Clear! 🎉
 FROM engineers
 GROUP BY department
 ORDER BY avg_score DESC;`,
-    output: `department      | member_count | avg_score
-------------------------------------------
-Backend (Java)  | 12           | 94.5
-Database (SQL)  | 9            | 91.0
-Frontend        | 7            | 88.2
-
-✅ テストケース 2/2 合格（実行時間: 2ms）`,
+    output: `department | member_count | avg_score
+Backend (Java) | 12 | 94.5
+Database (SQL) | 9 | 91.0
+Frontend | 7 | 88.2`,
+    footerNote: "✅ テストケース 2/2 合格（実行時間: 2ms）",
   },
 };
 
@@ -255,24 +254,44 @@ export default function HomePage() {
                   </pre>
                 </div>
 
-                {/* 実行コンソール出力エリア */}
+                {/* 実行コンソール／SQLテーブル出力エリア */}
                 <div className="p-4 bg-slate-950 font-mono text-xs space-y-2">
                   <div className="flex items-center justify-between text-[11px] text-slate-400">
                     <span className="flex items-center gap-1.5">
-                      <Terminal className="h-3.5 w-3.5 text-emerald-400" />
-                      実行コンソール出力
+                      {activeTab === "sql" ? (
+                        <>
+                          <Database className="h-3.5 w-3.5 text-amber-400" />
+                          SQL 実行結果（スプレッドシート表示）
+                        </>
+                      ) : (
+                        <>
+                          <Terminal className="h-3.5 w-3.5 text-emerald-400" />
+                          実行コンソール出力
+                        </>
+                      )}
                     </span>
                     <span className="text-emerald-400 font-semibold">
                       Ready
                     </span>
                   </div>
-                  <pre className="p-3 rounded-xl bg-slate-900/90 border border-slate-800/90 text-emerald-300 leading-relaxed min-h-[115px] overflow-x-auto">
-                    {isRunning
-                      ? "コンパイル＆テストケース検証中..."
-                      : hasRun
-                      ? snippet.output
-                      : "「実行を試す」をクリックしてください"}
-                  </pre>
+                  {isRunning ? (
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800/90 text-emerald-300 leading-relaxed min-h-[115px]">
+                      コンパイル＆テストケース検証中...
+                    </div>
+                  ) : !hasRun ? (
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800/90 text-slate-400 leading-relaxed min-h-[115px]">
+                      「実行を試す」をクリックしてください
+                    </div>
+                  ) : activeTab === "sql" ? (
+                    <SqlResultGrid
+                      output={DEMO_SNIPPETS.sql.output}
+                      footerNote={DEMO_SNIPPETS.sql.footerNote}
+                    />
+                  ) : (
+                    <pre className="p-3 rounded-xl bg-slate-900/90 border border-slate-800/90 text-emerald-300 leading-relaxed min-h-[115px] overflow-x-auto">
+                      {snippet.output}
+                    </pre>
+                  )}
                 </div>
               </div>
             </div>

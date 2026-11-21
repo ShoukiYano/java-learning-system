@@ -21,6 +21,7 @@ import Link from "next/link";
 import confetti from "canvas-confetti";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { LocalMonacoEditor } from "./local-monaco-editor";
+import { SqlResultGrid } from "./sql-result-grid";
 import { runJavaInBrowserWithTimeout } from "@/lib/java/worker-client";
 import { compareOutputs, JavaDiagnostic } from "@/lib/java";
 import { runSqlCode } from "@/lib/sql";
@@ -721,11 +722,14 @@ export function ProblemWorkspaceClient({
                       className="bg-slate-800 border-slate-700 text-slate-100 font-mono text-xs"
                     />
                   </div>
-                  {consoleStdout && (
-                    <pre className="p-3 rounded bg-slate-950 border border-slate-800 text-emerald-300 font-mono overflow-x-auto whitespace-pre-wrap">
-                      {consoleStdout}
-                    </pre>
-                  )}
+                  {consoleStdout &&
+                    (problemLanguage === "sql" ? (
+                      <SqlResultGrid output={consoleStdout} compact />
+                    ) : (
+                      <pre className="p-3 rounded bg-slate-950 border border-slate-800 text-emerald-300 font-mono overflow-x-auto whitespace-pre-wrap">
+                        {consoleStdout}
+                      </pre>
+                    ))}
                   {consoleStderr && (
                     <pre className="p-3 rounded bg-rose-950/60 border border-rose-800 text-rose-300 font-mono overflow-x-auto whitespace-pre-wrap">
                       {consoleStderr}
@@ -752,16 +756,39 @@ export function ProblemWorkspaceClient({
                           <span>{tr.name}</span>
                           <span>{tr.passed ? "PASS" : "FAIL"}</span>
                         </div>
-                        {!tr.isHidden && (
-                          <div className="mt-2 space-y-1 font-mono text-[11px]">
-                            <div className="text-slate-400">
-                              期待: {tr.expectedOutput}
+                        {!tr.isHidden &&
+                          (problemLanguage === "sql" ? (
+                            <div className="mt-2 space-y-2">
+                              <div>
+                                <div className="text-[10px] text-slate-400 mb-1">
+                                  期待される出力
+                                </div>
+                                <SqlResultGrid output={tr.expectedOutput} compact />
+                              </div>
+                              <div>
+                                <div className="text-[10px] text-slate-400 mb-1">
+                                  あなたの出力
+                                </div>
+                                <SqlResultGrid
+                                  output={
+                                    tr.actualOutput ||
+                                    tr.errorDetail ||
+                                    "(出力なし)"
+                                  }
+                                  compact
+                                />
+                              </div>
                             </div>
-                            <div className="text-slate-200">
-                              実測: {tr.actualOutput || tr.errorDetail || "(出力なし)"}
+                          ) : (
+                            <div className="mt-2 space-y-1 font-mono text-[11px]">
+                              <div className="text-slate-400">
+                                期待: {tr.expectedOutput}
+                              </div>
+                              <div className="text-slate-200">
+                                実測: {tr.actualOutput || tr.errorDetail || "(出力なし)"}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          ))}
                       </div>
                     ))
                   )}
@@ -1048,11 +1075,20 @@ export function ProblemWorkspaceClient({
                     <div className="md:col-span-2 space-y-3">
                       <div>
                         <span className="text-[11px] font-semibold text-slate-400 block mb-1">
-                          標準出力 (stdout)
+                          {problemLanguage === "sql"
+                            ? "SQL 実行結果（スプレッドシート表示）"
+                            : "標準出力 (stdout)"}
                         </span>
-                        <pre className="p-3 rounded-lg bg-slate-900 border border-slate-800 font-mono text-emerald-300 min-h-[60px] whitespace-pre-wrap">
-                          {consoleStdout || "(出力なし)"}
-                        </pre>
+                        {problemLanguage === "sql" ? (
+                          <SqlResultGrid
+                            output={consoleStdout}
+                            emptyText="(出力なし)"
+                          />
+                        ) : (
+                          <pre className="p-3 rounded-lg bg-slate-900 border border-slate-800 font-mono text-emerald-300 min-h-[60px] whitespace-pre-wrap">
+                            {consoleStdout || "(出力なし)"}
+                          </pre>
+                        )}
                       </div>
 
                       {(consoleStderr || diagnostics.length > 0) && (
@@ -1113,24 +1149,42 @@ export function ProblemWorkspaceClient({
                                 </pre>
                               </div>
                               <div>
-                                <span className="text-[10px] text-slate-400 block">
+                                <span className="text-[10px] text-slate-400 block mb-1">
                                   期待される出力
                                 </span>
-                                <pre className="p-2 rounded bg-slate-900 font-mono text-emerald-300 overflow-x-auto">
-                                  {tr.expectedOutput}
-                                </pre>
+                                {problemLanguage === "sql" ? (
+                                  <SqlResultGrid
+                                    output={tr.expectedOutput}
+                                    compact
+                                  />
+                                ) : (
+                                  <pre className="p-2 rounded bg-slate-900 font-mono text-emerald-300 overflow-x-auto">
+                                    {tr.expectedOutput}
+                                  </pre>
+                                )}
                               </div>
                               <div>
-                                <span className="text-[10px] text-slate-400 block">
+                                <span className="text-[10px] text-slate-400 block mb-1">
                                   あなたの出力
                                 </span>
-                                <pre
-                                  className={`p-2 rounded bg-slate-900 font-mono overflow-x-auto ${
-                                    tr.passed ? "text-emerald-300" : "text-rose-300"
-                                  }`}
-                                >
-                                  {tr.actualOutput || tr.errorDetail || "(出力なし)"}
-                                </pre>
+                                {problemLanguage === "sql" ? (
+                                  <SqlResultGrid
+                                    output={
+                                      tr.actualOutput ||
+                                      tr.errorDetail ||
+                                      "(出力なし)"
+                                    }
+                                    compact
+                                  />
+                                ) : (
+                                  <pre
+                                    className={`p-2 rounded bg-slate-900 font-mono overflow-x-auto ${
+                                      tr.passed ? "text-emerald-300" : "text-rose-300"
+                                    }`}
+                                  >
+                                    {tr.actualOutput || tr.errorDetail || "(出力なし)"}
+                                  </pre>
+                                )}
                               </div>
                             </div>
                           ) : (

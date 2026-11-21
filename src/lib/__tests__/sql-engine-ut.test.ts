@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { runSqlCode } from "@/lib/sql";
+import { parseSqlTableOutput } from "@/components/problem/sql-result-grid";
 import { recordAuditLog, getAuditLogs } from "@/lib/audit-log";
 import { sendSlackQuestionAlert } from "@/lib/slack";
 
@@ -95,5 +96,26 @@ describe("SQLエンジン・監査ログ・Slack UT / IT", () => {
       questionText: "質問です",
     });
     expect(res.ok).toBe(false);
+  });
+
+  it("UT-SQL-GRID-01: parseSqlTableOutput が複数列・単一列・区切り線あり出力をExcelグリッド用データへ変換できる", () => {
+    const multi = parseSqlTableOutput(
+      "department | member_count | avg_score\n---\nBackend | 12 | 94.5\nSQL | 9 | 91.0"
+    );
+    expect(multi).toEqual({
+      headers: ["department", "member_count", "avg_score"],
+      rows: [
+        ["Backend", "12", "94.5"],
+        ["SQL", "9", "91.0"],
+      ],
+    });
+
+    const single = parseSqlTableOutput("city\nOsaka\nTokyo");
+    expect(single).toEqual({
+      headers: ["city"],
+      rows: [["Osaka"], ["Tokyo"]],
+    });
+
+    expect(parseSqlTableOutput("(出力なし)")).toBeNull();
   });
 });
