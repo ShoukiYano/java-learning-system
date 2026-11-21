@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import { SEED_PROBLEMS, SEED_COURSES, SEED_CHAPTERS, detectProblemLanguage } from "../seed-data";
+import { verifySlackSignature } from "../slack";
 import { runJavaCode, compareOutputs } from "../java";
 import { runSqlCode } from "../sql";
 import { createInitialGitState, executeGitScript, compareGitStates } from "../git/git-engine";
@@ -207,5 +209,53 @@ describe("Full System Security & Route Integrity ST", () => {
       }
     }
     expect(broken).toEqual([]);
+  });
+
+  it("verifySlackSignature validates genuine HMAC-SHA256 signatures and rejects tampered/expired ones", () => {
+    const secret = "test-signing-secret-123";
+    const ts = String(Math.floor(Date.now() / 1000));
+    const body = JSON.stringify({ type: "event_callback", event: { text: "hello" } });
+    const validSig =
+      "v0=" +
+      crypto
+        .createHmac("sha256", secret)
+        .update(`v0:${ts}:${body}`, "utf8")
+        .digest("hex");
+
+    expect(
+      verifySlackSignature({
+        signingSecret: secret,
+        timestamp: ts,
+        rawBody: body,
+        signature: validSig,
+      })
+    ).toBe(true);
+
+    // Tampered body must fail
+    expect(
+      verifySlackSignature({
+        signingSecret: secret,
+        timestamp: ts,
+        rawBody: body + " ",
+        signature: validSig,
+      })
+    ).toBe(false);
+
+    // Expired timestamp (> 5 min ago) must fail
+    const oldTs = String(Math.floor(Date.now() / 1000) - 600);
+    const oldSig =
+      "v0=" +
+      crypto
+        .createHmac("sha256", secret)
+        .update(`v0:${oldTs}:${body}`, "utf8")
+        .digest("hex");
+    expect(
+      verifySlackSignature({
+        signingSecret: secret,
+        timestamp: oldTs,
+        rawBody: body,
+        signature: oldSig,
+      })
+    ).toBe(false);
   });
 });

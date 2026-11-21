@@ -14,20 +14,58 @@ import {
   getCurrentProfile,
   getStudentDashboardData,
   getReadAnnouncementIdsFromDb,
+  isSupabaseConfigured,
 } from "@/lib/data-service";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import {
   Code2,
   LayoutDashboard,
   BookOpen,
   History,
+  MessageSquareText,
   UserCircle,
   Flame,
   Building2,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { MobileNavMenu } from "@/components/layout/mobile-nav-menu";
+import { StudentQaNotifier } from "@/components/dashboard/student-qa-notifier";
 
 export const dynamic = "force-dynamic";
+
+async function getUnreadQaSummary(userId: string) {
+  if (!isSupabaseConfigured()) {
+    return { unreadCount: 0, latestUnread: null };
+  }
+  try {
+    const db =
+      process.env.SUPABASE_SERVICE_ROLE_KEY &&
+      !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+        ? createAdminClient()
+        : await createClient();
+    const { data, error } = await db
+      .from("student_questions")
+      .select("id, problem_title, updated_at")
+      .eq("user_id", userId)
+      .eq("has_unread_reply", true)
+      .order("updated_at", { ascending: false })
+      .limit(5);
+    if (error || !data) return { unreadCount: 0, latestUnread: null };
+    return {
+      unreadCount: data.length,
+      latestUnread: data[0]
+        ? {
+            id: data[0].id as string,
+            problemTitle: data[0].problem_title as string,
+            updatedAt: data[0].updated_at as string,
+          }
+        : null,
+    };
+  } catch {
+    return { unreadCount: 0, latestUnread: null };
+  }
+}
 
 export default async function StudentPortalLayout({
   children,
@@ -35,9 +73,10 @@ export default async function StudentPortalLayout({
   children: React.ReactNode;
 }) {
   const profile = await getCurrentProfile();
-  const [dashboard, readIds] = await Promise.all([
+  const [dashboard, readIds, qaSummary] = await Promise.all([
     getStudentDashboardData(profile.id, profile.company_id),
     getReadAnnouncementIdsFromDb(profile.id),
+    getUnreadQaSummary(profile.id),
   ]);
   const unreadAnnouncementCount = dashboard.announcements.filter(
     (a) => !readIds.includes(a.id)
@@ -58,6 +97,7 @@ export default async function StudentPortalLayout({
               { href: "/student", label: "マイダッシュボード" },
               { href: "/student/courses", label: "カリキュラム受講" },
               { href: "/student/submissions", label: "提出履歴" },
+              { href: "/student/questions", label: "質問・回答" },
               { href: "/student/profile", label: "プロフィール" },
             ]}
           />
@@ -104,6 +144,18 @@ export default async function StudentPortalLayout({
               提出履歴
             </Link>
             <Link
+              href="/student/questions"
+              className="px-3 py-1.5 rounded-md hover:bg-slate-100 hover:text-slate-900 flex items-center gap-1.5 transition"
+            >
+              <MessageSquareText className="h-4 w-4 text-indigo-600" />
+              質問・回答
+              {qaSummary.unreadCount > 0 && (
+                <span className="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-bold">
+                  {qaSummary.unreadCount}
+                </span>
+              )}
+            </Link>
+            <Link
               href="/student/profile"
               className="px-3 py-1.5 rounded-md hover:bg-slate-100 hover:text-slate-900 flex items-center gap-1.5 transition"
             >
@@ -130,6 +182,11 @@ export default async function StudentPortalLayout({
           <SignOutButton redirectPath="/student/login" />
         </div>
       </header>
+
+      <StudentQaNotifier
+        initialUnreadCount={qaSummary.unreadCount}
+        initialLatestUnread={qaSummary.latestUnread}
+      />
 
       <main className="flex-1">{children}</main>
     </div>

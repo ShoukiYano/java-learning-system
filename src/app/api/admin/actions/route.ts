@@ -790,6 +790,9 @@ export async function POST(request: NextRequest) {
         if (payload.question_slack_channel_name !== undefined) {
           compUpdateData.question_slack_channel_name = payload.question_slack_channel_name;
         }
+        if (payload.question_slack_channel_id !== undefined) {
+          compUpdateData.question_slack_channel_id = payload.question_slack_channel_id;
+        }
 
         const { data: updatedCompany, error: upErr } = await db
           .from("companies")

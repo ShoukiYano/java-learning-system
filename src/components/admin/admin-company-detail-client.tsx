@@ -107,6 +107,9 @@ export function AdminCompanyDetailClient({
     initialSlackSettings?.questionChannelName ||
       `#qa-${company.company_code.toLowerCase()}`
   );
+  const [questionSlackChannelId, setQuestionSlackChannelId] = useState(
+    initialSlackSettings?.questionChannelId || ""
+  );
   const [questionSlackTesting, setQuestionSlackTesting] = useState(false);
 
   // マイルストーン用の state
@@ -486,6 +489,7 @@ export function AdminCompanyDetailClient({
             slack_channel_name: slackChannelName.trim() || null,
             question_slack_webhook_url: questionSlackWebhookUrl.trim() || null,
             question_slack_channel_name: questionSlackChannelName.trim() || null,
+            question_slack_channel_id: questionSlackChannelId.trim() || null,
           },
         }),
       });
@@ -809,6 +813,21 @@ export function AdminCompanyDetailClient({
                         placeholder="#qa-acme2025"
                         className="font-mono text-xs bg-white"
                       />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-slate-700">
+                        質問用 Slack チャンネルID（双方向回答同期用・任意）
+                      </label>
+                      <Input
+                        value={questionSlackChannelId}
+                        onChange={(e) => setQuestionSlackChannelId(e.target.value)}
+                        placeholder="例: C0123456789（チャンネル詳細の一番下からコピー）"
+                        className="font-mono text-xs bg-white"
+                      />
+                      <p className="text-[10px] text-slate-500">
+                        ※ Vercel に <code>SLACK_BOT_TOKEN</code> と <code>SLACK_SIGNING_SECRET</code> を設定してここへチャンネルIDを入れると、Slackスレッドでの講師返信（画像含む）が受講生画面へ自動表示されます。
+                      </p>
                     </div>
 
                     <div className="space-y-1">

@@ -1666,7 +1666,7 @@ export async function getCompanySlackSettingsFromDb(companyId: string) {
       const { data: compSlack, error } = await db
         .from("companies")
         .select(
-          "slack_webhook_url, slack_channel_name, question_slack_webhook_url, question_slack_channel_name"
+          "slack_webhook_url, slack_channel_name, question_slack_webhook_url, question_slack_channel_name, question_slack_channel_id"
         )
         .eq("id", companyId)
         .maybeSingle();
@@ -1676,32 +1676,51 @@ export async function getCompanySlackSettingsFromDb(companyId: string) {
           compSlack.slack_webhook_url !== null ||
           compSlack.slack_channel_name !== null ||
           compSlack.question_slack_webhook_url !== null ||
-          compSlack.question_slack_channel_name !== null
+          compSlack.question_slack_channel_name !== null ||
+          compSlack.question_slack_channel_id !== null
         ) {
           slackSettings = {
             webhookUrl: compSlack.slack_webhook_url ?? null,
             channelName: compSlack.slack_channel_name ?? null,
             questionWebhookUrl: compSlack.question_slack_webhook_url ?? null,
             questionChannelName: compSlack.question_slack_channel_name ?? null,
+            questionChannelId: compSlack.question_slack_channel_id ?? null,
           };
         }
       } else {
-        // question_slack_* カラム未適用環境への後方互換フォールバック
-        const { data: legacySlack } = await db
+        // question_slack_channel_id 未適用環境への後方互換フォールバック
+        const { data: midSlack, error: midErr } = await db
           .from("companies")
-          .select("slack_webhook_url, slack_channel_name")
+          .select(
+            "slack_webhook_url, slack_channel_name, question_slack_webhook_url, question_slack_channel_name"
+          )
           .eq("id", companyId)
           .maybeSingle();
-        if (
-          legacySlack &&
-          (legacySlack.slack_webhook_url !== null ||
-            legacySlack.slack_channel_name !== null)
-        ) {
+        if (!midErr && midSlack) {
           slackSettings = {
             ...slackSettings,
-            webhookUrl: legacySlack.slack_webhook_url ?? null,
-            channelName: legacySlack.slack_channel_name ?? null,
+            webhookUrl: midSlack.slack_webhook_url ?? null,
+            channelName: midSlack.slack_channel_name ?? null,
+            questionWebhookUrl: midSlack.question_slack_webhook_url ?? null,
+            questionChannelName: midSlack.question_slack_channel_name ?? null,
           };
+        } else {
+          const { data: legacySlack } = await db
+            .from("companies")
+            .select("slack_webhook_url, slack_channel_name")
+            .eq("id", companyId)
+            .maybeSingle();
+          if (
+            legacySlack &&
+            (legacySlack.slack_webhook_url !== null ||
+              legacySlack.slack_channel_name !== null)
+          ) {
+            slackSettings = {
+              ...slackSettings,
+              webhookUrl: legacySlack.slack_webhook_url ?? null,
+              channelName: legacySlack.slack_channel_name ?? null,
+            };
+          }
         }
       }
     } catch {

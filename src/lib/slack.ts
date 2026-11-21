@@ -12,6 +12,7 @@
  * - Webhook URLが未設定またはテスト環境の場合は、通信エラーにならず安全にシミュレーション結果を返します。
  */
 
+import crypto from "crypto";
 import { StudentAnalyticsRecord } from "@/lib/mock-analytics";
 import { TrainingMilestone } from "@/types/database";
 
@@ -287,4 +288,231 @@ export async function sendSlackQuestionAlert(params: {
     text: `🙋 【質問】${params.studentName}（${params.problemTitle}）: ${params.questionText}`,
     blocks,
   });
+}
+
+/**
+ * Slack Bot API（chat.postMessage）で質問を投稿し、スレッド同期用の channelId と threadTs を取得する
+ */
+export async function postSlackBotQuestion(params: {
+  botToken: string;
+  channelId: string;
+  companyName: string;
+  studentName: string;
+  problemTitle: string;
+  questionText: string;
+  codeSnippet?: string;
+}): Promise<{
+  ok: boolean;
+  channelId?: string;
+  threadTs?: string;
+  error?: string;
+}> {
+  const snippetPreview = params.codeSnippet
+    ? params.codeSnippet.slice(0, 600)
+    : "";
+
+  const blocks: unknown[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: `🙋 受講生からの質問が届きました（${params.companyName}）`,
+        emoji: true,
+      },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*受講生:* ${params.studentName}` },
+        { type: "mrkdwn", text: `*対象問題:* ${params.problemTitle}` },
+      ],
+    },
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*質問内容:*\n${params.questionText}`,
+      },
+    },
+  ];
+
+  if (snippetPreview) {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*提出時点のコード抜粋:*\n\`\`\`\n${snippetPreview}\n\`\`\``,
+      },
+    });
+  }
+
+  blocks.push({
+    type: "context",
+    elements: [
+      {
+        type: "mrkdwn",
+        text: "💡 このメッセージのスレッドに返信（テキスト・画像添付OK）すると、受講生画面に自動で回答が表示されます。",
+      },
+    ],
+  });
+
+  try {
+    const res = await fetch("https://slack.com/api/chat.postMessage", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${params.botToken}`,
+      },
+      body: JSON.stringify({
+        channel: params.channelId,
+        text: `🙋 【質問】${params.studentName}（${params.problemTitle}）: ${params.questionText}`,
+        blocks,
+      }),
+    });
+    const data = (await res.json()) as {
+      ok?: boolean;
+      channel?: string;
+      ts?: string;
+      error?: string;
+    };
+    if (!data.ok) {
+      return { ok: false, error: data.error || "Slack Bot投稿エラー" };
+    }
+    return { ok: true, channelId: data.channel, threadTs: data.ts };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Slack Bot通信エラー",
+    };
+  }
+}
+
+/**
+ * 受講生の追加質問を既存のSlackスレッドへ投稿する
+ */
+export async function postSlackBotThreadReply(params: {
+  botToken: string;
+  channelId: string;
+  threadTs: string;
+  studentName: string;
+  replyText: string;
+}): Promise<{ ok: boolean; ts?: string; error?: string }> {
+  try {
+    const res = await fetch("https://slack.com/api/chat.postMessage", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${params.botToken}`,
+      },
+      body: JSON.stringify({
+        channel: params.channelId,
+        thread_ts: params.threadTs,
+        text: `💬 *${params.studentName}（受講生からの返信）:*\n${params.replyText}`,
+      }),
+    });
+    const data = (await res.json()) as {
+      ok?: boolean;
+      ts?: string;
+      error?: string;
+    };
+    if (!data.ok) {
+      return { ok: false, error: data.error || "Slackスレッド返信エラー" };
+    }
+    return { ok: true, ts: data.ts };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Slack Bot通信エラー",
+    };
+  }
+}
+
+/**
+ * Slack Event API リクエスト署名（HMAC-SHA256）の検証
+ */
+export function verifySlackSignature(params: {
+  signingSecret: string;
+  timestamp: string | null;
+  rawBody: string;
+  signature: string | null;
+}): boolean {
+  if (!params.signingSecret || !params.timestamp || !params.signature) {
+    return false;
+  }
+  const tsNum = Number(params.timestamp);
+  if (!Number.isFinite(tsNum)) return false;
+  // リプレイ攻撃防止（±5分以内）
+  if (Math.abs(Math.floor(Date.now() / 1000) - tsNum) > 300) {
+    return false;
+  }
+  const sigBase = `v0:${params.timestamp}:${params.rawBody}`;
+  const computed =
+    "v0=" +
+    crypto
+      .createHmac("sha256", params.signingSecret)
+      .update(sigBase, "utf8")
+      .digest("hex");
+
+  const a = Buffer.from(computed, "utf8");
+  const b = Buffer.from(params.signature, "utf8");
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
+/**
+ * SlackユーザーIDから講師の表示名を取得する
+ */
+export async function fetchSlackUserName(
+  botToken: string,
+  slackUserId: string
+): Promise<string> {
+  try {
+    const res = await fetch(
+      `https://slack.com/api/users.info?user=${encodeURIComponent(slackUserId)}`,
+      {
+        headers: { Authorization: `Bearer ${botToken}` },
+      }
+    );
+    const data = (await res.json()) as {
+      ok?: boolean;
+      user?: {
+        real_name?: string;
+        profile?: { display_name?: string; real_name?: string };
+      };
+    };
+    if (data.ok && data.user) {
+      return (
+        data.user.profile?.display_name ||
+        data.user.profile?.real_name ||
+        data.user.real_name ||
+        "担当講師"
+      );
+    }
+  } catch {
+    // ignore
+  }
+  return "担当講師";
+}
+
+/**
+ * Slackのプライベート画像URLをBot Tokenでダウンロードする
+ */
+export async function downloadSlackFileBuffer(
+  botToken: string,
+  privateUrl: string
+): Promise<{ buffer: Buffer; contentType: string } | null> {
+  try {
+    if (!privateUrl.startsWith("https://files.slack.com/")) {
+      return null;
+    }
+    const res = await fetch(privateUrl, {
+      headers: { Authorization: `Bearer ${botToken}` },
+    });
+    if (!res.ok) return null;
+    const arrayBuffer = await res.arrayBuffer();
+    const contentType = res.headers.get("content-type") || "image/png";
+    return { buffer: Buffer.from(arrayBuffer), contentType };
+  } catch {
+    return null;
+  }
 }

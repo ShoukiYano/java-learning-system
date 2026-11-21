@@ -169,6 +169,7 @@ export interface DemoCompanySlackSettings {
   channelName?: string | null;
   questionWebhookUrl?: string | null;
   questionChannelName?: string | null;
+  questionChannelId?: string | null;
 }
 
 const INITIAL_DEMO_SLACK_SETTINGS: Record<string, DemoCompanySlackSettings> = {
