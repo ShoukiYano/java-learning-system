@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import { MermaidDiagram } from "@/components/ui/mermaid-diagram";
 
 interface MarkdownRendererProps {
   content: string;
@@ -64,8 +65,9 @@ export function MarkdownRenderer({
       continue;
     }
 
-    // 1. コードブロック ``` ... ```
+    // 1. コードブロック ``` ... ```（mermaid は図解コンポーネントで描画）
     if (line.trim().startsWith("```")) {
+      const langTag = line.trim().slice(3).trim().toLowerCase();
       const codeLines: string[] = [];
       i++;
       while (i < lines.length && !lines[i].trim().startsWith("```")) {
@@ -73,14 +75,20 @@ export function MarkdownRenderer({
         i++;
       }
       if (i < lines.length) i++; // 閉じ ``` をスキップ
-      elements.push(
-        <pre
-          key={`code-${i}`}
-          className="my-2.5 p-3 rounded-lg bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto leading-relaxed shadow-sm"
-        >
-          <code>{codeLines.join("\n")}</code>
-        </pre>
-      );
+      if (langTag === "mermaid") {
+        elements.push(
+          <MermaidDiagram key={`mmd-${i}`} chart={codeLines.join("\n")} />
+        );
+      } else {
+        elements.push(
+          <pre
+            key={`code-${i}`}
+            className="my-2.5 p-3 rounded-lg bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto leading-relaxed shadow-sm"
+          >
+            <code>{codeLines.join("\n")}</code>
+          </pre>
+        );
+      }
       continue;
     }
 

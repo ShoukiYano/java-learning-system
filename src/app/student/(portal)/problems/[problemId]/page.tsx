@@ -7,6 +7,11 @@ import {
 } from "@/lib/data-service";
 import { ProblemWorkspaceClient } from "@/components/problem/problem-workspace-client";
 import { GitWorkspaceClient } from "@/components/git/git-workspace-client";
+import { LiteracyWorkspaceClient } from "@/components/literacy/literacy-workspace-client";
+import { ExcelWorkspaceClient } from "@/components/excel/excel-workspace-client";
+import { HtmlCssWorkspaceClient } from "@/components/htmlcss/htmlcss-workspace-client";
+import { ProjectWorkspaceClient } from "@/components/project/project-workspace-client";
+import { detectProblemLanguage } from "@/lib/seed-data";
 import { Lock, ArrowLeft, AlertCircle } from "lucide-react";
 import {
   Card,
@@ -98,14 +103,60 @@ export default async function StudentProblemPage({
     );
   }
 
-  const isGit =
-    detail.problem.language === "git" ||
-    detail.problem.tags?.some((t) => t.toUpperCase().includes("GIT"));
+  const lang = detectProblemLanguage(detail.problem);
 
-  if (isGit) {
+  if (lang === "git") {
     return (
       <GitWorkspaceClient
         problem={detail.problem}
+        initialProgress={detail.progress}
+        nextProblemId={detail.nextProblemId}
+        courseId={detail.courseId}
+      />
+    );
+  }
+
+  if (lang === "literacy") {
+    return (
+      <LiteracyWorkspaceClient
+        problem={detail.problem}
+        hints={detail.hints}
+        initialProgress={detail.progress}
+        nextProblemId={detail.nextProblemId}
+        courseId={detail.courseId}
+      />
+    );
+  }
+
+  if (lang === "excel") {
+    return (
+      <ExcelWorkspaceClient
+        problem={detail.problem}
+        hints={detail.hints}
+        initialProgress={detail.progress}
+        nextProblemId={detail.nextProblemId}
+        courseId={detail.courseId}
+      />
+    );
+  }
+
+  if (lang === "htmlcss") {
+    return (
+      <HtmlCssWorkspaceClient
+        problem={detail.problem}
+        hints={detail.hints}
+        initialProgress={detail.progress}
+        nextProblemId={detail.nextProblemId}
+        courseId={detail.courseId}
+      />
+    );
+  }
+
+  if (lang === "project") {
+    return (
+      <ProjectWorkspaceClient
+        problem={detail.problem}
+        hints={detail.hints}
         initialProgress={detail.progress}
         nextProblemId={detail.nextProblemId}
         courseId={detail.courseId}

@@ -23,6 +23,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { runJavaCode, compareOutputs } from "@/lib/java";
 import { runSqlCode } from "@/lib/sql";
 import { createInitialGitState, executeGitScript, compareGitStates } from "@/lib/git/git-engine";
+import { evaluateExcelSubmission } from "@/lib/excel/excel-engine";
+import { evaluateHtmlCssSubmission } from "@/lib/htmlcss/htmlcss-evaluator";
+import {
+  evaluateLiteracySubmission,
+  evaluateProjectSubmission,
+} from "@/lib/curriculum-evaluators";
 import {
   SEED_CHAPTERS,
   SEED_PROBLEMS,
@@ -241,19 +247,26 @@ export async function POST(request: NextRequest) {
       }));
     }
 
-    if (allTestCases.length === 0) {
+    // 2. 問題言語（Java / SQL / Git / ITリテラシー / Excel / HTML&CSS / Project）を判定
+    const starterSpecSource = seedProb?.starter_code ?? dbProblemMeta?.starter_code ?? "";
+    const problemLanguage = detectProblemLanguage({
+      language: seedProb?.language,
+      tags: seedProb?.tags ?? dbProblemMeta?.tags,
+      starter_code: starterSpecSource || code,
+    });
+
+    const isEmbeddedSpecLanguage =
+      problemLanguage === "literacy" ||
+      problemLanguage === "excel" ||
+      problemLanguage === "htmlcss" ||
+      problemLanguage === "project";
+
+    if (!isEmbeddedSpecLanguage && allTestCases.length === 0) {
       return NextResponse.json(
         { error: "対象の問題またはテストケースが見つかりません。" },
         { status: 404 }
       );
     }
-
-    // 2. 問題言語（Java / SQL / Git）を判定し、全テストケースを実行・判定
-    const problemLanguage = detectProblemLanguage({
-      language: seedProb?.language,
-      tags: seedProb?.tags ?? dbProblemMeta?.tags,
-      starter_code: seedProb?.starter_code ?? dbProblemMeta?.starter_code ?? code,
-    });
 
     const results: TestCaseClientJudgeResult[] = [];
     let passedCount = 0;
@@ -263,7 +276,73 @@ export async function POST(request: NextRequest) {
     let compileErrorText: string | null = null;
     let compileDiagnostics = null;
 
-    for (const tc of allTestCases) {
+    if (problemLanguage === "literacy") {
+      const grade = evaluateLiteracySubmission(starterSpecSource, code);
+      for (const d of grade.details) {
+        results.push({
+          name: d.question,
+          isHidden: false,
+          passed: d.passed,
+          executionTimeMs: 1,
+          stepsExecuted: 1,
+          actualOutput: d.passed ? "正解" : "不正解",
+          expectedOutput: "正解",
+          errorDetail: d.passed ? undefined : d.explanation,
+        });
+      }
+      passedCount = grade.passedCount;
+      overallStatus = grade.passed ? "passed" : "wrong_answer";
+    } else if (problemLanguage === "excel") {
+      const grade = evaluateExcelSubmission(starterSpecSource, code);
+      for (const chk of grade.checks) {
+        results.push({
+          name: `${chk.cell}: ${chk.label}`,
+          isHidden: false,
+          passed: chk.passed,
+          executionTimeMs: 2,
+          stepsExecuted: 1,
+          expectedOutput: chk.expected,
+          actualOutput: chk.actual,
+          errorDetail: chk.passed ? undefined : chk.message,
+        });
+      }
+      passedCount = grade.passedCount;
+      overallStatus = grade.passed ? "passed" : "wrong_answer";
+    } else if (problemLanguage === "htmlcss") {
+      const grade = evaluateHtmlCssSubmission(starterSpecSource, code);
+      for (const chk of grade.checks) {
+        results.push({
+          name: chk.label,
+          isHidden: false,
+          passed: chk.passed,
+          executionTimeMs: 2,
+          stepsExecuted: 1,
+          expectedOutput: "OK",
+          actualOutput: chk.passed ? "OK" : chk.message,
+          errorDetail: chk.passed ? undefined : chk.message,
+        });
+      }
+      passedCount = grade.passedCount;
+      overallStatus = grade.passed ? "passed" : "wrong_answer";
+    } else if (problemLanguage === "project") {
+      const grade = evaluateProjectSubmission(starterSpecSource, code);
+      for (const chk of grade.checks) {
+        results.push({
+          name: chk.label,
+          isHidden: false,
+          passed: chk.passed,
+          executionTimeMs: 2,
+          stepsExecuted: 1,
+          expectedOutput: "提出要件クリア",
+          actualOutput: chk.message,
+          errorDetail: chk.passed ? undefined : chk.message,
+        });
+      }
+      passedCount = grade.passedCount;
+      overallStatus = grade.passed ? "passed" : "wrong_answer";
+    }
+
+    for (const tc of isEmbeddedSpecLanguage ? [] : allTestCases) {
       if (problemLanguage === "git") {
         const initial = createInitialGitState();
         const baseState = seedProb?.starter_code
@@ -364,8 +443,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const totalTestsCount = isEmbeddedSpecLanguage
+      ? results.length
+      : allTestCases.length;
     const allPassed =
-      overallStatus === "passed" && passedCount === allTestCases.length;
+      overallStatus === "passed" &&
+      totalTestsCount > 0 &&
+      passedCount === totalTestsCount;
 
     // 3. Supabase が設定されている場合、submissions / progress / study_logs / profiles を更新
     let savedSubmissionId: string | null = null;
@@ -395,7 +479,7 @@ export async function POST(request: NextRequest) {
               code,
               status: allPassed ? "passed" : overallStatus,
               passed_count: passedCount,
-              total_count: allTestCases.length,
+              total_count: totalTestsCount,
               execution_time_ms: totalExecTimeMs,
               memory_kb: Math.max(128, Math.round(totalSteps / 10)),
               compile_error: compileErrorText,
@@ -523,7 +607,7 @@ export async function POST(request: NextRequest) {
       status: allPassed ? "passed" : overallStatus,
       allPassed,
       passedCount,
-      totalCount: allTestCases.length,
+      totalCount: totalTestsCount,
       executionTimeMs: totalExecTimeMs,
       stepsExecuted: totalSteps,
       compileError: compileErrorText,

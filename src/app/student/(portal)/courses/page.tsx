@@ -20,6 +20,11 @@ import {
   CheckCircle2,
   ArrowRight,
   Sparkles,
+  Table2,
+  Layout,
+  Rocket,
+  Users,
+  FileSpreadsheet,
 } from "lucide-react";
 
 export default async function StudentCoursesPage() {
@@ -46,7 +51,41 @@ export default async function StudentCoursesPage() {
                 )
               : 0;
           const isGit = course.title.toUpperCase().includes("GIT");
-          const isSql = course.title.toUpperCase().includes("SQL");
+          const isLiteracy = course.title.includes("ITリテラシー");
+          const isExcel = course.title.includes("Excel");
+          const isHtmlCss = course.title.includes("HTML");
+          const isSpringBoot = course.title.includes("Spring Boot");
+          const isTeam = course.title.includes("チーム開発");
+          const isGitTrack = !isTeam && !isSpringBoot && course.title.toUpperCase().includes("GIT");
+          const isSql = !isSpringBoot && !isTeam && course.title.toUpperCase().includes("SQL");
+
+          const trackBadge = isLiteracy
+            ? { label: "ITリテラシー Track（3日）", cls: "bg-sky-100 text-sky-800 border-sky-300" }
+            : isExcel
+            ? { label: "Excel実務 Track（1か月）", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" }
+            : isHtmlCss
+            ? { label: "HTML & CSS Track（1か月）", cls: "bg-orange-100 text-orange-800 border-orange-300" }
+            : isTeam
+            ? { label: "チーム開発 3人1組（3か月）", cls: "bg-purple-700 text-white" }
+            : isSpringBoot
+            ? { label: "Spring Boot 個人開発（2か月）", cls: "bg-indigo-700 text-white" }
+            : isGitTrack
+            ? { label: "Git Version Control（3日）", cls: "bg-purple-100 text-purple-700 border-purple-300" }
+            : isSql
+            ? { label: "SQL Database Track（2か月）", cls: "bg-amber-100 text-amber-800 border-amber-300" }
+            : course.title.includes("上級")
+            ? { label: "Java上級 Track", cls: "bg-rose-600 text-white" }
+            : course.title.includes("中級")
+            ? { label: "Java中級 Track", cls: "bg-indigo-600 text-white" }
+            : course.title.includes("初級")
+            ? { label: "Java初級 Track", cls: "bg-sky-600 text-white" }
+            : { label: "Java入門 Track", cls: "" };
+
+          const designDoc = isTeam
+            ? { href: "/docs/team-project-design-spec.xlsx", label: "チーム開発 詳細設計書 (.xlsx)" }
+            : isSpringBoot
+            ? { href: "/docs/product-management-design-spec.xlsx", label: "商品管理システム 詳細設計書 (.xlsx)" }
+            : null;
 
           return (
             <Card
@@ -60,33 +99,8 @@ export default async function StudentCoursesPage() {
               <CardHeader className="pb-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Badge
-                      variant={
-                        isGit ? "secondary" : isSql ? "warning" : "default"
-                      }
-                      className={
-                        isGit
-                          ? "bg-purple-100 text-purple-700 border-purple-300"
-                          : course.title.includes("上級")
-                          ? "bg-rose-600 text-white"
-                          : course.title.includes("中級")
-                          ? "bg-indigo-600 text-white"
-                          : course.title.includes("初級")
-                          ? "bg-sky-600 text-white"
-                          : ""
-                      }
-                    >
-                      {isGit
-                        ? "Git Version Control Track"
-                        : isSql
-                        ? "SQL Database Track"
-                        : course.title.includes("上級")
-                        ? "Java上級 Track"
-                        : course.title.includes("中級")
-                        ? "Java中級 Track"
-                        : course.title.includes("初級")
-                        ? "Java初級 Track"
-                        : "Java入門 Track"}
+                    <Badge variant="default" className={trackBadge.cls}>
+                      {trackBadge.label}
                     </Badge>
                     {course.lockStatus === "unlocked" ? (
                       <Badge
@@ -124,7 +138,17 @@ export default async function StudentCoursesPage() {
                   </span>
                 </div>
                 <CardTitle className="text-xl mt-2 flex items-center gap-2">
-                  {isGit ? (
+                  {isLiteracy ? (
+                    <BookOpen className="h-5 w-5 text-sky-600" />
+                  ) : isExcel ? (
+                    <Table2 className="h-5 w-5 text-emerald-600" />
+                  ) : isHtmlCss ? (
+                    <Layout className="h-5 w-5 text-orange-600" />
+                  ) : isTeam ? (
+                    <Users className="h-5 w-5 text-purple-700" />
+                  ) : isSpringBoot ? (
+                    <Rocket className="h-5 w-5 text-indigo-700" />
+                  ) : isGitTrack ? (
                     <GitBranch className="h-5 w-5 text-purple-600" />
                   ) : isSql ? (
                     <Database className="h-5 w-5 text-amber-600" />
@@ -136,6 +160,18 @@ export default async function StudentCoursesPage() {
                 <CardDescription className="text-slate-600 leading-relaxed">
                   {course.description}
                 </CardDescription>
+                {designDoc && (
+                  <div className="pt-2">
+                    <a
+                      href={designDoc.href}
+                      download
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition"
+                    >
+                      <FileSpreadsheet className="h-3.5 w-3.5" />
+                      {designDoc.label} をダウンロード
+                    </a>
+                  </div>
+                )}
                 {course.isLocked && (
                   <div className="mt-2 p-2 rounded-lg bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex items-center gap-1.5">
                     <Lock className="h-3.5 w-3.5 text-amber-600 shrink-0" />

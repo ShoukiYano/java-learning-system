@@ -10,7 +10,7 @@ import { createInitialGitState, executeGitScript, compareGitStates } from "../gi
 import { CURRICULUM_DAYS } from "../curriculum/days-plan";
 
 describe("Full Curriculum ST: All 68 Problems (Java / SQL / Git) & 90-Day Plan", () => {
-  it("All 68 problems have unique valid UUIDs and valid chapter_id", () => {
+  it("All 110 problems have unique valid UUIDs and valid chapter_id", () => {
     const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const chapterIds = new Set(SEED_CHAPTERS.map((c) => c.id));
     const seen = new Set<string>();
@@ -19,9 +19,12 @@ describe("Full Curriculum ST: All 68 Problems (Java / SQL / Git) & 90-Day Plan",
       expect(seen.has(p.id), `Duplicate problem ID: ${p.id}`).toBe(false);
       seen.add(p.id);
       expect(chapterIds.has(p.chapter_id), `Unknown chapter_id for ${p.title}`).toBe(true);
-      expect(p.test_cases.length, `No test cases for ${p.title}`).toBeGreaterThan(0);
+      const lang = detectProblemLanguage(p);
+      if (lang === "java" || lang === "sql" || lang === "git") {
+        expect(p.test_cases.length, `No test cases for ${p.title}`).toBeGreaterThan(0);
+      }
     }
-    expect(SEED_PROBLEMS.length).toBe(68);
+    expect(SEED_PROBLEMS.length).toBe(110);
   });
 
   it("All 34 Java problems pass 100% of public and hidden test cases with solution_code", () => {

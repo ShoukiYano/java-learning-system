@@ -16,11 +16,37 @@ import {
   EXTRA_SQL_CHAPTERS,
   EXTRA_SQL_PROBLEMS,
 } from "@/lib/sql-curriculum-problems";
+import {
+  SEED_LITERACY_COURSE_ID,
+  SEED_EXCEL_COURSE_ID,
+  LITERACY_CHAPTERS,
+  LITERACY_PROBLEMS,
+  EXCEL_CHAPTERS,
+  EXCEL_PROBLEMS,
+} from "@/lib/curriculum-1year-literacy-excel";
+import {
+  SEED_HTMLCSS_COURSE_ID,
+  HTMLCSS_CHAPTERS,
+  HTMLCSS_PROBLEMS,
+} from "@/lib/curriculum-1year-htmlcss";
+import {
+  SEED_SPRINGBOOT_PROJECT_COURSE_ID,
+  SEED_TEAM_PROJECT_COURSE_ID,
+  SPRINGBOOT_PROJECT_CHAPTERS,
+  SPRINGBOOT_PROJECT_PROBLEMS,
+  TEAM_PROJECT_CHAPTERS,
+  TEAM_PROJECT_PROBLEMS,
+} from "@/lib/curriculum-1year-projects";
 
 export {
   SEED_JAVA_BEGINNER_COURSE_ID,
   SEED_JAVA_INTERMEDIATE_COURSE_ID,
   SEED_JAVA_ADVANCED_COURSE_ID,
+  SEED_LITERACY_COURSE_ID,
+  SEED_EXCEL_COURSE_ID,
+  SEED_HTMLCSS_COURSE_ID,
+  SEED_SPRINGBOOT_PROJECT_COURSE_ID,
+  SEED_TEAM_PROJECT_COURSE_ID,
 };
 
 export interface SeedTestCase {
@@ -70,58 +96,103 @@ export const SEED_GIT_COURSE_ID = "4107aaa5-10f0-41ca-8c22-a3a99eeebcbb";
 
 export const SEED_COURSES = [
   {
-    id: SEED_COURSE_ID,
-    title: "Java入門コース：ゼロから学ぶ基礎文法とオブジェクト指向入門",
+    id: SEED_LITERACY_COURSE_ID,
+    title: "ITリテラシー導入コース：IT・Web開発の仕組みと現場基礎（3日間）",
     description:
-      "標準出力・変数・データ型・四則演算・Scanner入力・条件分岐（if/switch）・ループ・配列・メソッド・クラス設計の基礎まで全16問のコーディング演習で体系的に習得します。",
+      "Webアプリが動く仕組み・PC/パス/UTF-8・HTTP/HTTPS・情報セキュリティ・開発工程（要件定義〜テスト）・現場の質問力まで、Mermaid図解と確認テストでわかりやすく習得します。",
     order_index: 1,
     is_published: true,
     prerequisite_course_id: null,
   },
   {
+    id: SEED_EXCEL_COURSE_ID,
+    title: "Excel実務マスターコース：調査・突合・報告レポート実践（1か月）",
+    description:
+      "ブラウザ上のインタラクティブExcelシートで手を動かしながら、四則演算・SUM/AVERAGE・絶対参照・IF・COUNTIF/SUMIF・VLOOKUP/XLOOKUP・IFERROR・データ突合と月次報告集計を習得します。",
+    order_index: 2,
+    is_published: true,
+    prerequisite_course_id: null,
+  },
+  {
+    id: SEED_HTMLCSS_COURSE_ID,
+    title: "HTML＆CSS実践コース：リアルタイムプレビュー画面構築（1か月）",
+    description:
+      "コードを書いた瞬間に右側のプレビュー画面へ反映される実践演習で、見出し・テーブル・入力フォーム・ボックスモデル・Flexbox・CSS Grid・レスポンシブ対応まで習得します。",
+    order_index: 3,
+    is_published: true,
+    prerequisite_course_id: null,
+  },
+  {
+    id: SEED_COURSE_ID,
+    title: "Java入門コース：ゼロから学ぶ基礎文法とオブジェクト指向入門（Java 4か月①）",
+    description:
+      "標準出力・変数・データ型・四則演算・Scanner入力・条件分岐（if/switch）・ループ・配列・メソッド・クラス設計の基礎まで全16問のコーディング演習で体系的に習得します。",
+    order_index: 4,
+    is_published: true,
+    prerequisite_course_id: null,
+  },
+  {
     id: SEED_JAVA_BEGINNER_COURSE_ID,
-    title: "Java初級コース：二次元配列・メソッド設計・オブジェクト指向応用",
+    title: "Java初級コース：二次元配列・メソッド設計・オブジェクト指向応用（Java 4か月②）",
     description:
       "店舗売上の二次元配列集計、オーバーロード設計、staticによる自動採番、決済インターフェースとポリモーフィズムなど実務基礎へ直結するオブジェクト指向応用を習得します。",
-    order_index: 2,
+    order_index: 5,
     is_published: true,
     prerequisite_course_id: SEED_COURSE_ID,
   },
   {
     id: SEED_JAVA_INTERMEDIATE_COURSE_ID,
-    title: "Java中級コース：コレクション・標準API・CSV処理・例外ハンドリング",
+    title: "Java中級コース：コレクション・標準API・CSV処理・例外ハンドリング（Java 4か月③）",
     description:
       "実務で毎日使う ArrayList / HashMap による顧客検索・売上集計、CSVデータのパース処理、try-catch / throw を使った安全な在庫引当・例外制御を習得します。",
-    order_index: 3,
+    order_index: 6,
     is_published: true,
     prerequisite_course_id: SEED_JAVA_BEGINNER_COURSE_ID,
   },
   {
     id: SEED_JAVA_ADVANCED_COURSE_ID,
-    title: "Java上級コース：DAO設計・APIバリデーション・顧客案件管理実践",
+    title: "Java上級コース：DAO設計・APIバリデーション・顧客案件管理実践（Java 4か月④）",
     description:
       "DAOリポジトリ設計、REST API入力バリデーション＆ステータス判定、顧客・案件管理システムのService層集計、境界値単体テスト検証など案件参画レベルの実践力を養います。",
-    order_index: 4,
+    order_index: 7,
     is_published: true,
     prerequisite_course_id: SEED_JAVA_INTERMEDIATE_COURSE_ID,
   },
   {
     id: SEED_SQL_COURSE_ID,
-    title: "SQL実践コース：データ抽出・集計・テーブル結合マスター",
+    title: "SQL実践コース：データ抽出・集計・テーブル結合マスター（2か月）",
     description:
-      "SELECT文の基本とWHERE条件指定からスタートし、GROUP BY / HAVING による集計分析、INNER JOIN / LEFT JOIN による複数テーブル結合まで実践クエリ演習で習得します。",
-    order_index: 5,
+      "SELECT文の基本とWHERE条件指定からスタートし、GROUP BY / HAVING による集計分析、INNER JOIN / LEFT JOIN による複数テーブル結合まで全30問の実践クエリ演習で習得します。",
+    order_index: 8,
     is_published: true,
     prerequisite_course_id: SEED_JAVA_INTERMEDIATE_COURSE_ID,
   },
   {
     id: SEED_GIT_COURSE_ID,
-    title: "Git実践マスター：ビジュアル分岐・マージ演習",
+    title: "Git実践マスター：ビジュアル分岐・マージ演習（3日間）",
     description:
-      "ブラウザ上でコミットやブランチの分岐・マージをリアルタイムに視覚化しながら学ぶ、実践的Gitトレーニング。コマンドライン操作とツリー構造の直感的理解を深めます。",
-    order_index: 6,
+      "以降の開発・チーム開発に不可欠なGit操作を、ブラウザ上でコミットやブランチ分岐・マージ・リベースを視覚化しながら直感的に習得します。",
+    order_index: 9,
     is_published: true,
     prerequisite_course_id: null,
+  },
+  {
+    id: SEED_SPRINGBOOT_PROJECT_COURSE_ID,
+    title: "Spring Boot＋SQL 個人開発：商品管理システム構築（2か月・詳細設計書付）",
+    description:
+      "Eclipse・Spring Boot・PostgreSQL・GitHubの導入から、配布Excel詳細設計書（全7シート）を読み解いて商品管理システム（検索・CRUD・バリデーション・ログイン）を構築しGitHub URLで提出します。",
+    order_index: 10,
+    is_published: true,
+    prerequisite_course_id: SEED_JAVA_ADVANCED_COURSE_ID,
+  },
+  {
+    id: SEED_TEAM_PROJECT_COURSE_ID,
+    title: "チーム開発実践（3人1組）：ログイン機能付き総合業務Webシステム（3か月・詳細設計書付）",
+    description:
+      "Eclipse・Spring Boot・PostgreSQL・GitHub（ブランチ/PR/レビュー運用）を用い、3人1組・1人3ページ（計9画面）＋共通ログイン機能の業務システムをExcel詳細設計書から構築しGitHub URLで提出します。",
+    order_index: 11,
+    is_published: true,
+    prerequisite_course_id: SEED_SPRINGBOOT_PROJECT_COURSE_ID,
   },
 ];
 
@@ -541,8 +612,13 @@ export const SEED_CHAPTERS: SeedChapter[] = [
     lesson_id: "61a155fe-360f-41fc-b6de-2a9a00967f52",
     lesson_title: "2-1. マージとRebaseの実践",
   },
+  ...LITERACY_CHAPTERS,
+  ...EXCEL_CHAPTERS,
+  ...HTMLCSS_CHAPTERS,
   ...EXTRA_JAVA_CHAPTERS,
   ...EXTRA_SQL_CHAPTERS,
+  ...SPRINGBOOT_PROJECT_CHAPTERS,
+  ...TEAM_PROJECT_CHAPTERS,
 ];
 
 export const SEED_PROBLEMS: SeedProblem[] = [
@@ -2291,8 +2367,13 @@ Gitの最も基本的な操作であるコミット（\`git commit\`）を作成
       },
     ],
   },
+  ...LITERACY_PROBLEMS,
+  ...EXCEL_PROBLEMS,
+  ...HTMLCSS_PROBLEMS,
   ...EXTRA_JAVA_PROBLEMS,
   ...EXTRA_SQL_PROBLEMS,
+  ...SPRINGBOOT_PROJECT_PROBLEMS,
+  ...TEAM_PROJECT_PROBLEMS,
 ];
 
 export function detectProblemLanguage(problem: {
@@ -2300,9 +2381,28 @@ export function detectProblemLanguage(problem: {
   tags?: string[];
   starter_code?: string;
 }): ProblemLanguage {
-  if (problem.language === "git" || problem.language === "sql" || problem.language === "java") {
+  if (
+    problem.language === "git" ||
+    problem.language === "sql" ||
+    problem.language === "java" ||
+    problem.language === "literacy" ||
+    problem.language === "excel" ||
+    problem.language === "htmlcss" ||
+    problem.language === "project"
+  ) {
     return problem.language;
   }
+  const sc = problem.starter_code?.trim() || "";
+  if (sc.startsWith("{")) {
+    if (sc.includes('"sheetName"') && sc.includes('"targets"')) return "excel";
+    if (sc.includes('"html"') && sc.includes('"css"') && sc.includes('"checks"')) return "htmlcss";
+    if (sc.includes('"questions"') && sc.includes('"correctIndex"')) return "literacy";
+    if (sc.includes('"designDocPath"') && sc.includes('"checklist"')) return "project";
+  }
+  if (problem.tags?.some((t) => t.includes("Excel"))) return "excel";
+  if (problem.tags?.some((t) => t.includes("HTML") || t.includes("CSS"))) return "htmlcss";
+  if (problem.tags?.some((t) => t.includes("ITリテラシー"))) return "literacy";
+  if (problem.tags?.some((t) => t.includes("Spring Boot") || t.includes("チーム開発"))) return "project";
   if (problem.tags?.some((t) => t.toUpperCase().includes("GIT"))) {
     return "git";
   }
