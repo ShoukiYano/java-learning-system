@@ -330,7 +330,7 @@ function createProductManagementDesignSpec() {
             ["システム名", "商品管理システム（Product Manager）", "個人開発（2か月カリキュラム）", "DevSkillStudio 公式設計書"],
             ["バージョン", "1.0.0", "初版作成", "GitHub URLにて提出"],
             ["開発環境（IDE）", "Eclipse（Pleiades All in One / Spring Tools 4）", "Java 21 LTS", "UTF-8統一"],
-            ["フレームワーク", "Spring Boot 3.3.x（Spring Web / Spring Data JPA / Thymeleaf / Validation / Spring Security）", "Maven または Gradle", "MVCアーキテクチャ"],
+            ["フレームワーク", "Spring Boot 3.3.x（Spring Web / Spring Data JPA / Thymeleaf / Validation / Spring Security）", "ビルドツール：Maven（pom.xml）", "MVCアーキテクチャ"],
             ["データベース", "PostgreSQL 16.x（pgAdmin 4 または psql）", "DB名: product_mgmt_db", "UTF-8 / ポート5432"],
             ["バージョン管理", "Git + GitHub", "mainブランチ＋featureブランチ運用", "README.mdに起動手順を記載"],
           ]
@@ -574,7 +574,7 @@ function createTeamProjectDesignSpec() {
           ["項目", "内容", "補足", "備考"],
           [
             ["システム構成", "共通ログイン機能（1画面）＋ メンバー3名 × 各3ページ（計9画面）＝ 全10画面", "1人3ページを責任持って設計〜テストまで完遂", "チーム開発3か月"],
-            ["技術スタック", "Eclipse / Java 21 / Spring Boot 3.3 / Thymeleaf / Spring Security / PostgreSQL 16 / GitHub", "個人開発と同一スタックをチーム拡張", ""],
+            ["技術スタック", "Eclipse / Java 21 / Spring Boot 3.3 / Maven（pom.xml） / Thymeleaf / Spring Security / PostgreSQL 16 / GitHub", "個人開発と同一スタックをチーム拡張", "Mavenで依存関係を統一"],
             ["Git運用ルール", "main（本番保護）← develop（統合）← feature/担当名-機能名（作業）", "PRレビュー必須（他メンバー1名以上のApprove）", "コンフリクト解消を全員体験"],
             ["提出物", "チーム共有GitHubリポジトリURL（README・Pull Request履歴・テスト結果含む）", "全員のCommit履歴が確認できること", ""],
           ]

@@ -171,9 +171,10 @@ flowchart LR
     title: "Step 2：Spring Bootプロジェクト作成とPostgreSQL接続確認",
     description_md: `## Spring BootとPostgreSQLを繋ぐ
 
-### 1. Spring Initializrでプロジェクト雛形を作成
+### 1. Spring InitializrでMavenプロジェクト雛形を作成
 Eclipseの「新規 → Spring スターター・プロジェクト」（または [start.spring.io](https://start.spring.io/)）で以下を選択します。
-- **Project**: Maven / **Language**: Java / **Java**: 21
+- **Type（ビルドツール）**: **Maven**（実務で最もよく使われる \`pom.xml\` 管理方式）
+- **Language**: Java / **Java**: 21 / **Packaging**: Jar
 - **Dependencies（依存関係）**:
   - \`Spring Web\`
   - \`Thymeleaf\`
@@ -181,6 +182,10 @@ Eclipseの「新規 → Spring スターター・プロジェクト」（また�
   - \`Validation\`
   - \`PostgreSQL Driver\`
   - \`Spring Boot DevTools\`
+
+> **Maven（\`pom.xml\`）の基本操作**
+> - ライブラリを追加・変更したときは、Eclipseでプロジェクトを右クリック → **「Maven → プロジェクトの更新（Alt + F5）」** を実行します。
+> - ターミナルから起動・ビルドするときは \`./mvnw spring-boot:run\`（Windowsは \`mvnw.cmd spring-boot:run\`）や \`mvn clean package\` を使用します。
 
 ### 2. \`src/main/resources/application.properties\` の設定例
 \`\`\`properties
