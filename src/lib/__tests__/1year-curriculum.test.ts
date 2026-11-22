@@ -29,6 +29,7 @@ import {
 import {
   evaluateLiteracySubmission,
   evaluateProjectSubmission,
+  isValidGithubPrUrl,
   isValidGithubUrl,
 } from "@/lib/curriculum-evaluators";
 import { getStudentCourseLockStatuses } from "@/lib/data-service";
@@ -144,25 +145,35 @@ describe("1年間カリキュラム 総合検証テスト (UT / IT / ST)", () =>
   });
 
   describe("UT: GitHub URL検証＆プロジェクト提出チェック", () => {
-    it("有効URLのみ許可し、不正スキーム・他ドメイン・リポジトリ名欠落を拒否する", () => {
+    it("有効なGitHub Pull Request URLのみ許可し、リポジトリTOPや不正URLを拒否する", () => {
       expect(isValidGithubUrl("https://github.com/user-1/product-manager")).toBe(true);
-      expect(isValidGithubUrl("https://github.com/team.org/teamops-hub/tree/main")).toBe(true);
-      expect(isValidGithubUrl("http://github.com/user/repo")).toBe(false);
-      expect(isValidGithubUrl("https://gitlab.com/user/repo")).toBe(false);
-      expect(isValidGithubUrl("javascript:alert(1)")).toBe(false);
-      expect(isValidGithubUrl("https://github.com/only-user")).toBe(false);
+      expect(isValidGithubPrUrl("https://github.com/user-1/product-manager/pull/1")).toBe(true);
+      expect(isValidGithubPrUrl("https://github.com/team.org/teamops-hub/pull/12/files")).toBe(true);
+      expect(isValidGithubPrUrl("https://github.com/user-1/product-manager")).toBe(false);
+      expect(isValidGithubPrUrl("http://github.com/user/repo/pull/1")).toBe(false);
+      expect(isValidGithubPrUrl("https://gitlab.com/user/repo/pull/1")).toBe(false);
+      expect(isValidGithubPrUrl("javascript:alert(1)")).toBe(false);
     });
 
-    it("GitHub URLが有効でもチェックリスト未完了なら不合格になる", () => {
+    it("PR URLが有効でもチェックリスト未完了なら不合格、リポジトリTOPのみの提出も不合格になる", () => {
       const p1 = SPRINGBOOT_PROJECT_PROBLEMS[0];
       const incomplete = evaluateProjectSubmission(
         p1.starter_code,
         JSON.stringify({
-          githubUrl: "https://github.com/student/product-manager",
+          githubUrl: "https://github.com/student/product-manager/pull/1",
           checkedItems: [0, 1],
         })
       );
       expect(incomplete.passed).toBe(false);
+
+      const repoTopOnly = evaluateProjectSubmission(
+        p1.starter_code,
+        JSON.stringify({
+          githubUrl: "https://github.com/student/product-manager",
+          checkedItems: [0, 1, 2, 3],
+        })
+      );
+      expect(repoTopOnly.passed).toBe(false);
     });
   });
 

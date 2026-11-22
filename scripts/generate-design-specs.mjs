@@ -332,7 +332,7 @@ function createProductManagementDesignSpec() {
             ["開発環境（IDE）", "Eclipse（Pleiades All in One / Spring Tools 4）", "Java 21 LTS", "UTF-8統一"],
             ["フレームワーク", "Spring Boot 3.3.x（Spring Web / Spring Data JPA / Thymeleaf / Validation / Spring Security）", "ビルドツール：Maven（pom.xml）", "MVCアーキテクチャ"],
             ["データベース", "PostgreSQL 16.x（pgAdmin 4 または psql）", "DB名: product_mgmt_db", "UTF-8 / ポート5432"],
-            ["バージョン管理", "Git + GitHub", "mainブランチ＋featureブランチ運用", "README.mdに起動手順を記載"],
+            ["バージョン管理", "Git + GitHub（各Stepごとに feature/stepX-... ブランチを作成）", "main直接Push禁止・Pull Request URL提出", "差分レビュー（Files changed）で講師確認"],
           ]
         ),
         { style: 0, cells: ["", "", "", ""] },
@@ -576,7 +576,7 @@ function createTeamProjectDesignSpec() {
             ["システム構成", "共通ログイン機能（1画面）＋ メンバー3名 × 各3ページ（計9画面）＝ 全10画面", "1人3ページを責任持って設計〜テストまで完遂", "チーム開発3か月"],
             ["技術スタック", "Eclipse / Java 21 / Spring Boot 3.3 / Maven（pom.xml） / Thymeleaf / Spring Security / PostgreSQL 16 / GitHub", "個人開発と同一スタックをチーム拡張", "Mavenで依存関係を統一"],
             ["Git運用ルール", "main（本番保護）← develop（統合）← feature/担当名-機能名（作業）", "PRレビュー必須（他メンバー1名以上のApprove）", "コンフリクト解消を全員体験"],
-            ["提出物", "チーム共有GitHubリポジトリURL（README・Pull Request履歴・テスト結果含む）", "全員のCommit履歴が確認できること", ""],
+            ["提出物", "各ステップごとのGitHub Pull Request URL（https://github.com/.../pull/番号）", "全員のPR・相互レビュー履歴が確認できること", "Files changedで差分レビュー実施"],
           ]
         ),
         { style: 0, cells: ["", "", "", ""] },

@@ -89,7 +89,11 @@ export interface ProjectStepSpec {
   designDocPath: string;
   designDocLabel: string;
   checklist: string[];
+  /** Recommended feature branch name for this step (e.g. "feature/step1-setup") */
+  recommendedBranch?: string;
   requireGithubUrl?: boolean;
+  /** Require a Pull Request URL (/pull/<number>) so instructors can review diffs per step (default: true) */
+  requirePrUrl?: boolean;
   isTeamProject?: boolean;
 }
 
@@ -127,6 +131,11 @@ export function isValidGithubUrl(url: string): boolean {
   return /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\/.*)?$/.test(trimmed);
 }
 
+export function isValidGithubPrUrl(url: string): boolean {
+  const trimmed = url.trim();
+  return /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/pull\/\d+(?:\/.*)?$/.test(trimmed);
+}
+
 export function evaluateProjectSubmission(
   starterCodeJson: string,
   userSubmissionJson: string
@@ -153,16 +162,23 @@ export function evaluateProjectSubmission(
 
   const checks: Array<{ label: string; passed: boolean; message: string }> = [];
 
-  // 1. GitHub URL check
+  // 1. GitHub Pull Request URL check
   const requireUrl = spec.requireGithubUrl !== false;
+  const requirePr = spec.requirePrUrl !== false;
   if (requireUrl) {
-    const urlOk = isValidGithubUrl(payload.githubUrl);
+    const urlOk = requirePr
+      ? isValidGithubPrUrl(payload.githubUrl)
+      : isValidGithubUrl(payload.githubUrl);
     checks.push({
-      label: "GitHubリポジトリURL形式チェック",
+      label: requirePr
+        ? "GitHub Pull Request URL形式チェック（/pull/番号）"
+        : "GitHubリポジトリURL形式チェック",
       passed: urlOk,
       message: urlOk
-        ? `有効なGitHub URLを確認しました（${payload.githubUrl}）`
-        : "有効なGitHubリポジトリURL（例: https://github.com/your-id/product-manager）を入力してください",
+        ? `有効なPull Request URLを確認しました（${payload.githubUrl}）`
+        : requirePr
+          ? "ステップごとのブランチから作成した Pull Request URL（例: https://github.com/your-id/product-manager/pull/1）を入力してください"
+          : "有効なGitHubリポジトリURL（例: https://github.com/your-id/product-manager）を入力してください",
     });
   }
 

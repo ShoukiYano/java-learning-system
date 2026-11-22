@@ -13,9 +13,9 @@ function projStarter(spec: ProjectStepSpec): string {
 
 function projSolution(spec: ProjectStepSpec, repoName: string): string {
   return JSON.stringify({
-    githubUrl: `https://github.com/sample-student/${repoName}`,
+    githubUrl: `https://github.com/sample-student/${repoName}/pull/${spec.stepNumber}`,
     checkedItems: spec.checklist.map((_, i) => i),
-    summaryNote: "全チェック項目と動作確認を完了し、GitHubへPushしました。",
+    summaryNote: "推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。",
   });
 }
 
@@ -54,73 +54,79 @@ export const SPRINGBOOT_PROJECT_CHAPTERS: SeedChapter[] = [
 
 const SB_STEP1: ProjectStepSpec = {
   stepNumber: 1,
+  recommendedBranch: "feature/step1-setup",
   designDocPath: PRODUCT_SPEC_PATH,
   designDocLabel: "商品管理システム 詳細設計書（Excel・全7シート）",
   checklist: [
     "Eclipse（Pleiades All in One / Java 21）をインストールし、ワークスペース文字コードをUTF-8に設定した",
     "PostgreSQL 16をインストールし、pgAdmin 4 または psql でデータベース `product_mgmt_db` を作成した",
-    "GitHubアカウントと新規リポジトリ（例：product-manager）を作成し、初回README.mdをPushした",
+    "GitHubリポジトリ（例：product-manager）の `main` に初回READMEを作成後、`feature/step1-setup` ブランチを切って `.gitignore` 等を追加し **Pull Request** を作成した",
     "配布のExcel詳細設計書（全7シート）をダウンロードし、Sheet 1〜2に目を通した",
   ],
 };
 
 const SB_STEP2: ProjectStepSpec = {
   stepNumber: 2,
+  recommendedBranch: "feature/step2-spring-db",
   designDocPath: PRODUCT_SPEC_PATH,
   designDocLabel: "商品管理システム 詳細設計書（Excel・全7シート）",
   checklist: [
-    "Spring Initializr（またはEclipseのSpring Starter Project）で依存関係（Web / JPA / Thymeleaf / Validation / PostgreSQL Driver）入りプロジェクトを作成した",
+    "Spring Initializr（Maven / Java 21）で依存関係（Web / JPA / Thymeleaf / Validation / PostgreSQL Driver）入りプロジェクトを作成した",
     "`application.properties` にPostgreSQL接続情報（URL・ユーザー名・パスワード）を設定した",
     "EclipseからSpring Bootを起動し、コンソールエラーなく `http://localhost:8080` に接続できた",
-    "プロジェクト初期一式をGitHubリポジトリへCommit & Pushした",
+    "`feature/step2-spring-db` ブランチをPushして **Pull Request** を作成した",
   ],
 };
 
 const SB_STEP3: ProjectStepSpec = {
   stepNumber: 3,
+  recommendedBranch: "feature/step3-db-entity",
   designDocPath: PRODUCT_SPEC_PATH,
   designDocLabel: "商品管理システム 詳細設計書（Excel・Sheet 4 テーブル定義）",
   checklist: [
     "詳細設計書 Sheet 4 のDDLを実行し、`users`・`categories`・`products` の3テーブルを作成した",
     "初期データ（カテゴリ3件以上、サンプル商品5件以上）をINSERTした",
     "Entityクラス（`User`, `Category`, `Product`）とRepositoryインターフェースを作成した",
-    "DDLファイル（`schema.sql` / `data.sql`）とEntity/RepositoryをGitHubへPushした",
+    "`feature/step3-db-entity` ブランチでDDL・Entity・RepositoryをPushし **Pull Request** を作成した",
   ],
 };
 
 const SB_STEP4: ProjectStepSpec = {
   stepNumber: 4,
+  recommendedBranch: "feature/step4-product-list",
   designDocPath: PRODUCT_SPEC_PATH,
   designDocLabel: "商品管理システム 詳細設計書（Excel・Sheet 3 & 5）",
   checklist: [
     "`GET /products` で論理削除されていない商品一覧（カテゴリ名付き）が表示される",
     "在庫数が10未満の商品に赤色の警告バッジが表示される",
     "商品名（部分一致）とカテゴリ選択による複合検索が動作し、検索条件が画面に保持される",
-    "`GET /products/{id}` で商品詳細画面が表示され、変更をGitHubへPushした",
+    "`feature/step4-product-list` ブランチで商品一覧・検索・詳細をPushし **Pull Request** を作成した",
   ],
 };
 
 const SB_STEP5: ProjectStepSpec = {
   stepNumber: 5,
+  recommendedBranch: "feature/step5-product-crud",
   designDocPath: PRODUCT_SPEC_PATH,
   designDocLabel: "商品管理システム 詳細設計書（Excel・Sheet 5 & 6）",
   checklist: [
     "商品新規登録（`GET /products/new` → `POST /products`）がPRGパターンで動作しフラッシュメッセージが出る",
     "Sheet 6 の入力バリデーション（必須・SKU形式・単価/在庫0以上・SKU重複チェック）がすべて動作する",
     "商品編集（`GET /products/{id}/edit` → `POST /products/{id}`）と論理削除（`is_deleted = true`）が動作する",
-    "実装コードをGitHubへPushした",
+    "`feature/step5-product-crud` ブランチをPushし **Pull Request** を作成した",
   ],
 };
 
 const SB_STEP6: ProjectStepSpec = {
   stepNumber: 6,
+  recommendedBranch: "feature/step6-security-final",
   designDocPath: PRODUCT_SPEC_PATH,
   designDocLabel: "商品管理システム 詳細設計書（Excel・Sheet 7 テスト仕様書）",
   checklist: [
     "Spring Securityによるログイン・ログアウト（BCrypt暗号化・未ログイン時 `/login` リダイレクト）を実装した",
     "詳細設計書 Sheet 7 の単体・結合テスト（TC-001〜TC-012）をすべて実施し合格を確認した",
     "`README.md` にDB作成手順・起動方法・テスト用ログインID/パスワードを記載した",
-    "最終版ソースコードをGitHubの `main` ブランチへPushし、リポジトリURLを提出した",
+    "`feature/step6-security-final` ブランチから最終 **Pull Request** を作成し、PR URLを提出した",
   ],
 };
 
@@ -148,7 +154,27 @@ flowchart LR
 2. **PostgreSQL 16**：インストーラーを実行（ポート \`5432\`、スーパーユーザー \`postgres\` のパスワードを控えておく）。付属の **pgAdmin 4** を開き、データベース \`product_mgmt_db\` を作成します。
 3. **GitHub**：個人開発用のリポジトリ（例：\`product-manager\`）を作成し、ローカルPCに \`git clone\` しておきます。
 
-### 2. Excel詳細設計書をダウンロードしよう
+### 2. ブランチ分割＆Pull Request URL提出ルール（講師レビューを確実にする進め方）
+このコースでは \`main\` ブランチへ直接上書きPushせず、**各Stepごとにブランチを切って Pull Request（PR）URL を提出** します。これにより、講師がレビューする前に次のStepを進めていても、各Stepの差分（Files changed）を正確にレビューできます。
+
+\`\`\`mermaid
+gitGraph
+    commit id: "main初回: README.md"
+    branch feature/step1-setup
+    checkout feature/step1-setup
+    commit id: "Step1: .gitignore等 → PR#1提出"
+    branch feature/step2-spring-db
+    checkout feature/step2-spring-db
+    commit id: "Step2: Spring Boot作成 → PR#2提出"
+    checkout main
+    merge feature/step1-setup id: "レビューOK後マージ"
+\`\`\`
+
+- **初回準備**：GitHubでリポジトリ作成時に「Add a README file」にチェックを入れて \`main\` の初期コミットを作る
+- **各Stepの提出**：\`git switch -c feature/step1-setup\` のようにブランチを切り、Commit → Push → GitHubで **Pull Request作成** → \`https://github.com/ユーザー名/リポジトリ名/pull/1\` を提出する
+- **レビュー待ちで先へ進むとき**：前のStepブランチから次のブランチ（例：\`git switch -c feature/step2-spring-db\`）を切れば、レビューを待たずに開発を継続できます
+
+### 3. Excel詳細設計書をダウンロードしよう
 右側の **「詳細設計書（Excel）ダウンロード」** ボタンから \`product-management-design-spec.xlsx\` を保存し、ExcelまたはGoogleスプレッドシートで開いて **Sheet 1（表紙・読み方）と Sheet 2（機能要件）** を確認してください。`,
     difficulty: "easy",
     estimated_minutes: 90,
@@ -405,24 +431,26 @@ export const TEAM_PROJECT_CHAPTERS: SeedChapter[] = [
 
 const TEAM_STEP1: ProjectStepSpec = {
   stepNumber: 1,
+  recommendedBranch: "feature/team-step1-rules",
   designDocPath: TEAM_SPEC_PATH,
   designDocLabel: "チーム開発（3人1組）総合業務Webシステム 詳細設計書（Excel・全7シート）",
   isTeamProject: true,
   checklist: [
     "チーム3名の役割分担（メンバーA：社員・ダッシュボード3画面 / メンバーB：案件・タスク3画面 / メンバーC：備品貸出3画面）を決定した",
     "チーム共有GitHubリポジトリを作成し、3名全員をCollaboratorに登録した",
-    "`main` ブランチから `develop` ブランチを作成し、Sheet 2 のGit運用ルール（直接Push禁止・PRレビュー必須）を合意した",
+    "`main` ブランチから `develop` ブランチを作成し、Sheet 2 のGit運用ルール（直接Push禁止・PRレビュー必須）を合意し、役割分担表のPRを作成した",
     "Excel詳細設計書（全7シート）を3名全員で読み込み、担当画面と共有テーブルの境界を確認した",
   ],
 };
 
 const TEAM_STEP2: ProjectStepSpec = {
   stepNumber: 2,
+  recommendedBranch: "feature/team-step2-common-base",
   designDocPath: TEAM_SPEC_PATH,
   designDocLabel: "チーム開発 詳細設計書（Excel・Sheet 3 & 5）",
   isTeamProject: true,
   checklist: [
-    "Sheet 5 の共通DDL（6テーブル）を全員のローカルPostgreSQLに投入し、共通 `schema.sql` / `data.sql` を `develop` へマージした",
+    "Sheet 5 の共通DDL（6テーブル）を全員のローカルPostgreSQLに投入し、共通 `schema.sql` / `data.sql` を `develop` へPRマージした",
     "共通ログイン機能（SCR-00 `/login`・Spring Security・ADMIN/USERロール制御）が動作する",
     "共通ヘッダー／ナビゲーションレイアウト（`layout.html`）を作成し、全10画面へのリンク枠を配置した",
     "3名全員が最新の `develop` を `git pull` してローカルで起動確認できた",
@@ -431,6 +459,7 @@ const TEAM_STEP2: ProjectStepSpec = {
 
 const TEAM_STEP3: ProjectStepSpec = {
   stepNumber: 3,
+  recommendedBranch: "feature/your-role-pages",
   designDocPath: TEAM_SPEC_PATH,
   designDocLabel: "チーム開発 詳細設計書（Excel・Sheet 4 & 6）",
   isTeamProject: true,
@@ -444,6 +473,7 @@ const TEAM_STEP3: ProjectStepSpec = {
 
 const TEAM_STEP4: ProjectStepSpec = {
   stepNumber: 4,
+  recommendedBranch: "feature/team-step4-integration",
   designDocPath: TEAM_SPEC_PATH,
   designDocLabel: "チーム開発 詳細設計書（Excel・Sheet 2 & 6）",
   isTeamProject: true,
@@ -457,6 +487,7 @@ const TEAM_STEP4: ProjectStepSpec = {
 
 const TEAM_STEP5: ProjectStepSpec = {
   stepNumber: 5,
+  recommendedBranch: "fix/team-step5-test-fixes",
   designDocPath: TEAM_SPEC_PATH,
   designDocLabel: "チーム開発 詳細設計書（Excel・Sheet 7 結合テスト仕様書）",
   isTeamProject: true,
@@ -464,12 +495,13 @@ const TEAM_STEP5: ProjectStepSpec = {
     "Sheet 7 の横断結合テスト（IT-001〜IT-007）をチーム全員で実施した",
     "見つかったバグをGitHub Issuesに登録し、`fix/...` ブランチ→PRで修正・クローズした",
     "備品貸出の承認/返却トランザクションや案件進捗率の自動計算など異常系も含めて動作確認した",
-    "テスト完了済みの `develop` から `main` ブランチへリリースPRをマージした",
+    "テスト完了済みの `develop` から `main` ブランチへリリースPRを作成した",
   ],
 };
 
 const TEAM_STEP6: ProjectStepSpec = {
   stepNumber: 6,
+  recommendedBranch: "release/v1.0-final",
   designDocPath: TEAM_SPEC_PATH,
   designDocLabel: "チーム開発 詳細設計書（Excel・全7シート）",
   isTeamProject: true,

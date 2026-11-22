@@ -4549,10 +4549,30 @@ flowchart LR
 2. **PostgreSQL 16**：インストーラーを実行（ポート `5432`、スーパーユーザー `postgres` のパスワードを控えておく）。付属の **pgAdmin 4** を開き、データベース `product_mgmt_db` を作成します。
 3. **GitHub**：個人開発用のリポジトリ（例：`product-manager`）を作成し、ローカルPCに `git clone` しておきます。
 
-### 2. Excel詳細設計書をダウンロードしよう
+### 2. ブランチ分割＆Pull Request URL提出ルール（講師レビューを確実にする進め方）
+このコースでは `main` ブランチへ直接上書きPushせず、**各Stepごとにブランチを切って Pull Request（PR）URL を提出** します。これにより、講師がレビューする前に次のStepを進めていても、各Stepの差分（Files changed）を正確にレビューできます。
+
+```mermaid
+gitGraph
+    commit id: "main初回: README.md"
+    branch feature/step1-setup
+    checkout feature/step1-setup
+    commit id: "Step1: .gitignore等 → PR#1提出"
+    branch feature/step2-spring-db
+    checkout feature/step2-spring-db
+    commit id: "Step2: Spring Boot作成 → PR#2提出"
+    checkout main
+    merge feature/step1-setup id: "レビューOK後マージ"
+```
+
+- **初回準備**：GitHubでリポジトリ作成時に「Add a README file」にチェックを入れて `main` の初期コミットを作る
+- **各Stepの提出**：`git switch -c feature/step1-setup` のようにブランチを切り、Commit → Push → GitHubで **Pull Request作成** → `https://github.com/ユーザー名/リポジトリ名/pull/1` を提出する
+- **レビュー待ちで先へ進むとき**：前のStepブランチから次のブランチ（例：`git switch -c feature/step2-spring-db`）を切れば、レビューを待たずに開発を継続できます
+
+### 3. Excel詳細設計書をダウンロードしよう
 右側の **「詳細設計書（Excel）ダウンロード」** ボタンから `product-management-design-spec.xlsx` を保存し、ExcelまたはGoogleスプレッドシートで開いて **Sheet 1（表紙・読み方）と Sheet 2（機能要件）** を確認してください。',
   'easy', 90, ARRAY['Spring Boot', 'Eclipse', 'PostgreSQL', 'GitHub', '環境構築'],
-  '{"stepNumber":1,"designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・全7シート）","checklist":["Eclipse（Pleiades All in One / Java 21）をインストールし、ワークスペース文字コードをUTF-8に設定した","PostgreSQL 16をインストールし、pgAdmin 4 または psql でデータベース `product_mgmt_db` を作成した","GitHubアカウントと新規リポジトリ（例：product-manager）を作成し、初回README.mdをPushした","配布のExcel詳細設計書（全7シート）をダウンロードし、Sheet 1〜2に目を通した"]}', '{"githubUrl":"https://github.com/sample-student/product-manager","checkedItems":[0,1,2,3],"summaryNote":"全チェック項目と動作確認を完了し、GitHubへPushしました。"}', '環境構築はエンジニア実務の第一歩です。つまずいた場合はエラー画面のスクリーンショットを撮って講師質問チャットで相談しましょう。',
+  '{"stepNumber":1,"recommendedBranch":"feature/step1-setup","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・全7シート）","checklist":["Eclipse（Pleiades All in One / Java 21）をインストールし、ワークスペース文字コードをUTF-8に設定した","PostgreSQL 16をインストールし、pgAdmin 4 または psql でデータベース `product_mgmt_db` を作成した","GitHubリポジトリ（例：product-manager）の `main` に初回READMEを作成後、`feature/step1-setup` ブランチを切って `.gitignore` 等を追加し **Pull Request** を作成した","配布のExcel詳細設計書（全7シート）をダウンロードし、Sheet 1〜2に目を通した"]}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/1","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '環境構築はエンジニア実務の第一歩です。つまずいた場合はエラー画面のスクリーンショットを撮って講師質問チャットで相談しましょう。',
   1, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4602,7 +4622,7 @@ spring.jpa.show-sql=true
 
 ※パスワードをGitHubに公開したくない場合は `${DB_PASSWORD:postgres}` のように環境変数化すると実務レベルです！',
   'easy', 90, ARRAY['Spring Boot', 'PostgreSQL', 'application.properties'],
-  '{"stepNumber":2,"designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・全7シート）","checklist":["Spring Initializr（またはEclipseのSpring Starter Project）で依存関係（Web / JPA / Thymeleaf / Validation / PostgreSQL Driver）入りプロジェクトを作成した","`application.properties` にPostgreSQL接続情報（URL・ユーザー名・パスワード）を設定した","EclipseからSpring Bootを起動し、コンソールエラーなく `http://localhost:8080` に接続できた","プロジェクト初期一式をGitHubリポジトリへCommit & Pushした"]}', '{"githubUrl":"https://github.com/sample-student/product-manager","checkedItems":[0,1,2,3],"summaryNote":"全チェック項目と動作確認を完了し、GitHubへPushしました。"}', '`Started Application in X.XXX seconds` とコンソールに出ればSpring BootとPostgreSQLの疎通は成功です。',
+  '{"stepNumber":2,"recommendedBranch":"feature/step2-spring-db","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・全7シート）","checklist":["Spring Initializr（Maven / Java 21）で依存関係（Web / JPA / Thymeleaf / Validation / PostgreSQL Driver）入りプロジェクトを作成した","`application.properties` にPostgreSQL接続情報（URL・ユーザー名・パスワード）を設定した","EclipseからSpring Bootを起動し、コンソールエラーなく `http://localhost:8080` に接続できた","`feature/step2-spring-db` ブランチをPushして **Pull Request** を作成した"]}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/2","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '`Started Application in X.XXX seconds` とコンソールに出ればSpring BootとPostgreSQLの疎通は成功です。',
   2, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4659,7 +4679,7 @@ erDiagram
 2. カテゴリ3件以上・商品5件以上のテストデータを `INSERT` する
 3. `entity` パッケージに `Category`, `Product`, `User` を、`repository` パッケージに各 `JpaRepository` を実装する',
   'medium', 120, ARRAY['PostgreSQL', 'DDL', 'JPA', 'Entity'],
-  '{"stepNumber":3,"designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・Sheet 4 テーブル定義）","checklist":["詳細設計書 Sheet 4 のDDLを実行し、`users`・`categories`・`products` の3テーブルを作成した","初期データ（カテゴリ3件以上、サンプル商品5件以上）をINSERTした","Entityクラス（`User`, `Category`, `Product`）とRepositoryインターフェースを作成した","DDLファイル（`schema.sql` / `data.sql`）とEntity/RepositoryをGitHubへPushした"]}', '{"githubUrl":"https://github.com/sample-student/product-manager","checkedItems":[0,1,2,3],"summaryNote":"全チェック項目と動作確認を完了し、GitHubへPushしました。"}', 'テーブル定義書（Sheet 4）のカラム名・型・NOT NULL制約とEntityのフィールドを一致させるのがポイントです。',
+  '{"stepNumber":3,"recommendedBranch":"feature/step3-db-entity","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・Sheet 4 テーブル定義）","checklist":["詳細設計書 Sheet 4 のDDLを実行し、`users`・`categories`・`products` の3テーブルを作成した","初期データ（カテゴリ3件以上、サンプル商品5件以上）をINSERTした","Entityクラス（`User`, `Category`, `Product`）とRepositoryインターフェースを作成した","`feature/step3-db-entity` ブランチでDDL・Entity・RepositoryをPushし **Pull Request** を作成した"]}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/3","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', 'テーブル定義書（Sheet 4）のカラム名・型・NOT NULL制約とEntityのフィールドを一致させるのがポイントです。',
   3, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4707,7 +4727,7 @@ sequenceDiagram
 - 在庫数（`stock`）が `10` 未満の行に `th:if="${p.stock < 10}"` で警告バッジを出す
 - 商品名クリックで `/products/{id}` の詳細画面へ遷移できるようにする',
   'medium', 180, ARRAY['Spring Boot', 'Thymeleaf', '一覧・検索'],
-  '{"stepNumber":4,"designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・Sheet 3 & 5）","checklist":["`GET /products` で論理削除されていない商品一覧（カテゴリ名付き）が表示される","在庫数が10未満の商品に赤色の警告バッジが表示される","商品名（部分一致）とカテゴリ選択による複合検索が動作し、検索条件が画面に保持される","`GET /products/{id}` で商品詳細画面が表示され、変更をGitHubへPushした"]}', '{"githubUrl":"https://github.com/sample-student/product-manager","checkedItems":[0,1,2,3],"summaryNote":"全チェック項目と動作確認を完了し、GitHubへPushしました。"}', 'Controllerはリクエスト受付と画面返却だけを担当し、検索条件の組み立てや業務ルールはService層へ分離しましょう。',
+  '{"stepNumber":4,"recommendedBranch":"feature/step4-product-list","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・Sheet 3 & 5）","checklist":["`GET /products` で論理削除されていない商品一覧（カテゴリ名付き）が表示される","在庫数が10未満の商品に赤色の警告バッジが表示される","商品名（部分一致）とカテゴリ選択による複合検索が動作し、検索条件が画面に保持される","`feature/step4-product-list` ブランチで商品一覧・検索・詳細をPushし **Pull Request** を作成した"]}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/4","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', 'Controllerはリクエスト受付と画面返却だけを担当し、検索条件の組み立てや業務ルールはService層へ分離しましょう。',
   4, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4744,7 +4764,7 @@ flowchart LR
 - **PRG（Post-Redirect-Get）パターン**：登録・更新・削除のPOST後は必ず `return "redirect:/products";` を使い、ブラウザのリロードによる二重登録を防止します。
 - **論理削除**：`DELETE FROM` は使わず、`product.setDeleted(true)` に更新してデータを保全します。',
   'hard', 240, ARRAY['Spring Boot', 'CRUD', 'Validation', '論理削除'],
-  '{"stepNumber":5,"designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・Sheet 5 & 6）","checklist":["商品新規登録（`GET /products/new` → `POST /products`）がPRGパターンで動作しフラッシュメッセージが出る","Sheet 6 の入力バリデーション（必須・SKU形式・単価/在庫0以上・SKU重複チェック）がすべて動作する","商品編集（`GET /products/{id}/edit` → `POST /products/{id}`）と論理削除（`is_deleted = true`）が動作する","実装コードをGitHubへPushした"]}', '{"githubUrl":"https://github.com/sample-student/product-manager","checkedItems":[0,1,2,3],"summaryNote":"全チェック項目と動作確認を完了し、GitHubへPushしました。"}', 'Bean Validation（`@NotBlank`, `@Min`, `@Pattern`）＋業務バリデーション（SKU重複チェック）の組み合わせは実務の必須スキルです。',
+  '{"stepNumber":5,"recommendedBranch":"feature/step5-product-crud","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・Sheet 5 & 6）","checklist":["商品新規登録（`GET /products/new` → `POST /products`）がPRGパターンで動作しフラッシュメッセージが出る","Sheet 6 の入力バリデーション（必須・SKU形式・単価/在庫0以上・SKU重複チェック）がすべて動作する","商品編集（`GET /products/{id}/edit` → `POST /products/{id}`）と論理削除（`is_deleted = true`）が動作する","`feature/step5-product-crud` ブランチをPushし **Pull Request** を作成した"]}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/5","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', 'Bean Validation（`@NotBlank`, `@Min`, `@Pattern`）＋業務バリデーション（SKU重複チェック）の組み合わせは実務の必須スキルです。',
   5, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4777,7 +4797,7 @@ VALUES (
    - 別のエンジニアが `git clone` して動かせるよう、DB作成SQL・起動コマンド・テストアカウント情報を `README.md` に記載
    - 最終版のGitHub URLを下のフォームから提出してください！',
   'hard', 180, ARRAY['Spring Security', 'テスト', 'GitHub提出'],
-  '{"stepNumber":6,"designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・Sheet 7 テスト仕様書）","checklist":["Spring Securityによるログイン・ログアウト（BCrypt暗号化・未ログイン時 `/login` リダイレクト）を実装した","詳細設計書 Sheet 7 の単体・結合テスト（TC-001〜TC-012）をすべて実施し合格を確認した","`README.md` にDB作成手順・起動方法・テスト用ログインID/パスワードを記載した","最終版ソースコードをGitHubの `main` ブランチへPushし、リポジトリURLを提出した"]}', '{"githubUrl":"https://github.com/sample-student/product-manager","checkedItems":[0,1,2,3],"summaryNote":"全チェック項目と動作確認を完了し、GitHubへPushしました。"}', '商品管理システムの完遂おめでとうございます！この開発経験と設計書読解力を武器に、いよいよ最終段階の「3人1組チーム開発」へ挑戦しましょう。',
+  '{"stepNumber":6,"recommendedBranch":"feature/step6-security-final","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・Sheet 7 テスト仕様書）","checklist":["Spring Securityによるログイン・ログアウト（BCrypt暗号化・未ログイン時 `/login` リダイレクト）を実装した","詳細設計書 Sheet 7 の単体・結合テスト（TC-001〜TC-012）をすべて実施し合格を確認した","`README.md` にDB作成手順・起動方法・テスト用ログインID/パスワードを記載した","`feature/step6-security-final` ブランチから最終 **Pull Request** を作成し、PR URLを提出した"]}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/6","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '商品管理システムの完遂おめでとうございます！この開発経験と設計書読解力を武器に、いよいよ最終段階の「3人1組チーム開発」へ挑戦しましょう。',
   6, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4833,7 +4853,7 @@ gitGraph
 
 まずは右側から **チーム開発 詳細設計書（Excel・全7シート）** をダウンロードし、3人で担当（A/B/C）とGitルールを決めましょう！',
   'medium', 120, ARRAY['チーム開発', 'Gitブランチ', '役割分担'],
-  '{"stepNumber":1,"designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発（3人1組）総合業務Webシステム 詳細設計書（Excel・全7シート）","isTeamProject":true,"checklist":["チーム3名の役割分担（メンバーA：社員・ダッシュボード3画面 / メンバーB：案件・タスク3画面 / メンバーC：備品貸出3画面）を決定した","チーム共有GitHubリポジトリを作成し、3名全員をCollaboratorに登録した","`main` ブランチから `develop` ブランチを作成し、Sheet 2 のGit運用ルール（直接Push禁止・PRレビュー必須）を合意した","Excel詳細設計書（全7シート）を3名全員で読み込み、担当画面と共有テーブルの境界を確認した"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub","checkedItems":[0,1,2,3],"summaryNote":"全チェック項目と動作確認を完了し、GitHubへPushしました。"}', '最初に「誰がどのファイル・テーブルを触るか」の境界を設計書で合意しておくと、チーム開発のトラブルの8割を未然に防げます。',
+  '{"stepNumber":1,"recommendedBranch":"feature/team-step1-rules","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発（3人1組）総合業務Webシステム 詳細設計書（Excel・全7シート）","isTeamProject":true,"checklist":["チーム3名の役割分担（メンバーA：社員・ダッシュボード3画面 / メンバーB：案件・タスク3画面 / メンバーC：備品貸出3画面）を決定した","チーム共有GitHubリポジトリを作成し、3名全員をCollaboratorに登録した","`main` ブランチから `develop` ブランチを作成し、Sheet 2 のGit運用ルール（直接Push禁止・PRレビュー必須）を合意し、役割分担表のPRを作成した","Excel詳細設計書（全7シート）を3名全員で読み込み、担当画面と共有テーブルの境界を確認した"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/1","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '最初に「誰がどのファイル・テーブルを触るか」の境界を設計書で合意しておくと、チーム開発のトラブルの8割を未然に防げます。',
   1, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4872,7 +4892,7 @@ erDiagram
 - **Sheet 3**：全10画面のURLと ADMIN / USER 権限マトリクス
 - **Sheet 5**：全6テーブルのDDL（`schema.sql`）',
   'medium', 180, ARRAY['チーム開発', 'Spring Security', 'DB設計'],
-  '{"stepNumber":2,"designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発 詳細設計書（Excel・Sheet 3 & 5）","isTeamProject":true,"checklist":["Sheet 5 の共通DDL（6テーブル）を全員のローカルPostgreSQLに投入し、共通 `schema.sql` / `data.sql` を `develop` へマージした","共通ログイン機能（SCR-00 `/login`・Spring Security・ADMIN/USERロール制御）が動作する","共通ヘッダー／ナビゲーションレイアウト（`layout.html`）を作成し、全10画面へのリンク枠を配置した","3名全員が最新の `develop` を `git pull` してローカルで起動確認できた"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub","checkedItems":[0,1,2,3],"summaryNote":"全チェック項目と動作確認を完了し、GitHubへPushしました。"}', '共通基盤を先に `develop` へ確定させたことで、次ステップから3人が同時並行で高速開発できるようになります。',
+  '{"stepNumber":2,"recommendedBranch":"feature/team-step2-common-base","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発 詳細設計書（Excel・Sheet 3 & 5）","isTeamProject":true,"checklist":["Sheet 5 の共通DDL（6テーブル）を全員のローカルPostgreSQLに投入し、共通 `schema.sql` / `data.sql` を `develop` へPRマージした","共通ログイン機能（SCR-00 `/login`・Spring Security・ADMIN/USERロール制御）が動作する","共通ヘッダー／ナビゲーションレイアウト（`layout.html`）を作成し、全10画面へのリンク枠を配置した","3名全員が最新の `develop` を `git pull` してローカルで起動確認できた"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/2","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '共通基盤を先に `develop` へ確定させたことで、次ステップから3人が同時並行で高速開発できるようになります。',
   2, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4904,7 +4924,7 @@ Excel詳細設計書の **Sheet 4（画面項目詳細設計）** と **Sheet 6�
 4. GitHubで `develop` 向け **Pull Request** を作成
 5. チームメンバー1名以上がレビュー＆Approveしてからマージ！',
   'hard', 360, ARRAY['チーム開発', 'Pull Request', 'コードレビュー'],
-  '{"stepNumber":3,"designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発 詳細設計書（Excel・Sheet 4 & 6）","isTeamProject":true,"checklist":["自分の担当3ページすべてについて、機能ごとに `feature/...` ブランチを切って実装した","担当分のController / Service / Repository / Thymeleafテンプレートを Sheet 4・Sheet 6 の仕様通りに実装した","GitHub上で `develop` 宛のPull Requestを作成し、変更内容と動作確認スクショを記載した","他メンバーのPRを最低1件以上コードレビューし、コメント・Approveを行った"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub","checkedItems":[0,1,2,3],"summaryNote":"全チェック項目と動作確認を完了し、GitHubへPushしました。"}', '他人のコードを読んでレビューすることで、自分では気づかなかった書き方やバグの防止策が身につきます。',
+  '{"stepNumber":3,"recommendedBranch":"feature/your-role-pages","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発 詳細設計書（Excel・Sheet 4 & 6）","isTeamProject":true,"checklist":["自分の担当3ページすべてについて、機能ごとに `feature/...` ブランチを切って実装した","担当分のController / Service / Repository / Thymeleafテンプレートを Sheet 4・Sheet 6 の仕様通りに実装した","GitHub上で `develop` 宛のPull Requestを作成し、変更内容と動作確認スクショを記載した","他メンバーのPRを最低1件以上コードレビューし、コメント・Approveを行った"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/3","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '他人のコードを読んでレビューすることで、自分では気づかなかった書き方やバグの防止策が身につきます。',
   3, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4942,7 +4962,7 @@ flowchart TD
 - メンバーA・B・Cすべての画面が `develop` 上で1つのアプリとしてシームレスに遷移できること
 - 権限設定（ADMINのみ操作可能／USERは閲覧のみ）が仕様通り動くこと',
   'hard', 240, ARRAY['チーム開発', 'コンフリクト解消', '統合'],
-  '{"stepNumber":4,"designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発 詳細設計書（Excel・Sheet 2 & 6）","isTeamProject":true,"checklist":["全員の担当3ページ（計9ページ＋ログイン＝全10画面）が `develop` ブランチへマージされた","マージ時に発生したコンフリクト（共通ナビ・設定ファイル等）を `git merge origin/develop` で適切に解消した","メンバーAで登録した社員がメンバーBのタスク担当者やメンバーCの貸出申請者として正しく連携表示される","権限マトリクス（Sheet 3：USERがADMIN専用URLへアクセスすると403になる等）を確認した"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub","checkedItems":[0,1,2,3],"summaryNote":"全チェック項目と動作確認を完了し、GitHubへPushしました。"}', 'コンフリクトを自力で解消してビルドを通せた経験は、実務現場で即戦力として評価される大きな武器になります。',
+  '{"stepNumber":4,"recommendedBranch":"feature/team-step4-integration","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発 詳細設計書（Excel・Sheet 2 & 6）","isTeamProject":true,"checklist":["全員の担当3ページ（計9ページ＋ログイン＝全10画面）が `develop` ブランチへマージされた","マージ時に発生したコンフリクト（共通ナビ・設定ファイル等）を `git merge origin/develop` で適切に解消した","メンバーAで登録した社員がメンバーBのタスク担当者やメンバーCの貸出申請者として正しく連携表示される","権限マトリクス（Sheet 3：USERがADMIN専用URLへアクセスすると403になる等）を確認した"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/4","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', 'コンフリクトを自力で解消してビルドを通せた経験は、実務現場で即戦力として評価される大きな武器になります。',
   4, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4973,7 +4993,7 @@ Excel詳細設計書の **Sheet 7（結合・受入テスト仕様書：IT-001�
 3. PRレビュー後に `develop` へマージし、Issueをクローズする
 4. 全テスト合格後、`develop` → `main` へリリースPRをマージする',
   'hard', 180, ARRAY['チーム開発', '結合テスト', 'GitHub Issues'],
-  '{"stepNumber":5,"designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発 詳細設計書（Excel・Sheet 7 結合テスト仕様書）","isTeamProject":true,"checklist":["Sheet 7 の横断結合テスト（IT-001〜IT-007）をチーム全員で実施した","見つかったバグをGitHub Issuesに登録し、`fix/...` ブランチ→PRで修正・クローズした","備品貸出の承認/返却トランザクションや案件進捗率の自動計算など異常系も含めて動作確認した","テスト完了済みの `develop` から `main` ブランチへリリースPRをマージした"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub","checkedItems":[0,1,2,3],"summaryNote":"全チェック項目と動作確認を完了し、GitHubへPushしました。"}', '自分で作った画面は思い込みで見落としやすいため、他メンバーがテストするクロスチェックが品質向上の鍵です。',
+  '{"stepNumber":5,"recommendedBranch":"fix/team-step5-test-fixes","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発 詳細設計書（Excel・Sheet 7 結合テスト仕様書）","isTeamProject":true,"checklist":["Sheet 7 の横断結合テスト（IT-001〜IT-007）をチーム全員で実施した","見つかったバグをGitHub Issuesに登録し、`fix/...` ブランチ→PRで修正・クローズした","備品貸出の承認/返却トランザクションや案件進捗率の自動計算など異常系も含めて動作確認した","テスト完了済みの `develop` から `main` ブランチへリリースPRを作成した"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/5","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '自分で作った画面は思い込みで見落としやすいため、他メンバーがテストするクロスチェックが品質向上の鍵です。',
   5, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -5006,7 +5026,7 @@ VALUES (
   4. 工夫した点・苦労した点（コンフリクト解消や設計工夫など）
 - `main` ブランチを新規フォルダへ `git clone` してエラーなく起動できること',
   'hard', 120, ARRAY['チーム開発', '最終提出', 'GitHub提出'],
-  '{"stepNumber":6,"designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発 詳細設計書（Excel・全7シート）","isTeamProject":true,"checklist":["チーム共有リポジトリの `README.md` にシステム概要・3名の担当画面・環境構築＆起動手順・テストアカウントを記載した","GitHubのPull Requests履歴・Insights/Contributorsで3名全員の開発貢献が確認できる","デモ発表用の画面遷移シナリオを確認し、全10画面がエラーなく動作することを確認した","チーム共有GitHubリポジトリURLを下のフォームから提出した"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub","checkedItems":[0,1,2,3],"summaryNote":"全チェック項目と動作確認を完了し、GitHubへPushしました。"}', '1年間カリキュラムの全工程完遂、本当におめでとうございます！設計書読解・実装・テスト・Gitチーム開発までやり切った実績は、現場配属後も確かな自信になります。',
+  '{"stepNumber":6,"recommendedBranch":"release/v1.0-final","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発 詳細設計書（Excel・全7シート）","isTeamProject":true,"checklist":["チーム共有リポジトリの `README.md` にシステム概要・3名の担当画面・環境構築＆起動手順・テストアカウントを記載した","GitHubのPull Requests履歴・Insights/Contributorsで3名全員の開発貢献が確認できる","デモ発表用の画面遷移シナリオを確認し、全10画面がエラーなく動作することを確認した","チーム共有GitHubリポジトリURLを下のフォームから提出した"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/6","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '1年間カリキュラムの全工程完遂、本当におめでとうございます！設計書読解・実装・テスト・Gitチーム開発までやり切った実績は、現場配属後も確かな自信になります。',
   6, true
 )
 ON CONFLICT (id) DO UPDATE SET

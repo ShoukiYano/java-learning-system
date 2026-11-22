@@ -16,9 +16,14 @@ import {
   Rocket,
   CheckSquare,
   Square,
+  GitBranch,
 } from "lucide-react";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
-import { isValidGithubUrl, parseProjectStepSpec } from "@/lib/curriculum-evaluators";
+import {
+  isValidGithubPrUrl,
+  isValidGithubUrl,
+  parseProjectStepSpec,
+} from "@/lib/curriculum-evaluators";
 import type { Hint, Problem, Progress } from "@/types/database";
 
 interface Props {
@@ -55,7 +60,8 @@ export function ProjectWorkspaceClient({
 
   const allChecked =
     spec !== null && spec.checklist.every((_, idx) => checkedItems.includes(idx));
-  const urlValid = isValidGithubUrl(githubUrl);
+  const requirePr = spec?.requirePrUrl !== false;
+  const urlValid = requirePr ? isValidGithubPrUrl(githubUrl) : isValidGithubUrl(githubUrl);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -275,10 +281,26 @@ export function ProjectWorkspaceClient({
             </div>
 
             <div className="space-y-3 pt-3 border-t border-slate-100">
+              {spec.recommendedBranch && (
+                <div className="rounded-xl border border-indigo-200 bg-indigo-50/70 p-3 text-xs space-y-1">
+                  <div className="font-bold text-indigo-900 flex items-center gap-1.5">
+                    <GitBranch className="h-3.5 w-3.5 text-indigo-600" />
+                    このステップの推奨ブランチ（差分レビュー用）
+                  </div>
+                  <code className="block font-mono text-[11px] bg-white border border-indigo-200 rounded px-2.5 py-1 text-indigo-800">
+                    git switch -c {spec.recommendedBranch}
+                  </code>
+                  <p className="text-[11px] text-indigo-900/80">
+                    ブランチをPushして GitHub で <strong>Pull Request</strong> を作成し、その PR URL を下に提出してください。
+                  </p>
+                </div>
+              )}
+
               <label className="block space-y-1.5">
                 <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                   <Github className="h-4 w-4 text-slate-900" />
-                  提出用 GitHubリポジトリURL <span className="text-rose-500">*</span>
+                  {requirePr ? "提出用 GitHub Pull Request URL" : "提出用 GitHubリポジトリURL"}{" "}
+                  <span className="text-rose-500">*</span>
                 </span>
                 <input
                   type="url"
@@ -290,14 +312,16 @@ export function ProjectWorkspaceClient({
                   }}
                   placeholder={
                     isTeam
-                      ? "https://github.com/your-team/teamops-hub"
-                      : "https://github.com/your-id/product-manager"
+                      ? `https://github.com/your-team/teamops-hub/pull/${spec.stepNumber}`
+                      : `https://github.com/your-id/product-manager/pull/${spec.stepNumber}`
                   }
                   className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-mono text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none"
                 />
                 {githubUrl && !urlValid && (
                   <p className="text-[11px] text-rose-600">
-                    `https://github.com/ユーザー名/リポジトリ名` の形式で入力してください。
+                    {requirePr
+                      ? "リポジトリTOPではなく Pull Request URL（例: https://github.com/ユーザー名/リポジトリ名/pull/1）を入力してください。"
+                      : "`https://github.com/ユーザー名/リポジトリ名` の形式で入力してください。"}
                   </p>
                 )}
               </label>
@@ -338,7 +362,9 @@ export function ProjectWorkspaceClient({
               ) : (
                 <Send className="h-4 w-4" />
               )}
-              GitHub URLを提出してステップ完了する
+              {requirePr
+                ? "Pull Request URLを提出してステップ完了する"
+                : "GitHub URLを提出してステップ完了する"}
             </button>
           </form>
         </div>
