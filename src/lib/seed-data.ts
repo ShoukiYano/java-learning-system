@@ -13,6 +13,9 @@ import {
   EXTRA_JAVA_PROBLEMS,
 } from "@/lib/java-curriculum-problems";
 import { JAVA_INTRO_EXTRA_PROBLEMS } from "@/lib/java-intro-extra-problems";
+import { JAVA_BEGINNER_80_EXTRA } from "@/lib/java-80-beginner-extra";
+import { JAVA_INTERMEDIATE_80_EXTRA } from "@/lib/java-80-intermediate-extra";
+import { JAVA_ADVANCED_80_EXTRA } from "@/lib/java-80-advanced-extra";
 import {
   EXTRA_SQL_CHAPTERS,
   EXTRA_SQL_PROBLEMS,
@@ -2373,6 +2376,9 @@ Gitの最も基本的な操作であるコミット（\`git commit\`）を作成
   ...HTMLCSS_PROBLEMS,
   ...JAVA_INTRO_EXTRA_PROBLEMS,
   ...EXTRA_JAVA_PROBLEMS,
+  ...JAVA_BEGINNER_80_EXTRA,
+  ...JAVA_INTERMEDIATE_80_EXTRA,
+  ...JAVA_ADVANCED_80_EXTRA,
   ...EXTRA_SQL_PROBLEMS,
   ...SPRINGBOOT_PROJECT_PROBLEMS,
   ...TEAM_PROJECT_PROBLEMS,

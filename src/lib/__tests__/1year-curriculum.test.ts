@@ -238,12 +238,12 @@ describe("1年間カリキュラム 総合検証テスト (UT / IT / ST)", () =>
   // ST: システムテスト (System Tests)
   // =========================================================================
   describe("ST: 11コース/110問整合性・Excel詳細設計書OpenXML内部構造・SQLマイグレーション", () => {
-    it("11コース・全124問のマスターデータ整合性とUUID一意性、および1本道開放順チェーン", () => {
+    it("11コース・全156問のマスターデータ整合性とUUID一意性、および1本道開放順チェーン", () => {
       expect(SEED_COURSES.length).toBe(11);
-      expect(SEED_PROBLEMS.length).toBe(124);
+      expect(SEED_PROBLEMS.length).toBe(156);
       expect(new Set(SEED_COURSES.map((c) => c.id)).size).toBe(11);
       expect(new Set(SEED_CHAPTERS.map((c) => c.id)).size).toBe(SEED_CHAPTERS.length);
-      expect(new Set(SEED_PROBLEMS.map((p) => p.id)).size).toBe(124);
+      expect(new Set(SEED_PROBLEMS.map((p) => p.id)).size).toBe(156);
 
       // ITリテラシー導入 -> Excel -> HTML&CSS -> Java(入門/初級/中級/上級) -> SQL -> Git -> Spring Boot個人開発 -> チーム開発
       const sorted = [...SEED_COURSES].sort((a, b) => a.order_index - b.order_index);

@@ -2398,6 +2398,2140 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
+  '44444444-4444-4444-8444-444444442201', '5347964f-04df-4e46-ae8a-a654826f9d73', '初級 1-4. 二次元配列の列ごと合計と最大列の特定', '## 問題文
+`R` 行 `C` 列の整数表（店舗×月別売上など）が与えられます。
+各列（0列目〜C-1列目）の合計を1行目に半角スペース区切りで出力し、2行目に「合計が最大となった列番号（0始まり、同点時は小さい番号）」を出力してください。
+
+### 入力例
+```
+2 3
+10 20 30
+40 50 10
+```
+
+### 出力例
+```
+50 70 40
+1
+```',
+  'easy', 15, ARRAY['二次元配列', '列集計'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int r = sc.nextInt();
+        int c = sc.nextInt();
+        int[][] grid = new int[r][c];
+        for (int i = 0; i < r; i++) {
+            for (int j = 0; j < c; j++) {
+                grid[i][j] = sc.nextInt();
+            }
+        }
+        // 列ごとの合計と最大列番号を出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int r = sc.nextInt();
+        int c = sc.nextInt();
+        int[][] grid = new int[r][c];
+        for (int i = 0; i < r; i++) {
+            for (int j = 0; j < c; j++) {
+                grid[i][j] = sc.nextInt();
+            }
+        }
+        int bestCol = 0;
+        int bestSum = -2147483648;
+        String line = "";
+        for (int j = 0; j < c; j++) {
+            int colSum = 0;
+            for (int i = 0; i < r; i++) {
+                colSum += grid[i][j];
+            }
+            if (j > 0) line += " ";
+            line += colSum;
+            if (colSum > bestSum) {
+                bestSum = colSum;
+                bestCol = j;
+            }
+        }
+        System.out.println(line);
+        System.out.println(bestCol);
+    }
+}', '列方向を集計するときは、外側のループを列 `j`、内側のループを行 `i` にするとスッキリ書けます。',
+  4, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442202', '5347964f-04df-4e46-ae8a-a654826f9d73', '初級 1-5. 会議室座席表（二次元配列）の予約＆残空席カウント', '## 問題文
+`R` 行 `C` 列の座席（初期はすべて空席 `0`）に対し、`Q` 件の予約リクエスト（行 `r` 列 `c`）が来ます。
+空席なら予約済（`1`）にして `OK`、すでに予約済なら `TAKEN` と出力し、最後に残りの空席数を出力してください。
+
+### 入力例
+```
+2 2
+3
+0 1
+0 1
+1 0
+```
+
+### 出力例
+```
+OK
+TAKEN
+OK
+2
+```',
+  'easy', 15, ARRAY['二次元配列', '状態管理'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int rows = sc.nextInt();
+        int cols = sc.nextInt();
+        int q = sc.nextInt();
+        // 二次元配列で座席予約と残空席数を処理してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int rows = sc.nextInt();
+        int cols = sc.nextInt();
+        int q = sc.nextInt();
+        int[][] seats = new int[rows][cols];
+        int reserved = 0;
+        for (int i = 0; i < q; i++) {
+            int r = sc.nextInt();
+            int c = sc.nextInt();
+            if (seats[r][c] == 0) {
+                seats[r][c] = 1;
+                reserved++;
+                System.out.println("OK");
+            } else {
+                System.out.println("TAKEN");
+            }
+        }
+        System.out.println(rows * cols - reserved);
+    }
+}', '二次元配列の要素をフラグ（`0`/`1`）として管理すると、重複予約防止と残数算出がO(1)で行えます。',
+  5, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442203', '5347964f-04df-4e46-ae8a-a654826f9d73', '初級 1-6. メソッドのオーバーロード（2引数・3引数の最大値）', '## 問題文
+同名メソッド `maxVal` をオーバーロードして2つ定義してください。
+1. `maxVal(int a, int b)`：2つの整数の大きい方を返す
+2. `maxVal(int a, int b, int c)`：3つの整数の最大値を返す
+
+入力として3つの整数 `a, b, c` が与えられます。1行目に `maxVal(a, b)`、2行目に `maxVal(a, b, c)` を出力してください。',
+  'easy', 12, ARRAY['メソッド', 'オーバーロード'],
+  'import java.util.Scanner;
+
+public class Main {
+    // maxVal を2引数・3引数でオーバーロードしてください
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int a = sc.nextInt();
+        int b = sc.nextInt();
+        int c = sc.nextInt();
+        // 結果を2行で出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static int maxVal(int a, int b) {
+        return a >= b ? a : b;
+    }
+
+    public static int maxVal(int a, int b, int c) {
+        return maxVal(maxVal(a, b), c);
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int a = sc.nextInt();
+        int b = sc.nextInt();
+        int c = sc.nextInt();
+        System.out.println(maxVal(a, b));
+        System.out.println(maxVal(a, b, c));
+    }
+}', '3引数版の中で2引数版を呼び出すと、重複ロジックを排除できます。',
+  6, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442204', '5347964f-04df-4e46-ae8a-a654826f9d73', '初級 1-7. 配列の昇順ソートと上位K件の合計（メソッド実装）', '## 問題文
+整数 `N`, `K` と `N` 個のスコアが与えられます。
+スコアを大きい順に見たときの上位 `K` 件の合計を返すメソッド `sumTopK(int[] arr, int k)` を実装し、結果を出力してください。',
+  'medium', 20, ARRAY['配列', 'ソート', 'メソッド'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static int sumTopK(int[] arr, int k) {
+        // 並べ替えて上位k件の合計を返してください
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int k = sc.nextInt();
+        int[] arr = new int[n];
+        for (int i = 0; i < n; i++) arr[i] = sc.nextInt();
+        System.out.println(sumTopK(arr, k));
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static int sumTopK(int[] arr, int k) {
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[j] > arr[i]) {
+                    int tmp = arr[i];
+                    arr[i] = arr[j];
+                    arr[j] = tmp;
+                }
+            }
+        }
+        int sum = 0;
+        for (int i = 0; i < k && i < arr.length; i++) {
+            sum += arr[i];
+        }
+        return sum;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int k = sc.nextInt();
+        int[] arr = new int[n];
+        for (int i = 0; i < n; i++) arr[i] = sc.nextInt();
+        System.out.println(sumTopK(arr, k));
+    }
+}', '降順に並べ替えて先頭から `k` 件を足すアルゴリズムは、ランキング集計の基礎です。',
+  7, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442205', '5347964f-04df-4e46-ae8a-a654826f9d73', '初級 1-8. 配列内のユニーク要素数を数えるメソッド', '## 問題文
+整数 `N` と `N` 個の整数が与えられます。重複を除いた「異なる値の種類数」を返すメソッド `countUnique(int[] arr)` を実装してください。',
+  'medium', 15, ARRAY['配列', '重複判定', 'メソッド'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static int countUnique(int[] arr) {
+        // 重複を除いた種類数を返してください
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[] arr = new int[n];
+        for (int i = 0; i < n; i++) arr[i] = sc.nextInt();
+        System.out.println(countUnique(arr));
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static int countUnique(int[] arr) {
+        int count = 0;
+        for (int i = 0; i < arr.length; i++) {
+            boolean seen = false;
+            for (int j = 0; j < i; j++) {
+                if (arr[j] == arr[i]) {
+                    seen = true;
+                    break;
+                }
+            }
+            if (!seen) count++;
+        }
+        return count;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[] arr = new int[n];
+        for (int i = 0; i < n; i++) arr[i] = sc.nextInt();
+        System.out.println(countUnique(arr));
+    }
+}', '各要素 `i` について「それより前（`0..i-1`）に同じ値が出ていなければカウント+1」とする定番テクニックです。',
+  8, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442206', '5347964f-04df-4e46-ae8a-a654826f9d73', '初級 1-9. 成績マトリクス（生徒×科目）の個人合計＆トップ生徒判定', '## 問題文
+`S` 人の生徒と `M` 科目の点数が二次元配列として与えられます。
+各生徒の合計点を1行ずつ出力し、最終行に「合計点が最も高い生徒番号（1始まり、同点時は小さい番号）」を出力してください。',
+  'medium', 20, ARRAY['二次元配列', '行集計'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int s = sc.nextInt();
+        int m = sc.nextInt();
+        int[][] scores = new int[s][m];
+        for (int i = 0; i < s; i++) {
+            for (int j = 0; j < m; j++) {
+                scores[i][j] = sc.nextInt();
+            }
+        }
+        // 各生徒の合計とトップ生徒番号(1始まり)を出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int s = sc.nextInt();
+        int m = sc.nextInt();
+        int[][] scores = new int[s][m];
+        for (int i = 0; i < s; i++) {
+            for (int j = 0; j < m; j++) {
+                scores[i][j] = sc.nextInt();
+            }
+        }
+        int bestIdx = 0;
+        int bestSum = -1;
+        for (int i = 0; i < s; i++) {
+            int rowSum = 0;
+            for (int j = 0; j < m; j++) {
+                rowSum += scores[i][j];
+            }
+            System.out.println(rowSum);
+            if (rowSum > bestSum) {
+                bestSum = rowSum;
+                bestIdx = i;
+            }
+        }
+        System.out.println(bestIdx + 1);
+    }
+}', '生徒番号は1始まりなので、最後に `bestIdx + 1` とする点に注意しましょう。',
+  9, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442207', '41302b0f-c345-4660-9dfe-6cf806c97783', '初級 2-4. staticカウンタによる注文番号の自動採番クラス', '## 問題文
+`Order` クラスを作成し、インスタンスを生成するたびに `static` 変数で `1001, 1002, 1003, ...` と自動採番される注文IDと商品名を持たせてください。
+`N` 件の商品名が入力されるので、生成順に `ORD-<ID>: <商品名>` を出力してください。',
+  'medium', 15, ARRAY['static', 'コンストラクタ', 'オブジェクト指向'],
+  'import java.util.Scanner;
+
+class Order {
+    // static変数とインスタンス変数を定義してください
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // Order をn件生成して出力してください
+    }
+}', 'import java.util.Scanner;
+
+class Order {
+    private static int nextId = 1001;
+    private int id;
+    private String itemName;
+
+    public Order(String itemName) {
+        this.id = nextId++;
+        this.itemName = itemName;
+    }
+
+    public String format() {
+        return "ORD-" + id + ": " + itemName;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        for (int i = 0; i < n; i++) {
+            Order o = new Order(sc.next());
+            System.out.println(o.format());
+        }
+    }
+}', '`static` フィールドはクラス全体で1つだけ共有されるため、連番IDの発行に活用できます。',
+  4, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442208', '41302b0f-c345-4660-9dfe-6cf806c97783', '初級 2-5. 継承とsuperによる一般社員・管理職の給与計算', '## 問題文
+基本給 `baseSalary` を返す `Staff` クラスと、それを継承して役職手当 `allowance` を加算する `Manager` クラスを作成してください。
+`N` 名のデータ（`STAFF 氏名 基本給` または `MANAGER 氏名 基本給 手当`）を読み込み、`<氏名>: <支給額>` を出力してください。',
+  'medium', 20, ARRAY['継承', 'super', 'オーバーライド'],
+  'import java.util.Scanner;
+
+class Staff {
+    // 実装してください
+}
+
+class Manager extends Staff {
+    // super を使って実装してください
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // ポリモーフィズムで給与計算結果を出力してください
+    }
+}', 'import java.util.Scanner;
+
+class Staff {
+    protected String name;
+    protected int baseSalary;
+
+    public Staff(String name, int baseSalary) {
+        this.name = name;
+        this.baseSalary = baseSalary;
+    }
+
+    public int calcPay() {
+        return baseSalary;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+
+class Manager extends Staff {
+    private int allowance;
+
+    public Manager(String name, int baseSalary, int allowance) {
+        super(name, baseSalary);
+        this.allowance = allowance;
+    }
+
+    @Override
+    public int calcPay() {
+        return super.calcPay() + allowance;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        Staff[] members = new Staff[n];
+        for (int i = 0; i < n; i++) {
+            String type = sc.next();
+            String name = sc.next();
+            int base = sc.nextInt();
+            if (type.equals("MANAGER")) {
+                int allow = sc.nextInt();
+                members[i] = new Manager(name, base, allow);
+            } else {
+                members[i] = new Staff(name, base);
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            System.out.println(members[i].getName() + ": " + members[i].calcPay());
+        }
+    }
+}', '子クラスから `super(name, baseSalary)` で親コンストラクタを呼び出し、`calcPay()` をオーバーライドすることで共通型 `Staff[]` で統一処理できます。',
+  5, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442209', '41302b0f-c345-4660-9dfe-6cf806c97783', '初級 2-6. 抽象クラス（Shape）による図形面積の一括合計', '## 問題文
+抽象メソッド `int area()` を持つ抽象クラス `Shape` を定義し、`RectShape`（幅×高さ）と `TriShape`（底辺×高さ÷2）で実装してください。
+`N` 個の図形（`RECT w h` または `TRI b h`）の面積合計を出力してください。',
+  'medium', 20, ARRAY['抽象クラス', 'ポリモーフィズム'],
+  'import java.util.Scanner;
+
+abstract class Shape {
+    public abstract int area();
+}
+
+// RectShape と TriShape を実装してください
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // Shape配列で面積合計を出力してください
+    }
+}', 'import java.util.Scanner;
+
+abstract class Shape {
+    public abstract int area();
+}
+
+class RectShape extends Shape {
+    private int w, h;
+    public RectShape(int w, int h) { this.w = w; this.h = h; }
+    @Override
+    public int area() { return w * h; }
+}
+
+class TriShape extends Shape {
+    private int b, h;
+    public TriShape(int b, int h) { this.b = b; this.h = h; }
+    @Override
+    public int area() { return b * h / 2; }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        Shape[] shapes = new Shape[n];
+        for (int i = 0; i < n; i++) {
+            String kind = sc.next();
+            int a = sc.nextInt();
+            int b = sc.nextInt();
+            if (kind.equals("RECT")) shapes[i] = new RectShape(a, b);
+            else shapes[i] = new TriShape(a, b);
+        }
+        int total = 0;
+        for (int i = 0; i < n; i++) total += shapes[i].area();
+        System.out.println(total);
+    }
+}', '抽象クラスで「必ず `area()` を実装させる」契約を作ることで、呼び出し側は図形の種類を意識せず集計できます。',
+  6, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442210', '41302b0f-c345-4660-9dfe-6cf806c97783', '初級 2-7. インターフェース（DiscountPolicy）による会員ランク別割引', '## 問題文
+`int apply(int price)` を持つインターフェース `DiscountPolicy` を定義し、以下の2クラスを実装してください。
+- `RegularPolicy`：5%引き（`price * 95 / 100`）
+- `VipPolicy`：20%引き（`price * 80 / 100`）
+
+会員種別（`REGULAR` または `VIP`）と定価が与えられるので、割引後価格を出力してください。',
+  'medium', 15, ARRAY['インターフェース', 'Strategyパターン'],
+  'import java.util.Scanner;
+
+interface DiscountPolicy {
+    int apply(int price);
+}
+
+// RegularPolicy と VipPolicy を実装してください
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String rank = sc.next();
+        int price = sc.nextInt();
+        // DiscountPolicy を使って割引後価格を出力してください
+    }
+}', 'import java.util.Scanner;
+
+interface DiscountPolicy {
+    int apply(int price);
+}
+
+class RegularPolicy implements DiscountPolicy {
+    @Override
+    public int apply(int price) {
+        return price * 95 / 100;
+    }
+}
+
+class VipPolicy implements DiscountPolicy {
+    @Override
+    public int apply(int price) {
+        return price * 80 / 100;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String rank = sc.next();
+        int price = sc.nextInt();
+        DiscountPolicy policy = rank.equals("VIP") ? new VipPolicy() : new RegularPolicy();
+        System.out.println(policy.apply(price));
+    }
+}', '割引ルールをインターフェースとして差し替え可能にする設計は、実務でよく使う Strategy パターンの基本形です。',
+  7, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442211', '41302b0f-c345-4660-9dfe-6cf806c97783', '初級 2-8. ポリモーフィズムによるマルチチャネル通知送信', '## 問題文
+`String send(String msg)` を持つインターフェース `Notifier` を定義し、
+- `EmailNotifier`：`"[EMAIL] " + msg`
+- `SlackNotifier`：`"[SLACK] " + msg`
+を返すクラスを実装してください。
+
+`N` 件の送信先種別（`EMAIL` / `SLACK`）とメッセージ文字列を読み込み、送信結果を1行ずつ出力してください。',
+  'medium', 15, ARRAY['インターフェース', 'ポリモーフィズム'],
+  'import java.util.Scanner;
+
+interface Notifier {
+    String send(String msg);
+}
+
+// EmailNotifier と SlackNotifier を実装してください
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // 通知を順番に送信出力してください
+    }
+}', 'import java.util.Scanner;
+
+interface Notifier {
+    String send(String msg);
+}
+
+class EmailNotifier implements Notifier {
+    @Override
+    public String send(String msg) { return "[EMAIL] " + msg; }
+}
+
+class SlackNotifier implements Notifier {
+    @Override
+    public String send(String msg) { return "[SLACK] " + msg; }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        for (int i = 0; i < n; i++) {
+            String ch = sc.next();
+            String msg = sc.next();
+            Notifier notifier = ch.equals("SLACK") ? new SlackNotifier() : new EmailNotifier();
+            System.out.println(notifier.send(msg));
+        }
+    }
+}', 'Spring BootのDI（依存性注入）でも、このようにインターフェース型で受けて実装クラスを切り替える設計が基本となります。',
+  8, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442212', '41302b0f-c345-4660-9dfe-6cf806c97783', '初級 2-9. 【初級総合】複数決済手段の合計手数料計算システム', '## 問題文
+`int calcFee(int amount)` を持つインターフェース `FeeCalculator` を定義し、以下の決済手数料を実装してください。
+- `CARD`：決済額の3%（`amount * 3 / 100`）
+- `BANK`：一律220円
+- `CASH`：0円
+
+`N` 件の決済データ（`種別 金額`）を読み込み、全件の手数料合計を出力してください。',
+  'medium', 25, ARRAY['インターフェース', '総合演習', 'オブジェクト指向'],
+  'import java.util.Scanner;
+
+interface FeeCalculator {
+    int calcFee(int amount);
+}
+
+// 3つの決済手数料クラスを実装してください
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // N件の手数料合計を出力してください
+    }
+}', 'import java.util.Scanner;
+
+interface FeeCalculator {
+    int calcFee(int amount);
+}
+
+class CardFee implements FeeCalculator {
+    @Override
+    public int calcFee(int amount) { return amount * 3 / 100; }
+}
+
+class BankFee implements FeeCalculator {
+    @Override
+    public int calcFee(int amount) { return 220; }
+}
+
+class CashFee implements FeeCalculator {
+    @Override
+    public int calcFee(int amount) { return 0; }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int totalFee = 0;
+        for (int i = 0; i < n; i++) {
+            String type = sc.next();
+            int amount = sc.nextInt();
+            FeeCalculator calc;
+            if (type.equals("CARD")) calc = new CardFee();
+            else if (type.equals("BANK")) calc = new BankFee();
+            else calc = new CashFee();
+            totalFee += calc.calcFee(amount);
+        }
+        System.out.println(totalFee);
+    }
+}', '初級の総仕上げとして、インターフェースによるポリモーフィズムとループ集計を組み合わせた実務的な決済手数料計算を完成させました。',
+  9, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442301', '1177c80b-bcc9-4745-a4f8-7caf1ef01327', '中級 1-4. ArrayListによる価格フィルタリングと抽出一覧', '## 問題文
+`N` 件の「商品名 単価」と上限金額 `maxPrice` が与えられます。
+単価が `maxPrice` 以下の商品名だけを `ArrayList<String>` へ格納し、件数を1行目に、該当商品名を登録順で2行目以降に出力してください（0件時は1行目に `0` のみ）。',
+  'medium', 15, ARRAY['ArrayList', 'フィルタリング'],
+  'import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // ArrayList を使って条件に合う商品を抽出してください
+    }
+}', 'import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        String[] names = new String[n];
+        int[] prices = new int[n];
+        for (int i = 0; i < n; i++) {
+            names[i] = sc.next();
+            prices[i] = sc.nextInt();
+        }
+        int maxPrice = sc.nextInt();
+        ArrayList<String> matched = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            if (prices[i] <= maxPrice) {
+                matched.add(names[i]);
+            }
+        }
+        System.out.println(matched.size());
+        for (int i = 0; i < matched.size(); i++) {
+            System.out.println(matched.get(i));
+        }
+    }
+}', '事前に件数が分からない抽出結果は、可変長の `ArrayList` へ `add()` していくのがJavaの標準です。',
+  4, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442302', '1177c80b-bcc9-4745-a4f8-7caf1ef01327', '中級 1-5. HashMapによるエラーログコードの出現回数カウント', '## 問題文
+`N` 件のエラーコード（例：`E404`, `E500`）と、調査対象コード `target` が与えられます。
+`HashMap<String, Integer>` を使って各コードの出現回数を集計し、`target` の出現回数（未出現なら `0`）を出力してください。',
+  'medium', 15, ARRAY['HashMap', 'ログ集計'],
+  'import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // HashMap で出現回数をカウントしてください
+    }
+}', 'import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        HashMap<String, Integer> counts = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            String code = sc.next();
+            int prev = counts.containsKey(code) ? counts.get(code) : 0;
+            counts.put(code, prev + 1);
+        }
+        String target = sc.next();
+        System.out.println(counts.containsKey(target) ? counts.get(target) : 0);
+    }
+}', '`HashMap` で `containsKey`（または `getOrDefault`）を使ってカウントアップする処理は、アクセスログ解析や集計APIで頻出です。',
+  5, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442303', '1177c80b-bcc9-4745-a4f8-7caf1ef01327', '中級 1-6. HashMapによる部署別メンバー数の集計（入力順維持）', '## 問題文
+`N` 名の「氏名 部署名」が与えられます。
+部署ごとの人数を集計し、**部署が最初に登場した順番** で `<部署名>: <人数>` を出力してください。',
+  'medium', 20, ARRAY['HashMap', 'ArrayList', 'グループ集計'],
+  'import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // 部署の初出順を保ちながら人数を集計してください
+    }
+}', 'import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        ArrayList<String> order = new ArrayList<>();
+        HashMap<String, Integer> counts = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            sc.next(); // name
+            String dept = sc.next();
+            if (!counts.containsKey(dept)) {
+                order.add(dept);
+                counts.put(dept, 1);
+            } else {
+                counts.put(dept, counts.get(dept) + 1);
+            }
+        }
+        for (int i = 0; i < order.size(); i++) {
+            String d = order.get(i);
+            System.out.println(d + ": " + counts.get(d));
+        }
+    }
+}', '`HashMap` 自体は順序を保証しないため、キーの初出順を `ArrayList` に記録しておくと安定した出力順を保てます。',
+  6, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442304', '1177c80b-bcc9-4745-a4f8-7caf1ef01327', '中級 1-7. ArrayListによる重複ID除去と出現順リスト作成', '## 問題文
+`N` 件の顧客ID（文字列）が与えられます。重複を除去し、最初に現れた順番で半角スペース区切りに出力してください。',
+  'medium', 15, ARRAY['ArrayList', '重複除去'],
+  'import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // 重複を除去してスペース区切りで出力してください
+    }
+}', 'import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        ArrayList<String> unique = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            String id = sc.next();
+            if (!unique.contains(id)) {
+                unique.add(id);
+            }
+        }
+        String out = "";
+        for (int i = 0; i < unique.size(); i++) {
+            if (i > 0) out += " ";
+            out += unique.get(i);
+        }
+        System.out.println(out);
+    }
+}', '`ArrayList.contains()` を使うと、重複チェックと順序維持を簡潔に実装できます。',
+  7, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442305', '1177c80b-bcc9-4745-a4f8-7caf1ef01327', '中級 1-8. 商品マスタ（HashMap）参照による複数注文の合計算出', '## 問題文
+まず `M` 件の商品マスタ（`商品コード 単価`）が与えられ、続いて `Q` 件の注文（`商品コード 数量`）が与えられます。
+`HashMap<String, Integer>` にマスタを登録し、注文の合計金額を出力してください（マスタに存在しない商品コードは無視してください）。',
+  'medium', 20, ARRAY['HashMap', 'マスタ参照', '業務集計'],
+  'import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int m = sc.nextInt();
+        // マスタをHashMapに登録し、注文合計を計算してください
+    }
+}', 'import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int m = sc.nextInt();
+        HashMap<String, Integer> master = new HashMap<>();
+        for (int i = 0; i < m; i++) {
+            master.put(sc.next(), sc.nextInt());
+        }
+        int q = sc.nextInt();
+        int total = 0;
+        for (int i = 0; i < q; i++) {
+            String code = sc.next();
+            int qty = sc.nextInt();
+            if (master.containsKey(code)) {
+                total += master.get(code) * qty;
+            }
+        }
+        System.out.println(total);
+    }
+}', 'ExcelのVLOOKUPに相当するマスタ参照は、Javaでは `HashMap` を使うと高速（O(1)）に処理できます。',
+  8, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442306', '06f2d4e3-729c-4392-8945-9af33d7833e5', '中級 2-4. CSV売上明細のパースと合計金額計算', '## 問題文
+`N` 行のCSV文字列（`商品名,単価,数量` 形式）が与えられます。
+各行を `split(",")` で分割し、`Integer.parseInt` で数値変換して全行の売上合計（単価×数量の総和）を出力してください。',
+  'medium', 15, ARRAY['CSV処理', 'split', '文字列API'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // N行のCSV（商品名,単価,数量）をパースして合計を出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int total = 0;
+        for (int i = 0; i < n; i++) {
+            String row = sc.next();
+            String[] cols = row.split(",");
+            int price = Integer.parseInt(cols[1]);
+            int qty = Integer.parseInt(cols[2]);
+            total += price * qty;
+        }
+        System.out.println(total);
+    }
+}', 'カンマ区切り文字列を `split(",")` で配列にし、`Integer.parseInt` で数値化するのはバッチ処理の基本です。',
+  4, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442307', '06f2d4e3-729c-4392-8945-9af33d7833e5', '中級 2-5. 不正数値を含むデータのtry-catchスキップ集計', '## 問題文
+`N` 個の文字列が与えられます。整数に変換できるものだけを合計し、変換できない不正文字列は `try-catch` でスキップして件数を数えてください。
+1行目に「有効な数値の合計」、2行目に「スキップした不正件数」を出力してください。',
+  'medium', 15, ARRAY['例外処理', 'try-catch', 'NumberFormatException'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // try-catch で不正データをスキップしながら集計してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int sum = 0;
+        int errors = 0;
+        for (int i = 0; i < n; i++) {
+            String token = sc.next();
+            try {
+                sum += Integer.parseInt(token);
+            } catch (Exception e) {
+                errors++;
+            }
+        }
+        System.out.println(sum);
+        System.out.println(errors);
+    }
+}', '外部CSV取り込みなどでは1件の不正データで処理全体を落とさず、`try-catch` で捕捉してエラー件数を記録する設計がよく使われます。',
+  5, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442308', '06f2d4e3-729c-4392-8945-9af33d7833e5', '中級 2-6. メールアドレスの形式チェックとドメイン抽出', '## 問題文
+`N` 件のメールアドレス候補文字列が与えられます。
+`@` を含み、`@` の前後に1文字以上ある場合は `@` 以降のドメイン部分を小文字で出力し、それ以外は `INVALID` と出力してください。',
+  'medium', 15, ARRAY['文字列API', 'indexOf', 'substring'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // 各文字列のドメイン抽出または INVALID 出力を行ってください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        for (int i = 0; i < n; i++) {
+            String s = sc.next();
+            int at = s.indexOf("@");
+            if (at > 0 && at < s.length() - 1) {
+                System.out.println(s.substring(at + 1).toLowerCase());
+            } else {
+                System.out.println("INVALID");
+            }
+        }
+    }
+}', '`indexOf("@")` が `> 0` かつ `< length() - 1` であることを確認すると、先頭・末尾の `@` も安全に弾けます。',
+  6, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442309', '06f2d4e3-729c-4392-8945-9af33d7833e5', '中級 2-7. throwによる年齢バリデーションメソッドと例外捕捉', '## 問題文
+年齢 `age` を検証するメソッド `validateAge(int age)` を作成してください。
+- `age < 0` または `age > 120` の場合は `throw new IllegalArgumentException("OUT_OF_RANGE")` をスローする
+- 範囲内なら何もしない
+
+`N` 件の年齢入力に対し、`main` 側で `try-catch` して正常なら `OK`、例外時はメッセージ（`e.getMessage()`）を出力してください。',
+  'medium', 15, ARRAY['例外処理', 'throw', 'バリデーション'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void validateAge(int age) {
+        // 範囲外なら IllegalArgumentException をスローしてください
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // 各入力を validateAge で検証して出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void validateAge(int age) {
+        if (age < 0 || age > 120) {
+            throw new IllegalArgumentException("OUT_OF_RANGE");
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        for (int i = 0; i < n; i++) {
+            int age = sc.nextInt();
+            try {
+                validateAge(age);
+                System.out.println("OK");
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+}', '検証ロジック側で `throw` し、呼び出し側で `catch` してエラー応答を返すパターンはSpring BootのService/Controller設計に直結します。',
+  7, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442310', '06f2d4e3-729c-4392-8945-9af33d7833e5', '中級 2-8. 【中級総合】CSV売上データのカテゴリ別集計＆エラー行カウント', '## 問題文
+`N` 行のCSVデータ（`カテゴリ,金額`）が与えられます。金額が数値でない行や負の金額の行はエラーとしてスキップし、エラー件数を数えてください。
+有効なデータについて、カテゴリの初出順に `<カテゴリ>: <合計金額>` を出力し、最終行に `ERRORS: <エラー件数>` を出力してください。',
+  'hard', 25, ARRAY['HashMap', 'CSV処理', '例外処理', '総合演習'],
+  'import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // CSVパース・エラーハンドリング・カテゴリ別集計を実装してください
+    }
+}', 'import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        ArrayList<String> cats = new ArrayList<>();
+        HashMap<String, Integer> sums = new HashMap<>();
+        int errors = 0;
+        for (int i = 0; i < n; i++) {
+            String line = sc.next();
+            String[] parts = line.split(",");
+            if (parts.length < 2) {
+                errors++;
+                continue;
+            }
+            try {
+                int amount = Integer.parseInt(parts[1]);
+                if (amount < 0) {
+                    errors++;
+                    continue;
+                }
+                String cat = parts[0];
+                if (!sums.containsKey(cat)) {
+                    cats.add(cat);
+                    sums.put(cat, amount);
+                } else {
+                    sums.put(cat, sums.get(cat) + amount);
+                }
+            } catch (Exception e) {
+                errors++;
+            }
+        }
+        for (int i = 0; i < cats.size(); i++) {
+            String c = cats.get(i);
+            System.out.println(c + ": " + sums.get(c));
+        }
+        System.out.println("ERRORS: " + errors);
+    }
+}', 'コレクション・CSV分割・バリデーション・例外処理をすべて統合した中級の集大成です。',
+  8, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442401', 'd62467af-4c0c-45b3-be32-3224f0765b0d', '上級 1-4. Repository層のCRUD模擬（登録・検索・論理削除）', '## 問題文
+商品ID（`id`）・商品名（`name`）・論理削除フラグ（`deleted`）を管理する `ProductRepo` クラスを実装してください。
+`Q` 件のコマンドを処理します：
+- `ADD id name`：商品を登録
+- `DEL id`：該当IDの `deleted` を `true` に変更
+- `LIST`：`deleted == false` の商品を登録順で `id:name` 形式で出力（0件なら `EMPTY`）',
+  'medium', 25, ARRAY['DAO', '論理削除', 'CRUD'],
+  'import java.util.ArrayList;
+import java.util.Scanner;
+
+class ProductEntity {
+    int id;
+    String name;
+    boolean deleted;
+    ProductEntity(int id, String name) {
+        this.id = id;
+        this.name = name;
+        this.deleted = false;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int q = sc.nextInt();
+        // ADD / DEL / LIST コマンドを処理してください
+    }
+}', 'import java.util.ArrayList;
+import java.util.Scanner;
+
+class ProductEntity {
+    int id;
+    String name;
+    boolean deleted;
+    ProductEntity(int id, String name) {
+        this.id = id;
+        this.name = name;
+        this.deleted = false;
+    }
+}
+
+class ProductRepo {
+    private ArrayList<ProductEntity> store = new ArrayList<>();
+
+    public void save(int id, String name) {
+        store.add(new ProductEntity(id, name));
+    }
+
+    public void softDelete(int id) {
+        for (int i = 0; i < store.size(); i++) {
+            if (store.get(i).id == id) {
+                store.get(i).deleted = true;
+            }
+        }
+    }
+
+    public ArrayList<ProductEntity> findAllActive() {
+        ArrayList<ProductEntity> res = new ArrayList<>();
+        for (int i = 0; i < store.size(); i++) {
+            if (!store.get(i).deleted) res.add(store.get(i));
+        }
+        return res;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int q = sc.nextInt();
+        ProductRepo repo = new ProductRepo();
+        for (int i = 0; i < q; i++) {
+            String cmd = sc.next();
+            if (cmd.equals("ADD")) {
+                repo.save(sc.nextInt(), sc.next());
+            } else if (cmd.equals("DEL")) {
+                repo.softDelete(sc.nextInt());
+            } else if (cmd.equals("LIST")) {
+                ArrayList<ProductEntity> list = repo.findAllActive();
+                if (list.size() == 0) {
+                    System.out.println("EMPTY");
+                } else {
+                    for (int j = 0; j < list.size(); j++) {
+                        ProductEntity p = list.get(j);
+                        System.out.println(p.id + ":" + p.name);
+                    }
+                }
+            }
+        }
+    }
+}', '物理削除せず `deleted = true` として `findAllActive()` で絞り込む設計は、後半のSpring Boot商品管理システムと同じ構造です。',
+  4, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442402', 'd62467af-4c0c-45b3-be32-3224f0765b0d', '上級 1-5. 商品登録フォームの複数項目バリデーション', '## 問題文
+商品登録の入力値 `sku`（文字列）・`price`（整数）・`stock`（整数）が与えられます。
+以下のルールをすべてチェックし、違反があれば該当エラーコードを順番に1行ずつ出力、すべて正常なら `VALID` を出力してください。
+1. `sku.length() < 3` → `ERR_SKU`
+2. `price < 0` → `ERR_PRICE`
+3. `stock < 0` → `ERR_STOCK`',
+  'medium', 15, ARRAY['バリデーション', 'フォーム設計'],
+  'import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String sku = sc.next();
+        int price = sc.nextInt();
+        int stock = sc.nextInt();
+        // 3項目をすべて検証し、エラー一覧または VALID を出力してください
+    }
+}', 'import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String sku = sc.next();
+        int price = sc.nextInt();
+        int stock = sc.nextInt();
+        ArrayList<String> errs = new ArrayList<>();
+        if (sku.length() < 3) errs.add("ERR_SKU");
+        if (price < 0) errs.add("ERR_PRICE");
+        if (stock < 0) errs.add("ERR_STOCK");
+        if (errs.size() == 0) {
+            System.out.println("VALID");
+        } else {
+            for (int i = 0; i < errs.size(); i++) {
+                System.out.println(errs.get(i));
+            }
+        }
+    }
+}', '最初の1エラーで止めずに全項目のエラーをリストへ集約して返却すると、ユーザーが1回で全箇所を直せる親切なフォームになります。',
+  5, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442403', 'd62467af-4c0c-45b3-be32-3224f0765b0d', '上級 1-6. SKU重複チェック付き商品登録サービス（Service層設計）', '## 問題文
+`N` 件の商品登録リクエスト（`sku 商品名`）が順番に来ます。
+すでに登録済みのSKUが来た場合は登録せず `DUPLICATE: <sku>`、新規SKUであれば登録して `CREATED: <sku>` を出力してください。最後に総登録件数を出力してください。',
+  'medium', 15, ARRAY['Service設計', '重複チェック', 'HashMap'],
+  'import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // SKU重複チェック付き登録処理を実装してください
+    }
+}', 'import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        HashMap<String, String> repo = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            String sku = sc.next();
+            String name = sc.next();
+            if (repo.containsKey(sku)) {
+                System.out.println("DUPLICATE: " + sku);
+            } else {
+                repo.put(sku, name);
+                System.out.println("CREATED: " + sku);
+            }
+        }
+        System.out.println(repo.size());
+    }
+}', '一意制約（UNIQUE）のあるカラムをService層で事前に `existsBySku` チェックする実務パターンの模擬です。',
+  6, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442404', 'd62467af-4c0c-45b3-be32-3224f0765b0d', '上級 1-7. ページネーション計算（総ページ数とoffset算出）', '## 問題文
+総データ件数 `total`（0以上）、1ページあたりの件数 `size`（1以上）、表示ページ番号 `page`（1始まり）が与えられます。
+以下を3行で出力してください：
+1. 総ページ数（`total == 0` なら `0`、それ以外は切り上げ）
+2. SQLの `OFFSET` 値（`(page - 1) * size`）
+3. そのページに表示される実際の件数（0以上 `size` 以下）',
+  'medium', 20, ARRAY['ページネーション', '境界値', 'Web設計'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int total = sc.nextInt();
+        int size = sc.nextInt();
+        int page = sc.nextInt();
+        // 総ページ数、OFFSET、現在ページ件数を3行で出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int total = sc.nextInt();
+        int size = sc.nextInt();
+        int page = sc.nextInt();
+        int totalPages = total == 0 ? 0 : (total + size - 1) / size;
+        int offset = (page - 1) * size;
+        int remaining = total - offset;
+        int count = remaining <= 0 ? 0 : (remaining < size ? remaining : size);
+        System.out.println(totalPages);
+        System.out.println(offset);
+        System.out.println(count);
+    }
+}', '整数の切り上げ割り算 `(total + size - 1) / size` はページネーション実装の定番公式です。',
+  7, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442405', 'd62467af-4c0c-45b3-be32-3224f0765b0d', '上級 1-8. ロール権限マトリクスによるURLアクセス制御（403判定）', '## 問題文
+Spring Securityの認可ルールをJavaで実装しましょう。
+`Q` 件のリクエスト（`ロール URL`）が与えられます。
+- URLが `/admin/` で始まる場合：`ADMIN` ロールのみ `200 OK`、それ以外は `403 FORBIDDEN`
+- URLが `/user/` で始まる場合：`ADMIN` または `USER` は `200 OK`、それ以外（`GUEST` 等）は `403 FORBIDDEN`
+- それ以外の公開URL：すべて `200 OK`',
+  'medium', 15, ARRAY['セキュリティ', '認可', 'Spring Security準備'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int q = sc.nextInt();
+        // ロールとURLプレフィックスから 200 OK / 403 FORBIDDEN を判定してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int q = sc.nextInt();
+        for (int i = 0; i < q; i++) {
+            String role = sc.next();
+            String url = sc.next();
+            boolean allowed = true;
+            if (url.startsWith("/admin/")) {
+                allowed = role.equals("ADMIN");
+            } else if (url.startsWith("/user/")) {
+                allowed = role.equals("ADMIN") || role.equals("USER");
+            }
+            System.out.println(allowed ? "200 OK" : "403 FORBIDDEN");
+        }
+    }
+}', '`startsWith` とロールチェックの組み合わせは、チーム開発設計書の権限マトリクス（Sheet 3）そのままの考え方です。',
+  8, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442406', '3f313153-e5f5-466a-b5f2-51a43cefbf1d', '上級 2-4. 注文ステータス遷移マシンの正当性チェック', '## 問題文
+注文ステータスは `NEW → PAID → SHIPPED → DONE` の順番にのみ遷移可能（また `NEW` または `PAID` からは `CANCELED` へ遷移可能）とします。
+初期状態 `NEW` から `Q` 回の遷移先ステータスが与えられます。
+正当な遷移なら状態を進めて `OK`、不正な遷移なら状態を変えず `INVALID` と出力し、最終ステータスを最後に出力してください。',
+  'hard', 25, ARRAY['状態遷移', '業務ロジック'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static boolean canTransition(String current, String next) {
+        // 遷移可能かどうかを判定してください
+        return false;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int q = sc.nextInt();
+        String status = "NEW";
+        // Q回の遷移を処理してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static boolean canTransition(String current, String next) {
+        if (current.equals("NEW") && (next.equals("PAID") || next.equals("CANCELED"))) return true;
+        if (current.equals("PAID") && (next.equals("SHIPPED") || next.equals("CANCELED"))) return true;
+        if (current.equals("SHIPPED") && next.equals("DONE")) return true;
+        return false;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int q = sc.nextInt();
+        String status = "NEW";
+        for (int i = 0; i < q; i++) {
+            String next = sc.next();
+            if (canTransition(status, next)) {
+                status = next;
+                System.out.println("OK");
+            } else {
+                System.out.println("INVALID");
+            }
+        }
+        System.out.println(status);
+    }
+}', '状態遷移ルールを専用メソッドに閉じ込めることで、発送済み注文のキャンセルなどの業務事故をコードレベルで防止できます。',
+  4, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442407', '3f313153-e5f5-466a-b5f2-51a43cefbf1d', '上級 2-5. 備品貸出トランザクション模擬（承認で在庫減・返却で在庫増）', '## 問題文
+総在庫 `total` の備品（初期利用可能数 `available = total`）に対し、`Q` 件の操作を処理してください。
+- `APPROVE qty`：`available >= qty` なら減算して `APPROVED`、不足なら変更せず `DENIED`
+- `RETURN qty`：`available + qty <= total` なら加算して `RETURNED`、上限超過なら変更せず `INVALID`
+最後に現在の利用可能在庫数を出力してください。',
+  'medium', 20, ARRAY['トランザクション', '在庫整合性', 'チーム開発準備'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int total = sc.nextInt();
+        int q = sc.nextInt();
+        // APPROVE / RETURN を処理し、最終在庫を出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int total = sc.nextInt();
+        int available = total;
+        int q = sc.nextInt();
+        for (int i = 0; i < q; i++) {
+            String cmd = sc.next();
+            int qty = sc.nextInt();
+            if (cmd.equals("APPROVE")) {
+                if (available >= qty) {
+                    available -= qty;
+                    System.out.println("APPROVED");
+                } else {
+                    System.out.println("DENIED");
+                }
+            } else if (cmd.equals("RETURN")) {
+                if (available + qty <= total) {
+                    available += qty;
+                    System.out.println("RETURNED");
+                } else {
+                    System.out.println("INVALID");
+                }
+            }
+        }
+        System.out.println(available);
+    }
+}', 'チーム開発（メンバーC：備品貸出システム）のコア不変条件 `0 <= available <= total` を守る設計です。',
+  5, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442408', '3f313153-e5f5-466a-b5f2-51a43cefbf1d', '上級 2-6. 案件進捗率の自動集計サービス（完了タスク÷全タスク×100）', '## 問題文
+`N` 件のタスク（`案件名 ステータス`、ステータスは `TODO` / `IN_PROGRESS` / `DONE`）が与えられます。
+案件の初出順に `<案件名>: <進捗率>% (<完了数>/<総数>)` を出力してください（進捗率は整数切り捨て：`done * 100 / total`）。',
+  'hard', 25, ARRAY['HashMap', '業務集計', 'チーム開発準備'],
+  'import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // 案件ごとの完了数・総数から進捗率を算出して出力してください
+    }
+}', 'import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        ArrayList<String> projects = new ArrayList<>();
+        HashMap<String, Integer> totalMap = new HashMap<>();
+        HashMap<String, Integer> doneMap = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            String proj = sc.next();
+            String st = sc.next();
+            if (!totalMap.containsKey(proj)) {
+                projects.add(proj);
+                totalMap.put(proj, 0);
+                doneMap.put(proj, 0);
+            }
+            totalMap.put(proj, totalMap.get(proj) + 1);
+            if (st.equals("DONE")) {
+                doneMap.put(proj, doneMap.get(proj) + 1);
+            }
+        }
+        for (int i = 0; i < projects.size(); i++) {
+            String p = projects.get(i);
+            int t = totalMap.get(p);
+            int d = doneMap.get(p);
+            int pct = d * 100 / t;
+            System.out.println(p + ": " + pct + "% (" + d + "/" + t + ")");
+        }
+    }
+}', 'チーム開発（メンバーB：案件・タスク管理）の案件一覧進捗率計算と同じロジックです。',
+  6, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442409', '3f313153-e5f5-466a-b5f2-51a43cefbf1d', '上級 2-7. 配送料金ロジックの境界値テスト検証', '## 問題文
+以下の配送料金ルールを `calcShipping(int weightKg, int subtotal)` メソッドとして実装してください：
+- `subtotal >= 10000`：送料無料（`0`円）
+- それ以外で `weightKg <= 2`：`500`円
+- それ以外で `weightKg <= 10`：`800`円
+- `weightKg > 10`：`1500`円
+
+`N` 件のテストケース（`weightKg subtotal`）について算出した配送料を1行ずつ出力してください。',
+  'medium', 15, ARRAY['境界値テスト', '単体テスト', '業務ルール'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static int calcShipping(int weightKg, int subtotal) {
+        // 境界値を正確に判定してください
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        for (int i = 0; i < n; i++) {
+            System.out.println(calcShipping(sc.nextInt(), sc.nextInt()));
+        }
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static int calcShipping(int weightKg, int subtotal) {
+        if (subtotal >= 10000) return 0;
+        if (weightKg <= 2) return 500;
+        if (weightKg <= 10) return 800;
+        return 1500;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        for (int i = 0; i < n; i++) {
+            System.out.println(calcShipping(sc.nextInt(), sc.nextInt()));
+        }
+    }
+}', '境界値（9999 vs 10000、2 vs 3、10 vs 11）を優先度の高い条件から早期リターンで判定するとバグが混入しにくくなります。',
+  7, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442410', '3f313153-e5f5-466a-b5f2-51a43cefbf1d', '上級 2-8. 【Java 4か月総仕上げ】商品管理ミニシステム（登録・検索・在庫警告）', '## 問題文
+Java 4か月カリキュラム（全80問）の総仕上げです！後半のSpring Boot商品管理システムのコア処理をJavaで実装しましょう。
+`Q` 件のコマンドを処理してください：
+- `ADD sku name price stock`：商品を登録（SKU重複時は `DUP`、成功時は `OK`）
+- `SEARCH keyword`：商品名に `keyword` を含む商品を登録順で出力（在庫が10未満なら末尾に ` [LOW]` を付ける。形式：`sku name price stock`。0件なら `NONE`）',
+  'hard', 30, ARRAY['総仕上げ', '商品管理', 'Spring Boot準備'],
+  'import java.util.ArrayList;
+import java.util.Scanner;
+
+class Item {
+    String sku, name;
+    int price, stock;
+    Item(String sku, String name, int price, int stock) {
+        this.sku = sku;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int q = sc.nextInt();
+        // ADD と SEARCH コマンドを実装してください
+    }
+}', 'import java.util.ArrayList;
+import java.util.Scanner;
+
+class Item {
+    String sku, name;
+    int price, stock;
+    Item(String sku, String name, int price, int stock) {
+        this.sku = sku;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int q = sc.nextInt();
+        ArrayList<Item> items = new ArrayList<>();
+        for (int i = 0; i < q; i++) {
+            String cmd = sc.next();
+            if (cmd.equals("ADD")) {
+                String sku = sc.next();
+                String name = sc.next();
+                int price = sc.nextInt();
+                int stock = sc.nextInt();
+                boolean dup = false;
+                for (int j = 0; j < items.size(); j++) {
+                    if (items.get(j).sku.equals(sku)) {
+                        dup = true;
+                        break;
+                    }
+                }
+                if (dup) {
+                    System.out.println("DUP");
+                } else {
+                    items.add(new Item(sku, name, price, stock));
+                    System.out.println("OK");
+                }
+            } else if (cmd.equals("SEARCH")) {
+                String kw = sc.next();
+                int found = 0;
+                for (int j = 0; j < items.size(); j++) {
+                    Item it = items.get(j);
+                    if (it.name.contains(kw)) {
+                        String warn = it.stock < 10 ? " [LOW]" : "";
+                        System.out.println(it.sku + " " + it.name + " " + it.price + " " + it.stock + warn);
+                        found++;
+                    }
+                }
+                if (found == 0) {
+                    System.out.println("NONE");
+                }
+            }
+        }
+    }
+}', 'Java 4か月（全80問）の完走おめでとうございます！ここで身につけた設計力と実装力で、次のSQL・Git・Spring Boot商品管理システム開発へ自信を持って進みましょう。',
+  8, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
   '44444444-4444-4444-8444-444444441401', '33333333-3333-4333-8333-333333331401', 'Step 1：開発環境構築（Eclipse・PostgreSQL・GitHub）＆詳細設計書ダウンロード', '## はじめてのSpring Boot開発：全体構成をつかもう
 
 ここから2か月かけて、実務と同じ **Excel詳細設計書** を読み解きながら **「商品管理システム」** を自分の手でゼロから構築します。
@@ -2884,7 +5018,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 -- 5. 新規演習問題のテストケース登録（冪等洗い替え）
-DELETE FROM public.test_cases WHERE problem_id IN ('44444444-4444-4444-8444-444444441101', '44444444-4444-4444-8444-444444441102', '44444444-4444-4444-8444-444444441103', '44444444-4444-4444-8444-444444441104', '44444444-4444-4444-8444-444444441105', '44444444-4444-4444-8444-444444441106', '44444444-4444-4444-8444-444444441201', '44444444-4444-4444-8444-444444441202', '44444444-4444-4444-8444-444444441203', '44444444-4444-4444-8444-444444441204', '44444444-4444-4444-8444-444444441205', '44444444-4444-4444-8444-444444441206', '44444444-4444-4444-8444-444444441207', '44444444-4444-4444-8444-444444441208', '44444444-4444-4444-8444-444444441209', '44444444-4444-4444-8444-444444441210', '44444444-4444-4444-8444-444444441211', '44444444-4444-4444-8444-444444441212', '44444444-4444-4444-8444-444444441301', '44444444-4444-4444-8444-444444441302', '44444444-4444-4444-8444-444444441303', '44444444-4444-4444-8444-444444441304', '44444444-4444-4444-8444-444444441305', '44444444-4444-4444-8444-444444441306', '44444444-4444-4444-8444-444444441307', '44444444-4444-4444-8444-444444441308', '44444444-4444-4444-8444-444444441309', '44444444-4444-4444-8444-444444441310', '44444444-4444-4444-8444-444444441311', '44444444-4444-4444-8444-444444441312', '44444444-4444-4444-8444-444444442101', '44444444-4444-4444-8444-444444442102', '44444444-4444-4444-8444-444444442103', '44444444-4444-4444-8444-444444442104', '44444444-4444-4444-8444-444444442105', '44444444-4444-4444-8444-444444442106', '44444444-4444-4444-8444-444444442107', '44444444-4444-4444-8444-444444442108', '44444444-4444-4444-8444-444444442109', '44444444-4444-4444-8444-444444442110', '44444444-4444-4444-8444-444444442111', '44444444-4444-4444-8444-444444442112', '44444444-4444-4444-8444-444444442113', '44444444-4444-4444-8444-444444442114', '44444444-4444-4444-8444-444444441401', '44444444-4444-4444-8444-444444441402', '44444444-4444-4444-8444-444444441403', '44444444-4444-4444-8444-444444441404', '44444444-4444-4444-8444-444444441405', '44444444-4444-4444-8444-444444441406', '44444444-4444-4444-8444-444444441501', '44444444-4444-4444-8444-444444441502', '44444444-4444-4444-8444-444444441503', '44444444-4444-4444-8444-444444441504', '44444444-4444-4444-8444-444444441505', '44444444-4444-4444-8444-444444441506');
+DELETE FROM public.test_cases WHERE problem_id IN ('44444444-4444-4444-8444-444444441101', '44444444-4444-4444-8444-444444441102', '44444444-4444-4444-8444-444444441103', '44444444-4444-4444-8444-444444441104', '44444444-4444-4444-8444-444444441105', '44444444-4444-4444-8444-444444441106', '44444444-4444-4444-8444-444444441201', '44444444-4444-4444-8444-444444441202', '44444444-4444-4444-8444-444444441203', '44444444-4444-4444-8444-444444441204', '44444444-4444-4444-8444-444444441205', '44444444-4444-4444-8444-444444441206', '44444444-4444-4444-8444-444444441207', '44444444-4444-4444-8444-444444441208', '44444444-4444-4444-8444-444444441209', '44444444-4444-4444-8444-444444441210', '44444444-4444-4444-8444-444444441211', '44444444-4444-4444-8444-444444441212', '44444444-4444-4444-8444-444444441301', '44444444-4444-4444-8444-444444441302', '44444444-4444-4444-8444-444444441303', '44444444-4444-4444-8444-444444441304', '44444444-4444-4444-8444-444444441305', '44444444-4444-4444-8444-444444441306', '44444444-4444-4444-8444-444444441307', '44444444-4444-4444-8444-444444441308', '44444444-4444-4444-8444-444444441309', '44444444-4444-4444-8444-444444441310', '44444444-4444-4444-8444-444444441311', '44444444-4444-4444-8444-444444441312', '44444444-4444-4444-8444-444444442101', '44444444-4444-4444-8444-444444442102', '44444444-4444-4444-8444-444444442103', '44444444-4444-4444-8444-444444442104', '44444444-4444-4444-8444-444444442105', '44444444-4444-4444-8444-444444442106', '44444444-4444-4444-8444-444444442107', '44444444-4444-4444-8444-444444442108', '44444444-4444-4444-8444-444444442109', '44444444-4444-4444-8444-444444442110', '44444444-4444-4444-8444-444444442111', '44444444-4444-4444-8444-444444442112', '44444444-4444-4444-8444-444444442113', '44444444-4444-4444-8444-444444442114', '44444444-4444-4444-8444-444444442201', '44444444-4444-4444-8444-444444442202', '44444444-4444-4444-8444-444444442203', '44444444-4444-4444-8444-444444442204', '44444444-4444-4444-8444-444444442205', '44444444-4444-4444-8444-444444442206', '44444444-4444-4444-8444-444444442207', '44444444-4444-4444-8444-444444442208', '44444444-4444-4444-8444-444444442209', '44444444-4444-4444-8444-444444442210', '44444444-4444-4444-8444-444444442211', '44444444-4444-4444-8444-444444442212', '44444444-4444-4444-8444-444444442301', '44444444-4444-4444-8444-444444442302', '44444444-4444-4444-8444-444444442303', '44444444-4444-4444-8444-444444442304', '44444444-4444-4444-8444-444444442305', '44444444-4444-4444-8444-444444442306', '44444444-4444-4444-8444-444444442307', '44444444-4444-4444-8444-444444442308', '44444444-4444-4444-8444-444444442309', '44444444-4444-4444-8444-444444442310', '44444444-4444-4444-8444-444444442401', '44444444-4444-4444-8444-444444442402', '44444444-4444-4444-8444-444444442403', '44444444-4444-4444-8444-444444442404', '44444444-4444-4444-8444-444444442405', '44444444-4444-4444-8444-444444442406', '44444444-4444-4444-8444-444444442407', '44444444-4444-4444-8444-444444442408', '44444444-4444-4444-8444-444444442409', '44444444-4444-4444-8444-444444442410', '44444444-4444-4444-8444-444444441401', '44444444-4444-4444-8444-444444441402', '44444444-4444-4444-8444-444444441403', '44444444-4444-4444-8444-444444441404', '44444444-4444-4444-8444-444444441405', '44444444-4444-4444-8444-444444441406', '44444444-4444-4444-8444-444444441501', '44444444-4444-4444-8444-444444441502', '44444444-4444-4444-8444-444444441503', '44444444-4444-4444-8444-444444441504', '44444444-4444-4444-8444-444444441505', '44444444-4444-4444-8444-444444441506');
 
 INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
 VALUES ('44444444-4444-4444-8444-444444442101', '公開テスト1：10000円を3人で割り勘', '10000
@@ -3116,9 +5250,427 @@ Headset 5000 1
 ', '商品合計: 5000円
 送料: 0円
 請求金額: 5000円', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442201', '公開テスト1：2x3', '2 3
+10 20 30
+40 50 10
+', '50 70 40
+1', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442201', '非公開テスト：3x2同点', '3 2
+10 20
+20 10
+10 10
+', '40 40
+0', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442202', '公開テスト1：2x2で3件', '2 2
+3
+0 1
+0 1
+1 0
+', 'OK
+TAKEN
+OK
+2', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442202', '非公開テスト：全席予約', '1 2
+2
+0 0
+0 1
+', 'OK
+OK
+0', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442203', '公開テスト1：10 25 18', '10 25 18
+', '25
+25', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442203', '非公開テスト：-5 -2 0', '-5 -2 0
+', '-2
+0', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442204', '公開テスト1：5件中上位2件', '5 2
+40 90 70 100 60
+', '190', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442204', '非公開テスト：4件中上位3件', '4 3
+10 50 30 20
+', '100', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442205', '公開テスト1：重複あり', '6
+10 20 10 30 20 10
+', '3', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442205', '非公開テスト：すべて同一', '4
+5 5 5 5
+', '1', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442206', '公開テスト1：3名×2科目', '3 2
+70 80
+90 85
+60 95
+', '150
+175
+155
+2', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442206', '非公開テスト：2名×3科目', '2 3
+50 50 50
+40 60 50
+', '150
+150
+1', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442207', '公開テスト1：3件採番', '3
+PC
+Mouse
+Hub
+', 'ORD-1001: PC
+ORD-1002: Mouse
+ORD-1003: Hub', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442207', '非公開テスト：1件採番', '1
+Monitor
+', 'ORD-1001: Monitor', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442208', '公開テスト1：一般＋管理職', '2
+STAFF 佐藤 250000
+MANAGER 山田 350000 50000
+', '佐藤: 250000
+山田: 400000', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442208', '非公開テスト：管理職のみ', '1
+MANAGER 鈴木 300000 80000
+', '鈴木: 380000', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442209', '公開テスト1：長方形＋三角形', '2
+RECT 4 5
+TRI 6 4
+', '32', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442209', '非公開テスト：3図形', '3
+RECT 3 3
+TRI 10 2
+RECT 2 5
+', '29', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442210', '公開テスト1：VIP 10000円', 'VIP 10000
+', '8000', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442210', '公開テスト2：REGULAR 10000円', 'REGULAR 10000
+', '9500', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442210', '非公開テスト：VIP 2500円', 'VIP 2500
+', '2000', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442211', '公開テスト1：2件通知', '2
+EMAIL Welcome
+SLACK Alert
+', '[EMAIL] Welcome
+[SLACK] Alert', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442211', '非公開テスト：1件通知', '1
+SLACK DeployOK
+', '[SLACK] DeployOK', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442212', '公開テスト1：3種混在', '3
+CARD 10000
+BANK 5000
+CASH 3000
+', '520', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442212', '非公開テスト：CARD2件', '2
+CARD 5000
+CARD 2000
+', '210', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442301', '公開テスト1：3件中2件ヒット', '3
+PC 120000
+Mouse 3500
+Hub 4800
+5000
+', '2
+Mouse
+Hub', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442301', '非公開テスト：0件', '2
+PC 100000
+Monitor 40000
+10000
+', '0', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442302', '公開テスト1：E404カウント', '5
+E404 E500 E404 E403 E404
+E404
+', '3', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442302', '非公開テスト：未存在コード', '3
+E404 E500 E500
+E401
+', '0', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442303', '公開テスト1：3部署', '4
+山田 開発
+佐藤 営業
+鈴木 開発
+高橋 総務
+', '開発: 2
+営業: 1
+総務: 1', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442303', '非公開テスト：1部署のみ', '2
+A 開発
+B 開発
+', '開発: 2', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442304', '公開テスト1：重複あり', '5
+C01 C02 C01 C03 C02
+', 'C01 C02 C03', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442304', '非公開テスト：重複なし', '3
+A B C
+', 'A B C', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442305', '公開テスト1：未存在コード含む', '2
+P01 1000
+P02 2500
+3
+P01 2
+P99 5
+P02 1
+', '4500', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442305', '非公開テスト：全件有効', '2
+A 300
+B 400
+2
+A 3
+B 2
+', '1700', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442306', '公開テスト1：2行CSV', '2
+Pen,120,5
+Note,250,2
+', '1100', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442306', '非公開テスト：3行CSV', '3
+A,100,1
+B,200,2
+C,300,3
+', '1400', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442307', '公開テスト1：不正2件混在', '5
+100 abc 250 N/A 50
+', '400
+2', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442307', '非公開テスト：すべて正常', '3
+10 20 30
+', '60
+0', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442308', '公開テスト1：正常と異常', '3
+User@Example.COM
+@invalid.com
+no_at_mark
+', 'example.com
+INVALID
+INVALID', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442308', '非公開テスト：末尾@', '2
+abc@
+a@b.jp
+', 'INVALID
+b.jp', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442309', '公開テスト1：境界値含む', '4
+0 25 -1 121
+', 'OK
+OK
+OUT_OF_RANGE
+OUT_OF_RANGE', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442309', '非公開テスト：120歳', '2
+120 150
+', 'OK
+OUT_OF_RANGE', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442310', '公開テスト1：正常＋不正混在', '5
+PC,50000
+Book,2000
+PC,abc
+Book,-500
+PC,30000
+', 'PC: 80000
+Book: 2000
+ERRORS: 2', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442310', '非公開テスト：エラーなし', '2
+Food,500
+Food,700
+', 'Food: 1200
+ERRORS: 0', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442401', '公開テスト1：登録・論理削除・一覧', '4
+ADD 1 PC
+ADD 2 Mouse
+DEL 1
+LIST
+', '2:Mouse', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442401', '非公開テスト：全削除後EMPTY', '3
+ADD 10 Hub
+DEL 10
+LIST
+', 'EMPTY', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442402', '公開テスト1：複数エラー', 'AB -100 -5
+', 'ERR_SKU
+ERR_PRICE
+ERR_STOCK', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442402', '公開テスト2：正常', 'PRD01 0 0
+', 'VALID', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442402', '非公開テスト：価格のみNG', 'SKU-1 -1 10
+', 'ERR_PRICE', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442403', '公開テスト1：重複検知', '3
+P01 PC
+P02 Mouse
+P01 Keyboard
+', 'CREATED: P01
+CREATED: P02
+DUPLICATE: P01
+2', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442403', '非公開テスト：重複なし', '2
+A1 X
+A2 Y
+', 'CREATED: A1
+CREATED: A2
+2', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442404', '公開テスト1：25件・10件毎・3ページ目', '25 10 3
+', '3
+20
+5', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442404', '公開テスト2：0件', '0 10 1
+', '0
+0
+0', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442404', '非公開テスト：範囲外ページ', '20 10 5
+', '2
+40
+0', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442405', '公開テスト1：3パターン', '3
+USER /admin/users
+USER /user/profile
+GUEST /public/top
+', '403 FORBIDDEN
+200 OK
+200 OK', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442405', '非公開テスト：ADMINとGUEST', '2
+ADMIN /admin/settings
+GUEST /user/home
+', '200 OK
+403 FORBIDDEN', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442406', '公開テスト1：正常＋不正スキップ', '4
+SHIPPED
+PAID
+SHIPPED
+CANCELED
+', 'INVALID
+OK
+OK
+INVALID
+SHIPPED', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442406', '非公開テスト：完了まで', '3
+PAID
+SHIPPED
+DONE
+', 'OK
+OK
+OK
+DONE', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442407', '公開テスト1：貸出・超過・返却', '3 4
+APPROVE 2
+APPROVE 2
+RETURN 1
+RETURN 5
+', 'APPROVED
+DENIED
+RETURNED
+INVALID
+2', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442407', '非公開テスト：全返却', '5 2
+APPROVE 5
+RETURN 5
+', 'APPROVED
+RETURNED
+5', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442408', '公開テスト1：2案件', '4
+Alpha DONE
+Alpha TODO
+Beta DONE
+Alpha DONE
+', 'Alpha: 66% (2/3)
+Beta: 100% (1/1)', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442408', '非公開テスト：0%案件', '2
+Gamma TODO
+Gamma IN_PROGRESS
+', 'Gamma: 0% (0/2)', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442409', '公開テスト1：全境界値', '5
+15 10000
+2 9999
+3 5000
+10 5000
+11 5000
+', '0
+500
+800
+800
+1500', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442409', '非公開テスト：境界確認', '2
+1 10000
+11 9999
+', '0
+1500', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442410', '公開テスト1：登録・重複・検索・在庫警告', '5
+ADD P01 GamingMouse 4500 5
+ADD P02 OfficeMouse 1800 20
+ADD P01 DupItem 1000 10
+SEARCH Mouse
+SEARCH Keyboard
+', 'OK
+OK
+DUP
+P01 GamingMouse 4500 5 [LOW]
+P02 OfficeMouse 1800 20
+NONE', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442410', '非公開テスト：境界在庫10', '2
+ADD P09 Monitor 30000 10
+SEARCH Mon
+', 'OK
+P09 Monitor 30000 10', true, 2);
 
 -- 6. 新規演習問題のヒント登録（冪等洗い替え）
-DELETE FROM public.hints WHERE problem_id IN ('44444444-4444-4444-8444-444444441101', '44444444-4444-4444-8444-444444441102', '44444444-4444-4444-8444-444444441103', '44444444-4444-4444-8444-444444441104', '44444444-4444-4444-8444-444444441105', '44444444-4444-4444-8444-444444441106', '44444444-4444-4444-8444-444444441201', '44444444-4444-4444-8444-444444441202', '44444444-4444-4444-8444-444444441203', '44444444-4444-4444-8444-444444441204', '44444444-4444-4444-8444-444444441205', '44444444-4444-4444-8444-444444441206', '44444444-4444-4444-8444-444444441207', '44444444-4444-4444-8444-444444441208', '44444444-4444-4444-8444-444444441209', '44444444-4444-4444-8444-444444441210', '44444444-4444-4444-8444-444444441211', '44444444-4444-4444-8444-444444441212', '44444444-4444-4444-8444-444444441301', '44444444-4444-4444-8444-444444441302', '44444444-4444-4444-8444-444444441303', '44444444-4444-4444-8444-444444441304', '44444444-4444-4444-8444-444444441305', '44444444-4444-4444-8444-444444441306', '44444444-4444-4444-8444-444444441307', '44444444-4444-4444-8444-444444441308', '44444444-4444-4444-8444-444444441309', '44444444-4444-4444-8444-444444441310', '44444444-4444-4444-8444-444444441311', '44444444-4444-4444-8444-444444441312', '44444444-4444-4444-8444-444444442101', '44444444-4444-4444-8444-444444442102', '44444444-4444-4444-8444-444444442103', '44444444-4444-4444-8444-444444442104', '44444444-4444-4444-8444-444444442105', '44444444-4444-4444-8444-444444442106', '44444444-4444-4444-8444-444444442107', '44444444-4444-4444-8444-444444442108', '44444444-4444-4444-8444-444444442109', '44444444-4444-4444-8444-444444442110', '44444444-4444-4444-8444-444444442111', '44444444-4444-4444-8444-444444442112', '44444444-4444-4444-8444-444444442113', '44444444-4444-4444-8444-444444442114', '44444444-4444-4444-8444-444444441401', '44444444-4444-4444-8444-444444441402', '44444444-4444-4444-8444-444444441403', '44444444-4444-4444-8444-444444441404', '44444444-4444-4444-8444-444444441405', '44444444-4444-4444-8444-444444441406', '44444444-4444-4444-8444-444444441501', '44444444-4444-4444-8444-444444441502', '44444444-4444-4444-8444-444444441503', '44444444-4444-4444-8444-444444441504', '44444444-4444-4444-8444-444444441505', '44444444-4444-4444-8444-444444441506');
+DELETE FROM public.hints WHERE problem_id IN ('44444444-4444-4444-8444-444444441101', '44444444-4444-4444-8444-444444441102', '44444444-4444-4444-8444-444444441103', '44444444-4444-4444-8444-444444441104', '44444444-4444-4444-8444-444444441105', '44444444-4444-4444-8444-444444441106', '44444444-4444-4444-8444-444444441201', '44444444-4444-4444-8444-444444441202', '44444444-4444-4444-8444-444444441203', '44444444-4444-4444-8444-444444441204', '44444444-4444-4444-8444-444444441205', '44444444-4444-4444-8444-444444441206', '44444444-4444-4444-8444-444444441207', '44444444-4444-4444-8444-444444441208', '44444444-4444-4444-8444-444444441209', '44444444-4444-4444-8444-444444441210', '44444444-4444-4444-8444-444444441211', '44444444-4444-4444-8444-444444441212', '44444444-4444-4444-8444-444444441301', '44444444-4444-4444-8444-444444441302', '44444444-4444-4444-8444-444444441303', '44444444-4444-4444-8444-444444441304', '44444444-4444-4444-8444-444444441305', '44444444-4444-4444-8444-444444441306', '44444444-4444-4444-8444-444444441307', '44444444-4444-4444-8444-444444441308', '44444444-4444-4444-8444-444444441309', '44444444-4444-4444-8444-444444441310', '44444444-4444-4444-8444-444444441311', '44444444-4444-4444-8444-444444441312', '44444444-4444-4444-8444-444444442101', '44444444-4444-4444-8444-444444442102', '44444444-4444-4444-8444-444444442103', '44444444-4444-4444-8444-444444442104', '44444444-4444-4444-8444-444444442105', '44444444-4444-4444-8444-444444442106', '44444444-4444-4444-8444-444444442107', '44444444-4444-4444-8444-444444442108', '44444444-4444-4444-8444-444444442109', '44444444-4444-4444-8444-444444442110', '44444444-4444-4444-8444-444444442111', '44444444-4444-4444-8444-444444442112', '44444444-4444-4444-8444-444444442113', '44444444-4444-4444-8444-444444442114', '44444444-4444-4444-8444-444444442201', '44444444-4444-4444-8444-444444442202', '44444444-4444-4444-8444-444444442203', '44444444-4444-4444-8444-444444442204', '44444444-4444-4444-8444-444444442205', '44444444-4444-4444-8444-444444442206', '44444444-4444-4444-8444-444444442207', '44444444-4444-4444-8444-444444442208', '44444444-4444-4444-8444-444444442209', '44444444-4444-4444-8444-444444442210', '44444444-4444-4444-8444-444444442211', '44444444-4444-4444-8444-444444442212', '44444444-4444-4444-8444-444444442301', '44444444-4444-4444-8444-444444442302', '44444444-4444-4444-8444-444444442303', '44444444-4444-4444-8444-444444442304', '44444444-4444-4444-8444-444444442305', '44444444-4444-4444-8444-444444442306', '44444444-4444-4444-8444-444444442307', '44444444-4444-4444-8444-444444442308', '44444444-4444-4444-8444-444444442309', '44444444-4444-4444-8444-444444442310', '44444444-4444-4444-8444-444444442401', '44444444-4444-4444-8444-444444442402', '44444444-4444-4444-8444-444444442403', '44444444-4444-4444-8444-444444442404', '44444444-4444-4444-8444-444444442405', '44444444-4444-4444-8444-444444442406', '44444444-4444-4444-8444-444444442407', '44444444-4444-4444-8444-444444442408', '44444444-4444-4444-8444-444444442409', '44444444-4444-4444-8444-444444442410', '44444444-4444-4444-8444-444444441401', '44444444-4444-4444-8444-444444441402', '44444444-4444-4444-8444-444444441403', '44444444-4444-4444-8444-444444441404', '44444444-4444-4444-8444-444444441405', '44444444-4444-4444-8444-444444441406', '44444444-4444-4444-8444-444444441501', '44444444-4444-4444-8444-444444441502', '44444444-4444-4444-8444-444444441503', '44444444-4444-4444-8444-444444441504', '44444444-4444-4444-8444-444444441505', '44444444-4444-4444-8444-444444441506');
 
 INSERT INTO public.hints (problem_id, step_number, content_md)
 VALUES ('44444444-4444-4444-8444-444444441101', 1, '上のMermaidシーケンス図の登場人物（ブラウザ・Webサーバー・アプリサーバー・データベース）の役割を見直してみましょう。');
@@ -3278,6 +5830,112 @@ INSERT INTO public.hints (problem_id, step_number, content_md)
 VALUES ('44444444-4444-4444-8444-444444442114', 2, '送料判定は境界値の「ちょうど5000円」が0円になるよう `>= 5000` で比較しましょう。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
 VALUES ('44444444-4444-4444-8444-444444442114', 3, '請求金額は「商品合計 + 送料」で計算します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442201', 1, '列ごとに集計するため、外側のループで列インデックス `j` を回しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442201', 2, '同点時に小さい番号を優先するには、最大値更新の条件を `>` にします。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442202', 1, '`int[][] seats = new int[rows][cols];` は自動的にすべて `0` で初期化されます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442202', 2, '残りの空席数は「総席数 `rows * cols` − 予約成功回数」でも求められます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442203', 1, '引数の個数が異なれば、同じメソッド名 `maxVal` を複数定義できます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442203', 2, '3引数の最大値は、2引数版を2回組み合わせるだけで簡潔に書けます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442204', 1, '二重ループで大きい値を先頭側へ交換（降順ソート）してみましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442204', 2, 'ソート後、インデックス `0` から `k - 1` までを足し合わせます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442205', 1, 'インデックス `i` より前の位置に `arr[i]` と同じ値があるかどうかを内側ループで確認します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442205', 2, 'まだ一度も登場していないときだけカウンタを増やしましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442206', 1, '行ごとに合計を求めながら出力し、同時に最大値とインデックスを更新します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442206', 2, '出力するトップ番号は0始まりではなく1始まり（`+ 1`）です。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442207', 1, '`private static int nextId = 1001;` のようにクラス共通の連番変数を用意します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442207', 2, 'コンストラクタの中で自分の `id` に代入しつつ `nextId` を1増やしましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442208', 1, '`Manager` のコンストラクタ先頭で `super(name, baseSalary);` を呼び出します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442208', 2, '親クラス型 `Staff[]` の配列に `Staff` と `Manager` の両方を格納できます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442209', 1, '`extends Shape` したクラスで `public int area()` をオーバーライドします。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442209', 2, '`Shape[]` に格納し、ループで `shapes[i].area()` を足し合わせましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442210', 1, '`implements DiscountPolicy` を付けた2つのクラスを作成します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442210', 2, '変数の型を `DiscountPolicy` にしておくと、どちらのインスタンスも同じ呼び出し方で計算できます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442211', 1, '送信種別に応じて `EmailNotifier` または `SlackNotifier` を生成し、`Notifier` 型変数へ代入します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442212', 1, '決済種別ごとに3つのクラスを作成し、共通の `FeeCalculator` 変数で受け取ります。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442212', 2, 'ループ内で各決済の `calcFee(amount)` を合計変数へ加算しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442301', 1, 'まず全件の商品名・価格を読み込み、最後に `maxPrice` を読み込んで比較しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442301', 2, '一致した商品名を `ArrayList<String>` に `add` し、`size()` と各要素を出力します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442302', 1, 'すでにキーが存在すれば現在の値に `+1`、存在しなければ `1` を `put` します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442302', 2, '調査対象がマップに存在しない場合は `null` 回避のため `0` を出力しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442303', 1, '`HashMap` で人数を数えつつ、初登場の部署名だけを `ArrayList` に追加しておきます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442303', 2, '最後に `ArrayList` の順番で `HashMap` から人数を取り出して出力しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442304', 1, '`!list.contains(id)` のときだけ `list.add(id)` すると重複を防げます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442305', 1, '商品コードをキー、単価を値として `HashMap` へ登録します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442305', 2, '注文処理時は `containsKey` で存在チェックしてから単価×数量を加算しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442306', 1, '1行を `split(",")` で分割すると、`cols[1]` が単価、`cols[2]` が数量になります。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442306', 2, '文字列から `int` への変換には `Integer.parseInt(...)` を使います。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442307', 1, '`Integer.parseInt(token)` を `try` ブロック内で実行し、失敗時は `catch` ブロックでエラー件数を増やします。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442308', 1, '`indexOf("@")` で `@` の位置を探し、`0` より大きく末尾より前かを判定します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442308', 2, '`substring(at + 1).toLowerCase()` でドメイン部分を小文字化して取得できます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442309', 1, '`if (age < 0 || age > 120)` のときに `throw new IllegalArgumentException("OUT_OF_RANGE");` を実行します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442310', 1, '各行を `,` で分割し、`Integer.parseInt` を `try-catch` で囲みつつ負数もエラー扱いします。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442310', 2, '初出順の `ArrayList` と集計用の `HashMap` を組み合わせて出力順を安定させましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442401', 1, 'リポジトリクラス内に `ArrayList<ProductEntity>` を持ち、`save` / `softDelete` / `findAllActive` を分離します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442402', 1, '`else if` ではなく独立した3つの `if` 文を使い、エラーを `ArrayList<String>` に蓄積しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442403', 1, '`HashMap<String, String>` で `containsKey(sku)` を調べればO(1)で重複検知できます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442404', 1, '切り上げ総ページ数は `(total + size - 1) / size` で求められます（`total == 0` の場合だけ例外的に0）。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442404', 2, '現在ページの件数は `total - offset` が0以下なら0、`size` より大きければ `size` に丸めます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442405', 1, 'URLの先頭一致判定には `url.startsWith("/admin/")` を使います。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442406', 1, '現在の状態ごとに「次に許可される状態」を明示的に列挙し、それ以外は `false` を返します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442407', 1, '貸出時は `available >= qty`、返却時は `available + qty <= total` の2つの不変条件を守ります。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442408', 1, '総数用の `HashMap` と完了数用の `HashMap` の2つを持つと見通しが良くなります。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442408', 2, '割り算を先にすると0になるため、`d * 100 / t` の順に計算しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442409', 1, '最優先ルールである `subtotal >= 10000` を最初に判定し、残りを重さの昇順で `<=` 判定します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442410', 1, '部分一致検索は `it.name.contains(kw)` で判定できます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442410', 2, '在庫警告は「10未満（`stock < 10`）」のときだけ末尾に `" [LOW]"` を付与しましょう。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
 VALUES ('44444444-4444-4444-8444-444444441401', 1, 'WindowsではEclipseの展開先を `C:\pleiades` のように短い英数字パスにすると、パス長エラーを防げます。');
 INSERT INTO public.hints (problem_id, step_number, content_md)

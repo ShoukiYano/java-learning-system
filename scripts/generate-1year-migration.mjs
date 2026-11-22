@@ -33,6 +33,9 @@ try {
   const htmlcss = await server.ssrLoadModule("/src/lib/curriculum-1year-htmlcss.ts");
   const proj = await server.ssrLoadModule("/src/lib/curriculum-1year-projects.ts");
   const javaIntroExtra = await server.ssrLoadModule("/src/lib/java-intro-extra-problems.ts");
+  const javaBegExtra = await server.ssrLoadModule("/src/lib/java-80-beginner-extra.ts");
+  const javaIntExtra = await server.ssrLoadModule("/src/lib/java-80-intermediate-extra.ts");
+  const javaAdvExtra = await server.ssrLoadModule("/src/lib/java-80-advanced-extra.ts");
 
   const newChapters = [
     ...litExcel.LITERACY_CHAPTERS,
@@ -47,6 +50,9 @@ try {
     ...litExcel.EXCEL_PROBLEMS,
     ...htmlcss.HTMLCSS_PROBLEMS,
     ...javaIntroExtra.JAVA_INTRO_EXTRA_PROBLEMS,
+    ...javaBegExtra.JAVA_BEGINNER_80_EXTRA,
+    ...javaIntExtra.JAVA_INTERMEDIATE_80_EXTRA,
+    ...javaAdvExtra.JAVA_ADVANCED_80_EXTRA,
     ...proj.SPRINGBOOT_PROJECT_PROBLEMS,
     ...proj.TEAM_PROJECT_PROBLEMS,
   ];
