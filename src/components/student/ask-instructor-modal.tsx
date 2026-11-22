@@ -46,13 +46,15 @@ export function AskInstructorButton({
     text: string;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const imagesRef = useRef<AttachedImage[]>([]);
+  imagesRef.current = images;
 
-  // Cleanup object URLs on unmount
+  // Cleanup object URLs only on unmount (so adding a 2nd image doesn't revoke the 1st)
   useEffect(() => {
     return () => {
-      images.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+      imagesRef.current.forEach((img) => URL.revokeObjectURL(img.previewUrl));
     };
-  }, [images]);
+  }, []);
 
   function addFiles(files: FileList | File[]) {
     const incoming = Array.from(files);

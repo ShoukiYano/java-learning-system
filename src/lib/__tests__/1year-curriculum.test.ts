@@ -34,6 +34,12 @@ import {
 } from "@/lib/curriculum-evaluators";
 import { getStudentCourseLockStatuses } from "@/lib/data-service";
 import { POST as submitProblemPOST } from "@/app/api/problems/submit/route";
+import { POST as studentQuestionsPOST } from "@/app/api/student/questions/route";
+import { JAVA_INTRO_EXTRA_PROBLEMS } from "@/lib/java-intro-extra-problems";
+import { JAVA_BEGINNER_80_EXTRA } from "@/lib/java-80-beginner-extra";
+import { JAVA_INTERMEDIATE_80_EXTRA } from "@/lib/java-80-intermediate-extra";
+import { JAVA_ADVANCED_80_EXTRA } from "@/lib/java-80-advanced-extra";
+import { parseProjectStepSpec } from "@/lib/curriculum-evaluators";
 
 /** Minimal ZIP entry extractor to verify real .xlsx OpenXML archives without external deps */
 function extractZipEntries(buf: Buffer): Record<string, string> {
@@ -243,6 +249,122 @@ describe("1年間カリキュラム 総合検証テスト (UT / IT / ST)", () =>
       expect(labels).toContain("Spring Boot 個人開発 Track");
       expect(labels).toContain("チーム開発 Track");
     });
+
+    it("POST /api/student/questions：JSON後方互換・画像添付(FormData)正常系・不正MIME/4枚超/空本文のバリデーション", async () => {
+      // 1. JSON 後方互換
+      const jsonReq = new NextRequest("http://localhost:3000/api/student/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problemId: SPRINGBOOT_PROJECT_PROBLEMS[0].id,
+          problemTitle: SPRINGBOOT_PROJECT_PROBLEMS[0].title,
+          questionText: "PostgreSQLのポート5432接続について質問です",
+        }),
+      });
+      const jsonRes = await studentQuestionsPOST(jsonReq);
+      expect(jsonRes.status).toBe(200);
+      expect((await jsonRes.json()).ok).toBe(true);
+
+      // 2. multipart/form-data 画像添付正常系（1x1 PNG）
+      const pngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+      const fdOk = new FormData();
+      fdOk.append("problemId", TEAM_PROJECT_PROBLEMS[0].id);
+      fdOk.append("problemTitle", TEAM_PROJECT_PROBLEMS[0].title);
+      fdOk.append("questionText", "Eclipseエラー画面のスクショを送ります");
+      fdOk.append("images", new File([pngBytes], "error.png", { type: "image/png" }));
+      const fdOkRes = await studentQuestionsPOST(
+        new NextRequest("http://localhost:3000/api/student/questions", {
+          method: "POST",
+          body: fdOk,
+        })
+      );
+      expect(fdOkRes.status).toBe(200);
+      expect((await fdOkRes.json()).ok).toBe(true);
+
+      // 3. 不正MIME（PDF）拒否
+      const fdBadMime = new FormData();
+      fdBadMime.append("questionText", "PDFを貼ります");
+      fdBadMime.append("images", new File([new Uint8Array([1, 2, 3])], "doc.pdf", { type: "application/pdf" }));
+      const badMimeRes = await studentQuestionsPOST(
+        new NextRequest("http://localhost:3000/api/student/questions", {
+          method: "POST",
+          body: fdBadMime,
+        })
+      );
+      expect(badMimeRes.status).toBe(400);
+
+      // 4. 4枚超拒否
+      const fdTooMany = new FormData();
+      fdTooMany.append("questionText", "4枚貼ります");
+      for (let i = 0; i < 4; i++) {
+        fdTooMany.append("images", new File([pngBytes], `img${i}.png`, { type: "image/png" }));
+      }
+      const tooManyRes = await studentQuestionsPOST(
+        new NextRequest("http://localhost:3000/api/student/questions", {
+          method: "POST",
+          body: fdTooMany,
+        })
+      );
+      expect(tooManyRes.status).toBe(400);
+
+      // 5. 空本文拒否
+      const fdEmpty = new FormData();
+      fdEmpty.append("questionText", "   ");
+      const emptyRes = await studentQuestionsPOST(
+        new NextRequest("http://localhost:3000/api/student/questions", {
+          method: "POST",
+          body: fdEmpty,
+        })
+      );
+      expect(emptyRes.status).toBe(400);
+    });
+
+    it("Java 4か月80問のコース配分（入門30/初級18/中級16/上級16）と単元内 order_index 一意性", () => {
+      const chToCourse = new Map(SEED_CHAPTERS.map((ch) => [ch.id, ch.course_id]));
+      const countByCourse = new Map<string, number>();
+      const lessonOrderSet = new Set<string>();
+
+      for (const p of SEED_PROBLEMS) {
+        const cid = chToCourse.get(p.chapter_id)!;
+        countByCourse.set(cid, (countByCourse.get(cid) ?? 0) + 1);
+        const key = `${p.lesson_id}:${p.order_index}`;
+        expect(lessonOrderSet.has(key), `Duplicate order_index ${key} for ${p.title}`).toBe(false);
+        lessonOrderSet.add(key);
+      }
+
+      const introCourse = SEED_COURSES.find((c) => c.title.includes("Java入門"))!;
+      const begCourse = SEED_COURSES.find((c) => c.title.includes("Java初級"))!;
+      const midCourse = SEED_COURSES.find((c) => c.title.includes("Java中級"))!;
+      const advCourse = SEED_COURSES.find((c) => c.title.includes("Java上級"))!;
+
+      expect(countByCourse.get(introCourse.id)).toBe(30);
+      expect(countByCourse.get(begCourse.id)).toBe(18);
+      expect(countByCourse.get(midCourse.id)).toBe(16);
+      expect(countByCourse.get(advCourse.id)).toBe(16);
+    });
+
+    it("全12プロジェクトステップに推奨ブランチが設定され、PR URLルールがAPIで強制される", async () => {
+      const allProj = [...SPRINGBOOT_PROJECT_PROBLEMS, ...TEAM_PROJECT_PROBLEMS];
+      for (const p of allProj) {
+        const spec = parseProjectStepSpec(p.starter_code);
+        expect(spec?.recommendedBranch, `Missing recommendedBranch for ${p.title}`).toBeTruthy();
+      }
+      // リポジトリTOP URL提出は wrong_answer になること
+      const topReq = new NextRequest("http://localhost:3000/api/problems/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-forwarded-for": "10.99.0.1" },
+        body: JSON.stringify({
+          problemId: SPRINGBOOT_PROJECT_PROBLEMS[0].id,
+          code: JSON.stringify({
+            githubUrl: "https://github.com/student/product-manager",
+            checkedItems: [0, 1, 2, 3],
+          }),
+        }),
+      });
+      const topRes = await submitProblemPOST(topReq);
+      expect(topRes.status).toBe(200);
+      expect((await topRes.json()).allPassed).toBe(false);
+    });
   });
 
   // =========================================================================
@@ -273,11 +395,11 @@ describe("1年間カリキュラム 総合検証テスト (UT / IT / ST)", () =>
       const specs = [
         {
           file: "product-management-design-spec.xlsx",
-          keywords: ["商品管理システム", "CREATE TABLE products", "TC-001", "ProductController"],
+          keywords: ["商品管理システム", "Maven（pom.xml）", "Pull Request", "CREATE TABLE products", "TC-001", "ProductController"],
         },
         {
           file: "team-project-design-spec.xlsx",
-          keywords: ["TeamOps Hub", "メンバーA", "SCR-00", "CREATE TABLE equipment_loans", "IT-001"],
+          keywords: ["TeamOps Hub", "Maven（pom.xml）", "Pull Request", "メンバーA", "SCR-00", "CREATE TABLE equipment_loans", "IT-001"],
         },
       ];
 
@@ -307,15 +429,16 @@ describe("1年間カリキュラム 総合検証テスト (UT / IT / ST)", () =>
           expect(/[\\/?*[\]:]/.test(sName), `Illegal char in sheet name: ${sName}`).toBe(false);
         }
 
-        // Verify key Japanese & DDL content exists in sharedStrings.xml
+        // Verify key Japanese & DDL content exists in sharedStrings.xml and Gradle is not referenced
         const ss = entries["xl/sharedStrings.xml"];
+        expect(ss, `${file} should not contain Gradle`).not.toContain("Gradle");
         for (const kw of keywords) {
           expect(ss, `${file} should contain "${kw}"`).toContain(kw);
         }
       }
     });
 
-    it("SupabaseマイグレーションSQLに全11コースID・新規42問IDがすべて含まれている", () => {
+    it("SupabaseマイグレーションSQLに全11コースID・新規88問IDとtest_casesがすべて含まれている", () => {
       const sqlPath = path.resolve(
         process.cwd(),
         "supabase",
@@ -331,12 +454,18 @@ describe("1年間カリキュラム 総合検証テスト (UT / IT / ST)", () =>
         ...LITERACY_PROBLEMS,
         ...EXCEL_PROBLEMS,
         ...HTMLCSS_PROBLEMS,
+        ...JAVA_INTRO_EXTRA_PROBLEMS,
+        ...JAVA_BEGINNER_80_EXTRA,
+        ...JAVA_INTERMEDIATE_80_EXTRA,
+        ...JAVA_ADVANCED_80_EXTRA,
         ...SPRINGBOOT_PROJECT_PROBLEMS,
         ...TEAM_PROJECT_PROBLEMS,
       ];
+      expect(newProblems.length).toBe(88);
       for (const p of newProblems) {
         expect(sql, `Problem ${p.id} missing in migration`).toContain(p.id);
       }
+      expect(sql).toContain("INSERT INTO public.test_cases");
     });
   });
 });
