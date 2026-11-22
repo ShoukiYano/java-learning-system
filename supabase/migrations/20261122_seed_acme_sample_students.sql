@@ -17,9 +17,6 @@ DECLARE
   v_admin_id  UUID;
   v_pw        TEXT := crypt('Password123!', gen_salt('bf'));
   v_total_p   INTEGER;
-  v_jiro_cnt  INTEGER;
-  v_hanako_cnt INTEGER;
-  v_saburo_cnt INTEGER;
   v_first_pid UUID;
 BEGIN
   -- ACME社レコードが存在しない場合は作成
@@ -129,38 +126,113 @@ BEGIN
     last_study_date = CURRENT_DATE - 8,
     last_login_at = now() - interval '8 days';
 
-  -- 4. 問題進捗（progress）を各レベルに合わせて投入
+  -- 4. 問題進捗（progress）をカリキュラム開放順（courses.order_index → chapters.order_index → problems.order_index）に厳密に従って投入
+  -- 既存の混在進捗をクリーンアップしてから再投入
+  DELETE FROM public.progress WHERE user_id IN (v_jiro_id, v_hanako_id, v_saburo_id);
+
   SELECT COUNT(*) INTO v_total_p FROM public.problems WHERE is_published = true;
   IF v_total_p > 0 THEN
-    v_jiro_cnt   := GREATEST(1, ROUND(v_total_p * 0.85)::INTEGER);
-    v_hanako_cnt := GREATEST(1, ROUND(v_total_p * 0.55)::INTEGER);
-    v_saburo_cnt := GREATEST(1, ROUND(v_total_p * 0.15)::INTEGER);
-
-    -- 鈴木 次郎：85% クリア（平均試行1.2回・高速）
+    -- 鈴木 次郎（優秀）：Java入門(16)→初級(6)→中級(6)→上級(6)→SQL(20)→Git(4) = 58問（約85%）
     INSERT INTO public.progress (user_id, problem_id, status, attempts_count, total_time_spent_seconds, unlocked_hint_step, completed_at, updated_at)
-    SELECT v_jiro_id, id, 'completed', 1, 420, 0, now() - interval '1 day', now()
-    FROM (SELECT id FROM public.problems WHERE is_published = true ORDER BY order_index, id LIMIT v_jiro_cnt) p
+    SELECT v_jiro_id, p.id, 'completed', 1, 420, 0, now() - interval '1 day', now()
+    FROM public.problems p
+    JOIN public.lessons l ON l.id = p.lesson_id
+    JOIN public.chapters ch ON ch.id = l.chapter_id
+    JOIN public.courses c ON c.id = ch.course_id
+    WHERE p.is_published = true
+      AND (
+        c.order_index IN (1, 2, 3, 4, 6)
+        OR (c.order_index = 5 AND p.id IN (
+          SELECT p2.id
+          FROM public.problems p2
+          JOIN public.lessons l2 ON l2.id = p2.lesson_id
+          JOIN public.chapters ch2 ON ch2.id = l2.chapter_id
+          JOIN public.courses c2 ON c2.id = ch2.course_id
+          WHERE p2.is_published = true AND c2.order_index = 5
+          ORDER BY ch2.order_index, p2.order_index, p2.id
+          LIMIT 20
+        ))
+      )
     ON CONFLICT (user_id, problem_id) DO UPDATE SET status = 'completed', attempts_count = 1, updated_at = now();
 
-    -- 山田 花子：55% クリア（平均試行2回）
+    -- 山田 花子（普通）：Java入門(16)→初級(6)→中級(6)完了（上級・SQL開放済）＋上級(2)＋SQL(2)＋Git(2) = 34問（50%）
     INSERT INTO public.progress (user_id, problem_id, status, attempts_count, total_time_spent_seconds, unlocked_hint_step, completed_at, updated_at)
-    SELECT v_hanako_id, id, 'completed', 2, 660, 1, now() - interval '2 days', now() - interval '1 day'
-    FROM (SELECT id FROM public.problems WHERE is_published = true ORDER BY order_index, id LIMIT v_hanako_cnt) p
+    SELECT v_hanako_id, p.id, 'completed', 2, 660, 1, now() - interval '2 days', now() - interval '1 day'
+    FROM public.problems p
+    JOIN public.lessons l ON l.id = p.lesson_id
+    JOIN public.chapters ch ON ch.id = l.chapter_id
+    JOIN public.courses c ON c.id = ch.course_id
+    WHERE p.is_published = true
+      AND (
+        c.order_index IN (1, 2, 3)
+        OR (c.order_index = 4 AND p.id IN (
+          SELECT p2.id FROM public.problems p2
+          JOIN public.lessons l2 ON l2.id = p2.lesson_id
+          JOIN public.chapters ch2 ON ch2.id = l2.chapter_id
+          JOIN public.courses c2 ON c2.id = ch2.course_id
+          WHERE p2.is_published = true AND c2.order_index = 4
+          ORDER BY ch2.order_index, p2.order_index, p2.id
+          LIMIT 2
+        ))
+        OR (c.order_index = 5 AND p.id IN (
+          SELECT p2.id FROM public.problems p2
+          JOIN public.lessons l2 ON l2.id = p2.lesson_id
+          JOIN public.chapters ch2 ON ch2.id = l2.chapter_id
+          JOIN public.courses c2 ON c2.id = ch2.course_id
+          WHERE p2.is_published = true AND c2.order_index = 5
+          ORDER BY ch2.order_index, p2.order_index, p2.id
+          LIMIT 2
+        ))
+        OR (c.order_index = 6 AND p.id IN (
+          SELECT p2.id FROM public.problems p2
+          JOIN public.lessons l2 ON l2.id = p2.lesson_id
+          JOIN public.chapters ch2 ON ch2.id = l2.chapter_id
+          JOIN public.courses c2 ON c2.id = ch2.course_id
+          WHERE p2.is_published = true AND c2.order_index = 6
+          ORDER BY ch2.order_index, p2.order_index, p2.id
+          LIMIT 2
+        ))
+      )
     ON CONFLICT (user_id, problem_id) DO UPDATE SET status = 'completed', attempts_count = 2, updated_at = now() - interval '1 day';
 
-    -- 佐藤 三郎：15% クリア＋直近2問を挑戦中（つまずき状態）
+    -- 佐藤 三郎（遅れ気味）：Java入門の最初の7問のみクリア（第2章で停滞中・他コースは未開放のため0問）
     INSERT INTO public.progress (user_id, problem_id, status, attempts_count, total_time_spent_seconds, unlocked_hint_step, completed_at, updated_at)
-    SELECT v_saburo_id, id, 'completed', 3, 900, 2, now() - interval '9 days', now() - interval '8 days'
-    FROM (SELECT id FROM public.problems WHERE is_published = true ORDER BY order_index, id LIMIT v_saburo_cnt) p
+    SELECT v_saburo_id, sub.id, 'completed', 3, 900, 2, now() - interval '9 days', now() - interval '8 days'
+    FROM (
+      SELECT p.id
+      FROM public.problems p
+      JOIN public.lessons l ON l.id = p.lesson_id
+      JOIN public.chapters ch ON ch.id = l.chapter_id
+      JOIN public.courses c ON c.id = ch.course_id
+      WHERE p.is_published = true AND c.order_index = 1
+      ORDER BY ch.order_index, p.order_index, p.id
+      LIMIT 7
+    ) sub
     ON CONFLICT (user_id, problem_id) DO UPDATE SET status = 'completed', attempts_count = 3, updated_at = now() - interval '8 days';
 
     INSERT INTO public.progress (user_id, problem_id, status, attempts_count, total_time_spent_seconds, unlocked_hint_step, completed_at, updated_at)
-    SELECT v_saburo_id, id, 'in_progress', 5, 1200, 3, NULL, now() - interval '8 days'
-    FROM (SELECT id FROM public.problems WHERE is_published = true ORDER BY order_index, id OFFSET v_saburo_cnt LIMIT 2) p
+    SELECT v_saburo_id, sub.id, 'in_progress', 5, 1200, 3, NULL, now() - interval '8 days'
+    FROM (
+      SELECT p.id
+      FROM public.problems p
+      JOIN public.lessons l ON l.id = p.lesson_id
+      JOIN public.chapters ch ON ch.id = l.chapter_id
+      JOIN public.courses c ON c.id = ch.course_id
+      WHERE p.is_published = true AND c.order_index = 1
+      ORDER BY ch.order_index, p.order_index, p.id
+      OFFSET 7 LIMIT 1
+    ) sub
     ON CONFLICT (user_id, problem_id) DO UPDATE SET status = 'in_progress', attempts_count = 5, updated_at = now() - interval '8 days';
 
-    -- 代表的な提出履歴（1件ずつ）
-    SELECT id INTO v_first_pid FROM public.problems WHERE is_published = true ORDER BY order_index, id LIMIT 1;
+    -- 代表的な提出履歴（1件ずつ：Java入門の1問目）
+    SELECT p.id INTO v_first_pid
+    FROM public.problems p
+    JOIN public.lessons l ON l.id = p.lesson_id
+    JOIN public.chapters ch ON ch.id = l.chapter_id
+    JOIN public.courses c ON c.id = ch.course_id
+    WHERE p.is_published = true AND c.order_index = 1
+    ORDER BY ch.order_index, p.order_index, p.id
+    LIMIT 1;
     IF v_first_pid IS NOT NULL THEN
       INSERT INTO public.submissions (user_id, problem_id, code, status, passed_count, total_count, execution_time_ms, memory_kb, time_spent_seconds, created_at)
       SELECT v_jiro_id, id, solution_code, 'passed', 2, 2, 12, 256, 300, now() - interval '3 hours'
