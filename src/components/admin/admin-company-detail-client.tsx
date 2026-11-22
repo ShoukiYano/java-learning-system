@@ -115,11 +115,14 @@ export function AdminCompanyDetailClient({
   // マイルストーン用の state
   const [milestones, setMilestones] = useState<TrainingMilestone[]>(initialMilestones);
   const [isAddingMs, setIsAddingMs] = useState(false);
+  const [msMode, setMsMode] = useState<"relative" | "fixed">("relative");
   const [msTitle, setMsTitle] = useState("");
   const [msDate, setMsDate] = useState("");
-  const [msCount, setMsCount] = useState(6);
+  const [msDaysOffset, setMsDaysOffset] = useState(7);
+  const [msCount, setMsCount] = useState(10);
   const [msDesc, setMsDesc] = useState("");
   const [msSubmitting, setMsSubmitting] = useState(false);
+  const [msPresetLoading, setMsPresetLoading] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -401,10 +404,12 @@ export function AdminCompanyDetailClient({
     }
   };
 
-  // マイルストーン新規登録
+  // マイルストーン新規登録（登録日からの相対日数 / 固定日付 両対応）
   const handleCreateMilestone = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!msTitle.trim() || !msDate.trim() || msSubmitting) return;
+    if (!msTitle.trim() || msSubmitting) return;
+    if (msMode === "fixed" && !msDate.trim()) return;
+    if (msMode === "relative" && (!msDaysOffset || msDaysOffset < 1)) return;
     setMsSubmitting(true);
     setNotice(null);
     setErrorMsg(null);
@@ -417,7 +422,8 @@ export function AdminCompanyDetailClient({
           payload: {
             companyId: company.id,
             title: msTitle.trim(),
-            targetDate: msDate.trim(),
+            targetDate: msMode === "fixed" ? msDate.trim() : "",
+            targetDaysOffset: msMode === "relative" ? msDaysOffset : null,
             targetProblemCount: msCount,
             description: msDesc.trim(),
             orderIndex: milestones.length + 1,
@@ -431,7 +437,8 @@ export function AdminCompanyDetailClient({
         setMilestones((prev) => [...prev, data.milestone]);
         setMsTitle("");
         setMsDate("");
-        setMsCount(6);
+        setMsDaysOffset(7);
+        setMsCount(10);
         setMsDesc("");
         setIsAddingMs(false);
         setNotice(`🎯 目標マイルストーン「${data.milestone.title}」を追加しました。`);
@@ -441,6 +448,81 @@ export function AdminCompanyDetailClient({
       setErrorMsg("通信エラーが発生しました。");
     } finally {
       setMsSubmitting(false);
+    }
+  };
+
+  // Java標準5週間テンプレート（登録日からの相対日数）を一括登録
+  const handleApplyJavaPresetMilestones = async () => {
+    if (msPresetLoading) return;
+    const presetItems = [
+      {
+        title: "Java入門 第1〜2章（基本構文・制御構文）完了",
+        targetDaysOffset: 7,
+        targetProblemCount: 10,
+        description: "登録から1週間（5営業日）目安：出力・変数・条件分岐・ループ全10問",
+      },
+      {
+        title: "Java入門コース（全16問）完了",
+        targetDaysOffset: 14,
+        targetProblemCount: 16,
+        description: "登録から2週間目安：配列・メソッド・クラス設計を含むJava入門全16問",
+      },
+      {
+        title: "Java初級コース（オブジェクト指向応用）完了",
+        targetDaysOffset: 21,
+        targetProblemCount: 22,
+        description: "登録から3週間目安：二次元配列・static・インターフェース・ポリモーフィズム",
+      },
+      {
+        title: "Java中級コース（コレクション・CSV・例外）完了",
+        targetDaysOffset: 28,
+        targetProblemCount: 28,
+        description: "登録から4週間目安：ArrayList/HashMap・CSV処理・例外ハンドリング",
+      },
+      {
+        title: "Java上級コース（DAO・業務ロジック・テスト）修了",
+        targetDaysOffset: 35,
+        targetProblemCount: 34,
+        description: "登録から5週間目安：DAOパターン・バリデーション・単体テスト設計まで全34問修了",
+      },
+    ];
+    setMsPresetLoading(true);
+    setNotice(null);
+    setErrorMsg(null);
+    try {
+      const added: TrainingMilestone[] = [];
+      let baseOrder = milestones.length;
+      for (const item of presetItems) {
+        baseOrder += 1;
+        const res = await fetch("/api/admin/actions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "save_milestone",
+            payload: {
+              companyId: company.id,
+              title: item.title,
+              targetDate: "",
+              targetDaysOffset: item.targetDaysOffset,
+              targetProblemCount: item.targetProblemCount,
+              description: item.description,
+              orderIndex: baseOrder,
+            },
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || "テンプレート登録に失敗しました。");
+        }
+        added.push(data.milestone);
+      }
+      setMilestones((prev) => [...prev, ...added]);
+      setNotice("🎯 Java標準5週間マイルストーン（登録日ベース・全5段階）を一括登録しました。");
+      router.refresh();
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : "テンプレート登録に失敗しました。");
+    } finally {
+      setMsPresetLoading(false);
     }
   };
 
@@ -1439,6 +1521,44 @@ export function AdminCompanyDetailClient({
                     </button>
                   </div>
 
+                  <div className="flex flex-wrap items-center gap-2 pb-1">
+                    <span className="text-[11px] font-semibold text-slate-700">
+                      期日の指定方式：
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setMsMode("relative")}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition ${
+                        msMode === "relative"
+                          ? "bg-amber-600 text-white border-amber-600"
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      登録日からの日数（推奨）
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMsMode("fixed")}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition ${
+                        msMode === "fixed"
+                          ? "bg-amber-600 text-white border-amber-600"
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      固定の目標日付
+                    </button>
+                    <button
+                      type="button"
+                      disabled={msPresetLoading}
+                      onClick={handleApplyJavaPresetMilestones}
+                      className="ml-auto px-2.5 py-1 rounded-md text-[11px] font-semibold border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition disabled:opacity-50"
+                    >
+                      {msPresetLoading
+                        ? "一括登録中..."
+                        : "✨ Java標準5週間テンプレートを一括追加"}
+                    </button>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <div className="sm:col-span-2 space-y-1">
                       <label className="text-[11px] font-semibold text-slate-700">
@@ -1448,22 +1568,40 @@ export function AdminCompanyDetailClient({
                         required
                         value={msTitle}
                         onChange={(e) => setMsTitle(e.target.value)}
-                        placeholder="例: Java基礎（第1・2章）修了"
+                        placeholder="例: Java入門 第1〜2章完了"
                         className="bg-white text-xs"
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-slate-700">
-                        目標期日 (YYYY-MM-DD)
-                      </label>
-                      <Input
-                        type="date"
-                        required
-                        value={msDate}
-                        onChange={(e) => setMsDate(e.target.value)}
-                        className="bg-white text-xs"
-                      />
-                    </div>
+                    {msMode === "relative" ? (
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-slate-700">
+                          受講生登録からの日数（日後）
+                        </label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={365}
+                          required
+                          value={msDaysOffset}
+                          onChange={(e) => setMsDaysOffset(Number(e.target.value))}
+                          placeholder="例: 7"
+                          className="bg-white text-xs font-mono"
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-slate-700">
+                          目標期日 (YYYY-MM-DD)
+                        </label>
+                        <Input
+                          type="date"
+                          required
+                          value={msDate}
+                          onChange={(e) => setMsDate(e.target.value)}
+                          className="bg-white text-xs"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -1474,7 +1612,7 @@ export function AdminCompanyDetailClient({
                       <Input
                         type="number"
                         min={1}
-                        max={50}
+                        max={200}
                         required
                         value={msCount}
                         onChange={(e) => setMsCount(Number(e.target.value))}
@@ -1523,8 +1661,10 @@ export function AdminCompanyDetailClient({
               ) : (
                 <div className="space-y-2.5">
                   {milestones.map((ms, idx) => {
+                    const isRelative = ms.target_days_offset != null;
                     const todayStr = new Date().toISOString().slice(0, 10);
-                    const isPassed = ms.target_date < todayStr;
+                    const isPassed =
+                      !isRelative && Boolean(ms.target_date) && ms.target_date < todayStr;
                     return (
                       <div
                         key={ms.id}
@@ -1538,17 +1678,25 @@ export function AdminCompanyDetailClient({
                             <strong className="text-xs text-slate-900 font-semibold">
                               {ms.title}
                             </strong>
-                            <Badge
-                              variant={isPassed ? "secondary" : "outline"}
-                              className="text-[10px]"
-                            >
-                              {isPassed ? "期日経過" : "進行中"}
-                            </Badge>
+                            {isRelative ? (
+                              <Badge variant="default" className="text-[10px]">
+                                登録日ベース
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant={isPassed ? "secondary" : "outline"}
+                                className="text-[10px]"
+                              >
+                                {isPassed ? "期日経過" : "進行中"}
+                              </Badge>
+                            )}
                           </div>
                           <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-1 pl-7">
                             <span className="flex items-center gap-1 font-mono text-slate-700">
                               <Calendar className="h-3 w-3 text-amber-600" />
-                              目標期日: {ms.target_date}
+                              {isRelative
+                                ? `目標目安: 登録から ${ms.target_days_offset}日後`
+                                : `目標期日: ${ms.target_date}`}
                             </span>
                             <span className="text-slate-600">
                               クリア基準: <strong className="text-slate-900 font-mono">{ms.target_problem_count} 問</strong>以上

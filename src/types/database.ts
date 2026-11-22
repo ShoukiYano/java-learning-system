@@ -455,8 +455,10 @@ export interface TrainingMilestone {
   company_id?: string | null;
   /** 目標タイトル（例: "Java前半（第1・2章）完了", "Java入門修了", "実践SQL修了"） */
   title: string;
-  /** 目標達成期日（YYYY-MM-DD形式） */
+  /** 目標達成期日（YYYY-MM-DD形式・固定日付モード時に使用） */
   target_date: string;
+  /** 受講生登録日からの相対目標日数（例: 7 = 登録から7日後。指定時は固定日付より優先） */
+  target_days_offset?: number | null;
   /** 目標基準となる対象コースID（任意） */
   course_id?: string | null;
   /** 達成基準となる累計クリア問題数（例: 6問、12問） */

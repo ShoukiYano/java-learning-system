@@ -132,7 +132,10 @@ export function CompanyReportClient({
                     <div>
                       <div className="font-bold text-slate-900">{m.title}</div>
                       <div className="text-slate-500">
-                        目標期日: {m.target_date} ／ 基準: {m.target_problem_count}問以上
+                        {m.target_days_offset != null
+                          ? `目安: 登録から ${m.target_days_offset}日後`
+                          : `目標期日: ${m.target_date}`}{" "}
+                        ／ 基準: {m.target_problem_count}問以上
                       </div>
                     </div>
                     <div className="text-right font-bold text-amber-800 shrink-0">

@@ -146,7 +146,10 @@ export async function sendCompanyDigestMessage(
 
   // 直近のアクティブなマイルストーン
   const todayStr = new Date().toISOString().slice(0, 10);
-  const upcomingMilestone = milestones.find((m) => m.target_date >= todayStr) || milestones[0];
+  const upcomingMilestone =
+    milestones.find(
+      (m) => m.target_days_offset != null || m.target_date >= todayStr
+    ) || milestones[0];
 
   const blocks: unknown[] = [
     {
@@ -181,11 +184,15 @@ export async function sendCompanyDigestMessage(
   ];
 
   if (upcomingMilestone) {
+    const deadlineLabel =
+      upcomingMilestone.target_days_offset != null
+        ? `登録から ${upcomingMilestone.target_days_offset}日後`
+        : upcomingMilestone.target_date;
     blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `🎯 *直近の目標マイルストーン:* *${upcomingMilestone.title}*\n・目標期日: \`${upcomingMilestone.target_date}\` ｜ 目標クリア数: \`${upcomingMilestone.target_problem_count}問\``,
+        text: `🎯 *直近の目標マイルストーン:* *${upcomingMilestone.title}*\n・目標目安: \`${deadlineLabel}\` ｜ 目標クリア数: \`${upcomingMilestone.target_problem_count}問\``,
       },
     });
   }

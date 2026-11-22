@@ -137,7 +137,9 @@ export function CompanyDashboardClient({
   // 直近のアクティブなマイルストーン
   const todayStr = new Date().toISOString().slice(0, 10);
   const activeMilestone =
-    milestones.find((m) => m.target_date >= todayStr) || milestones[0];
+    milestones.find(
+      (m) => m.target_days_offset != null || m.target_date >= todayStr
+    ) || milestones[0];
   const delayedStudents = companyStudents.filter((s) => s.isDelayed);
   const avgProgress = Math.round(
     companyStudents.reduce((acc, cur) => acc + cur.progressPercent, 0) /

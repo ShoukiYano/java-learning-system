@@ -64,12 +64,20 @@ export async function POST(request: NextRequest) {
         }
         return NextResponse.json({ ok: true, result });
       } else if (action === "save_milestone") {
+        const offsetVal =
+          payload.targetDaysOffset !== undefined &&
+          payload.targetDaysOffset !== null &&
+          payload.targetDaysOffset !== ""
+            ? Number(payload.targetDaysOffset)
+            : null;
         const saved = saveInMemoryMilestone({
           id: payload.id,
           company_id: payload.companyId,
           title: payload.title,
-          target_date: payload.targetDate,
+          target_date: payload.targetDate || "",
+          target_days_offset: offsetVal,
           target_problem_count: payload.targetProblemCount,
+          description: payload.description || undefined,
           order_index: payload.orderIndex,
         });
         return NextResponse.json({ ok: true, milestone: saved });
@@ -1273,12 +1281,21 @@ export async function POST(request: NextRequest) {
 
       // 20. 研修スケジュール（目標マイルストーン）保存（Supabase永続化）
       case "save_milestone": {
+        const offsetVal =
+          payload.targetDaysOffset !== undefined &&
+          payload.targetDaysOffset !== null &&
+          payload.targetDaysOffset !== ""
+            ? Math.max(1, Number(payload.targetDaysOffset))
+            : null;
+        const cleanDate = payload.targetDate ? String(payload.targetDate).trim() : "";
         const savedLocal = saveInMemoryMilestone({
           id: payload.id,
           company_id: payload.companyId,
           title: payload.title,
-          target_date: payload.targetDate,
+          target_date: cleanDate,
+          target_days_offset: offsetVal,
           target_problem_count: payload.targetProblemCount,
+          description: payload.description || undefined,
           order_index: payload.orderIndex,
         });
         const milestoneId =
@@ -1289,7 +1306,8 @@ export async function POST(request: NextRequest) {
           id: milestoneId,
           company_id: payload.companyId || null,
           title: String(payload.title || "").trim(),
-          target_date: payload.targetDate,
+          target_date: cleanDate,
+          target_days_offset: offsetVal,
           course_id: payload.courseId || null,
           target_problem_count: Number(payload.targetProblemCount) || 0,
           description: payload.description || null,
@@ -1309,12 +1327,14 @@ export async function POST(request: NextRequest) {
           );
         }
         const savedRow = msData ?? savedLocal;
+        const scheduleLabel =
+          offsetVal !== null ? `登録から${offsetVal}日後` : cleanDate;
         await recordAuditLog({
           actorId: user?.id ?? null,
           actorEmail: user?.email ?? null,
           actorRole: callerRole,
           action: "save_milestone",
-          targetSummary: `目標マイルストーン「${payload.title}」(${payload.targetDate})を保存しました`,
+          targetSummary: `目標マイルストーン「${payload.title}」(${scheduleLabel})を保存しました`,
           detail: { milestoneId: savedRow.id, companyId: payload.companyId },
         });
         return NextResponse.json({ ok: true, milestone: savedRow });

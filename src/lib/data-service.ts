@@ -1737,6 +1737,7 @@ export async function getMilestonesFromDb(companyId?: string) {
       let q = db
         .from("training_milestones")
         .select("*")
+        .order("order_index", { ascending: true })
         .order("target_date", { ascending: true });
       if (companyId) {
         q = q.or(`company_id.eq.${companyId},company_id.is.null`);
