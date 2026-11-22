@@ -115,6 +115,7 @@ export function AdminCompanyDetailClient({
   // マイルストーン用の state
   const [milestones, setMilestones] = useState<TrainingMilestone[]>(initialMilestones);
   const [isAddingMs, setIsAddingMs] = useState(false);
+  const [editingMsId, setEditingMsId] = useState<string | null>(null);
   const [msMode, setMsMode] = useState<"relative" | "fixed">("relative");
   const [msTitle, setMsTitle] = useState("");
   const [msDate, setMsDate] = useState("");
@@ -404,7 +405,31 @@ export function AdminCompanyDetailClient({
     }
   };
 
-  // マイルストーン新規登録（登録日からの相対日数 / 固定日付 両対応）
+  // マイルストーン編集開始
+  const startEditMilestone = (ms: TrainingMilestone) => {
+    setEditingMsId(ms.id);
+    setMsTitle(ms.title);
+    const isRel = ms.target_days_offset != null;
+    setMsMode(isRel ? "relative" : "fixed");
+    setMsDaysOffset(ms.target_days_offset ?? 7);
+    setMsDate(ms.target_date || "");
+    setMsCount(ms.target_problem_count);
+    setMsDesc(ms.description || "");
+    setIsAddingMs(true);
+  };
+
+  const resetMilestoneForm = () => {
+    setEditingMsId(null);
+    setMsTitle("");
+    setMsDate("");
+    setMsDaysOffset(7);
+    setMsCount(10);
+    setMsDesc("");
+    setMsMode("relative");
+    setIsAddingMs(false);
+  };
+
+  // マイルストーン新規登録・更新（登録日からの相対日数 / 固定日付 両対応）
   const handleCreateMilestone = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!msTitle.trim() || msSubmitting) return;
@@ -414,34 +439,40 @@ export function AdminCompanyDetailClient({
     setNotice(null);
     setErrorMsg(null);
     try {
+      const existingTarget = editingMsId
+        ? milestones.find((m) => m.id === editingMsId)
+        : null;
       const res = await fetch("/api/admin/actions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "save_milestone",
           payload: {
+            id: editingMsId ?? undefined,
             companyId: company.id,
             title: msTitle.trim(),
             targetDate: msMode === "fixed" ? msDate.trim() : "",
             targetDaysOffset: msMode === "relative" ? msDaysOffset : null,
             targetProblemCount: msCount,
             description: msDesc.trim(),
-            orderIndex: milestones.length + 1,
+            orderIndex: existingTarget?.order_index ?? milestones.length + 1,
           },
         }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
-        setErrorMsg(data.error || "マイルストーン登録に失敗しました。");
+        setErrorMsg(data.error || "マイルストーン保存に失敗しました。");
       } else {
-        setMilestones((prev) => [...prev, data.milestone]);
-        setMsTitle("");
-        setMsDate("");
-        setMsDaysOffset(7);
-        setMsCount(10);
-        setMsDesc("");
-        setIsAddingMs(false);
-        setNotice(`🎯 目標マイルストーン「${data.milestone.title}」を追加しました。`);
+        if (editingMsId) {
+          setMilestones((prev) =>
+            prev.map((m) => (m.id === editingMsId ? data.milestone : m))
+          );
+          setNotice(`✏️ 目標マイルストーン「${data.milestone.title}」を更新しました。`);
+        } else {
+          setMilestones((prev) => [...prev, data.milestone]);
+          setNotice(`🎯 目標マイルストーン「${data.milestone.title}」を追加しました。`);
+        }
+        resetMilestoneForm();
         router.refresh();
       }
     } catch {
@@ -1510,11 +1541,11 @@ export function AdminCompanyDetailClient({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
                       <Flag className="h-3.5 w-3.5 text-amber-600" />
-                      新規マイルストーン設定
+                      {editingMsId ? "マイルストーンを編集" : "新規マイルストーン設定"}
                     </span>
                     <button
                       type="button"
-                      onClick={() => setIsAddingMs(false)}
+                      onClick={resetMilestoneForm}
                       className="text-slate-400 hover:text-slate-600"
                     >
                       <X className="h-4 w-4" />
@@ -1637,7 +1668,7 @@ export function AdminCompanyDetailClient({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => setIsAddingMs(false)}
+                      onClick={resetMilestoneForm}
                       className="text-xs h-7"
                     >
                       キャンセル
@@ -1648,7 +1679,11 @@ export function AdminCompanyDetailClient({
                       disabled={msSubmitting}
                       className="bg-amber-600 hover:bg-amber-500 text-white text-xs h-7"
                     >
-                      {msSubmitting ? "保存中..." : "マイルストーンを登録"}
+                      {msSubmitting
+                        ? "保存中..."
+                        : editingMsId
+                        ? "変更を保存"
+                        : "マイルストーンを登録"}
                     </Button>
                   </div>
                 </form>
@@ -1707,7 +1742,17 @@ export function AdminCompanyDetailClient({
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-end gap-2 shrink-0 pl-7 sm:pl-0">
+                        <div className="flex items-center justify-end gap-1.5 shrink-0 pl-7 sm:pl-0">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => startEditMilestone(ms)}
+                            className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 h-7 text-xs px-2"
+                          >
+                            <Edit2 className="h-3.5 w-3.5 mr-1" />
+                            編集
+                          </Button>
                           <Button
                             type="button"
                             variant="ghost"
