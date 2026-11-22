@@ -15,6 +15,7 @@ import {
   FunctionSquare,
 } from "lucide-react";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import { AskInstructorButton } from "@/components/student/ask-instructor-modal";
 import {
   colIndexToLetter,
   evaluateExcelSubmission,
@@ -172,6 +173,12 @@ export function ExcelWorkspaceClient({
           </div>
 
           <div className="flex items-center gap-2">
+            <AskInstructorButton
+              problemId={problem.id}
+              problemTitle={problem.title}
+              contextSnippet={JSON.stringify(userCells, null, 2)}
+              contextLabel="入力中のExcel数式を質問に添える"
+            />
             {completed && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
                 <CheckCircle2 className="h-3.5 w-3.5" />

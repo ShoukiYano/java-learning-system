@@ -175,17 +175,68 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const ALLOWED_IMAGE_MIME = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/gif",
+  "image/webp",
+]);
+const MAX_IMAGE_COUNT = 3;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
+
 export async function POST(request: NextRequest) {
   try {
     const auth = await requireApiAuth(["student", "company", "admin"]);
     if (!auth.ok) return auth.response;
 
-    const body = await request.json();
-    const problemId = String(body.problemId ?? "").trim();
-    const problemTitle = String(body.problemTitle ?? "演習問題").trim();
-    const questionText = String(body.questionText ?? "").trim();
-    const rawSnippet = body.codeSnippet ?? body.codeSnapshot;
-    const codeSnippet = rawSnippet ? String(rawSnippet) : undefined;
+    const contentType = request.headers.get("content-type") || "";
+    let problemId = "";
+    let problemTitle = "演習問題";
+    let questionText = "";
+    let codeSnippet: string | undefined;
+    const uploadedFiles: File[] = [];
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData();
+      problemId = String(formData.get("problemId") ?? "").trim();
+      problemTitle = String(formData.get("problemTitle") ?? "演習問題").trim();
+      questionText = String(formData.get("questionText") ?? "").trim();
+      const rawSnippet = formData.get("codeSnippet");
+      codeSnippet = rawSnippet ? String(rawSnippet) : undefined;
+
+      const rawImages = formData.getAll("images");
+      for (const item of rawImages) {
+        if (item instanceof File && item.size > 0) {
+          if (!ALLOWED_IMAGE_MIME.has(item.type)) {
+            return NextResponse.json(
+              { error: "添付できる画像は PNG / JPEG / GIF / WebP 形式のみです。" },
+              { status: 400 }
+            );
+          }
+          if (item.size > MAX_IMAGE_BYTES) {
+            return NextResponse.json(
+              { error: "画像サイズは1枚あたり5MB以内にしてください。" },
+              { status: 400 }
+            );
+          }
+          uploadedFiles.push(item);
+        }
+      }
+      if (uploadedFiles.length > MAX_IMAGE_COUNT) {
+        return NextResponse.json(
+          { error: `添付できる画像は最大${MAX_IMAGE_COUNT}枚までです。` },
+          { status: 400 }
+        );
+      }
+    } else {
+      const body = await request.json();
+      problemId = String(body.problemId ?? "").trim();
+      problemTitle = String(body.problemTitle ?? "演習問題").trim();
+      questionText = String(body.questionText ?? "").trim();
+      const rawSnippet = body.codeSnippet ?? body.codeSnapshot;
+      codeSnippet = rawSnippet ? String(rawSnippet) : undefined;
+    }
 
     if (!questionText) {
       return NextResponse.json(
@@ -199,6 +250,45 @@ export async function POST(request: NextRequest) {
       profile.company_id ?? "00000000-0000-4000-8000-000000000001";
     const companyName =
       profile.companies?.name ?? "株式会社ACMEテクノロジーズ";
+
+    // 画像を Supabase Storage (qa-attachments) へアップロード
+    const uploadedImageUrls: string[] = [];
+    if (uploadedFiles.length > 0 && isSupabaseConfigured()) {
+      const storageClient =
+        process.env.SUPABASE_SERVICE_ROLE_KEY &&
+        !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+          ? createAdminClient()
+          : await createClient();
+
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const file = uploadedFiles[i];
+        const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+        const safeExt = /^[a-z0-9]{2,5}$/.test(ext) ? ext : "png";
+        const storagePath = `student/${profile.id}/${Date.now()}_${i}.${safeExt}`;
+        const arrayBuf = await file.arrayBuffer();
+        const { error: upErr } = await storageClient.storage
+          .from("qa-attachments")
+          .upload(storagePath, Buffer.from(arrayBuf), {
+            contentType: file.type,
+            upsert: false,
+          });
+        if (!upErr) {
+          const { data: pubData } = storageClient.storage
+            .from("qa-attachments")
+            .getPublicUrl(storagePath);
+          if (pubData?.publicUrl) {
+            uploadedImageUrls.push(pubData.publicUrl);
+          }
+        } else {
+          console.error("[POST /api/student/questions] image upload error:", upErr);
+        }
+      }
+    }
+
+    const questionTextForSlack =
+      uploadedImageUrls.length > 0
+        ? `${questionText}\n\n📎 添付画像:\n${uploadedImageUrls.map((u, idx) => `・画像${idx + 1}: ${u}`).join("\n")}`
+        : questionText;
 
     // Slack通知：Bot Token ＋ チャンネルID が揃っていれば双方向スレッド同期モードで投稿、なければWebhookへフォールバック
     let slackNotified = false;
@@ -219,7 +309,7 @@ export async function POST(request: NextRequest) {
         companyName,
         studentName: profile.full_name,
         problemTitle,
-        questionText,
+        questionText: questionTextForSlack,
         codeSnippet,
       });
       if (botRes.ok) {
@@ -240,7 +330,7 @@ export async function POST(request: NextRequest) {
           companyName,
           studentName: profile.full_name,
           problemTitle,
-          questionText,
+          questionText: questionTextForSlack,
           codeSnippet,
         });
         slackNotified = slackRes.ok;
@@ -254,24 +344,9 @@ export async function POST(request: NextRequest) {
           ? createAdminClient()
           : await createClient();
 
-      const { error: insErr } = await db.from("student_questions").insert({
-        user_id: profile.id,
-        company_id: companyId,
-        student_name: profile.full_name,
-        problem_id: problemId,
-        problem_title: problemTitle,
-        question_text: questionText,
-        code_snippet: codeSnippet ?? null,
-        status: "open",
-        slack_channel_id: slackChannelId,
-        slack_thread_ts: slackThreadTs,
-        has_unread_reply: false,
-        updated_at: new Date().toISOString(),
-      });
-
-      if (insErr) {
-        // 新カラム未マイグレーション環境への後方互換フォールバック
-        await db.from("student_questions").insert({
+      const { data: insertedQ, error: insErr } = await db
+        .from("student_questions")
+        .insert({
           user_id: profile.id,
           company_id: companyId,
           student_name: profile.full_name,
@@ -280,6 +355,43 @@ export async function POST(request: NextRequest) {
           question_text: questionText,
           code_snippet: codeSnippet ?? null,
           status: "open",
+          slack_channel_id: slackChannelId,
+          slack_thread_ts: slackThreadTs,
+          has_unread_reply: false,
+          updated_at: new Date().toISOString(),
+        })
+        .select("id")
+        .maybeSingle();
+
+      let questionIdForImages = insertedQ?.id ?? null;
+
+      if (insErr) {
+        // 新カラム未マイグレーション環境への後方互換フォールバック
+        const { data: fallbackQ } = await db
+          .from("student_questions")
+          .insert({
+            user_id: profile.id,
+            company_id: companyId,
+            student_name: profile.full_name,
+            problem_id: problemId,
+            problem_title: problemTitle,
+            question_text: questionText,
+            code_snippet: codeSnippet ?? null,
+            status: "open",
+          })
+          .select("id")
+          .maybeSingle();
+        questionIdForImages = fallbackQ?.id ?? null;
+      }
+
+      // 添付画像がある場合はスレッド側にも記録し、/student/questions でそのままサムネイル表示できるようにする
+      if (questionIdForImages && uploadedImageUrls.length > 0) {
+        await db.from("student_question_replies").insert({
+          question_id: questionIdForImages,
+          sender_role: "student",
+          sender_name: profile.full_name,
+          body: "（スクリーンショットを添付しました）",
+          image_urls: uploadedImageUrls,
         });
       }
     }
@@ -289,13 +401,15 @@ export async function POST(request: NextRequest) {
       actorEmail: profile.email,
       actorRole: "student",
       action: "student_question",
-      targetSummary: `${profile.full_name} が「${problemTitle}」について質問（Slack通知: ${slackNotified ? (slackThreadTs ? "双方向スレッド連携済" : "Webhook済") : "未設定"}）`,
+      targetSummary: `${profile.full_name} が「${problemTitle}」について質問（画像${uploadedImageUrls.length}枚・Slack通知: ${slackNotified ? (slackThreadTs ? "双方向スレッド連携済" : "Webhook済") : "未設定"}）`,
     });
 
     return NextResponse.json({
       ok: true,
       slackNotified,
       twoWaySynced: Boolean(slackThreadTs),
+      imageCount: uploadedImageUrls.length,
+      imageUrls: uploadedImageUrls,
       message: slackNotified
         ? "質問を送信し、担当講師のSlackチャンネルへ通知しました！回答が届くと画面上でお知らせします。"
         : "質問を送信しました。講師からの回答をお待ちください。",

@@ -18,6 +18,7 @@ import {
   Eye,
 } from "lucide-react";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import { AskInstructorButton } from "@/components/student/ask-instructor-modal";
 import {
   buildLivePreviewHtml,
   evaluateHtmlCssSubmission,
@@ -138,6 +139,12 @@ export function HtmlCssWorkspaceClient({
           </div>
 
           <div className="flex items-center gap-2">
+            <AskInstructorButton
+              problemId={problem.id}
+              problemTitle={problem.title}
+              contextSnippet={`<!-- HTML -->\n${htmlCode}\n\n/* CSS */\n${cssCode}`}
+              contextLabel="編集中のHTML/CSSコードを質問に添える"
+            />
             {completed && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
                 <CheckCircle2 className="h-3.5 w-3.5" />

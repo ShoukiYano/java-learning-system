@@ -19,6 +19,7 @@ import {
   GitBranch,
 } from "lucide-react";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import { AskInstructorButton } from "@/components/student/ask-instructor-modal";
 import {
   isValidGithubPrUrl,
   isValidGithubUrl,
@@ -147,6 +148,12 @@ export function ProjectWorkspaceClient({
           </div>
 
           <div className="flex items-center gap-2">
+            <AskInstructorButton
+              problemId={problem.id}
+              problemTitle={problem.title}
+              contextSnippet={githubUrl ? `PR URL: ${githubUrl}` : undefined}
+              contextLabel="入力中のPull Request URLを質問に添える"
+            />
             {completed && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
                 <CheckCircle2 className="h-3.5 w-3.5" />

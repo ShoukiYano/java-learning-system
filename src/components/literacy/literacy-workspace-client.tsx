@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import { AskInstructorButton } from "@/components/student/ask-instructor-modal";
 import { parseLiteracyQuizSpec } from "@/lib/curriculum-evaluators";
 import type { Hint, Problem, Progress } from "@/types/database";
 
@@ -97,6 +98,10 @@ export function LiteracyWorkspaceClient({
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            <AskInstructorButton
+              problemId={problem.id}
+              problemTitle={problem.title}
+            />
             {completed && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
                 <CheckCircle2 className="h-3.5 w-3.5" />
