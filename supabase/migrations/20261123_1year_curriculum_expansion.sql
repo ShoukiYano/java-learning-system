@@ -38,7 +38,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111101', 'Java入門コース：ゼロから学ぶ基礎文法とオブジェクト指向入門（Java 4か月①）', '標準出力・変数・データ型・四則演算・Scanner入力・条件分岐（if/switch）・ループ・配列・メソッド・クラス設計の基礎まで全16問のコーディング演習で体系的に習得します。', 4, true, '11111111-1111-4111-8111-111111111113')
+VALUES ('11111111-1111-4111-8111-111111111101', 'Java入門コース：ゼロから学ぶ基礎文法とオブジェクト指向入門（Java 4か月①）', '標準出力・変数・データ型・四則演算・文字列操作・Scanner入力・条件分岐（if/switch）・ループ・二重ループ・配列・線形探索・メソッド分割・クラス設計と在庫/カート演習まで全30問のコーディング演習で基礎を徹底定着させます。', 4, true, '11111111-1111-4111-8111-111111111113')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -1391,6 +1391,1013 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
+  '44444444-4444-4444-8444-444444442101', '33333333-3333-4333-8333-333333333301', '1-6. 整数の割り算と余り（/ と %）による割り勘計算', '## 問題文
+合計金額 `total`（円）と人数 `people`（人）が標準入力から2行で与えられます。
+1人あたりの支払額（整数・切り捨て）と、割り切れなかった余りの金額を計算し、以下の形式で出力してください。
+
+### 出力形式
+```
+1人あたり: <支払額>円
+余り: <余り>円
+```
+
+### 入力例
+```
+10000
+3
+```
+
+### 出力例
+```
+1人あたり: 3333円
+余り: 1円
+```',
+  'easy', 10, ARRAY['出力と変数', '四則演算', '剰余'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int total = sc.nextInt();
+        int people = sc.nextInt();
+        // ここに計算と出力を記述してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int total = sc.nextInt();
+        int people = sc.nextInt();
+        int perPerson = total / people;
+        int remainder = total % people;
+        System.out.println("1人あたり: " + perPerson + "円");
+        System.out.println("余り: " + remainder + "円");
+    }
+}', 'Javaで `int` 同士を `/` で割ると小数点以下は自動で切り捨てられ、`%` で余り（剰余）を取得できます。',
+  6, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442102', '33333333-3333-4333-8333-333333333301', '1-7. 小数計算と型キャスト（3科目の合計点・平均点）', '## 問題文
+国語・数学・英語の3科目の点数（整数）が標準入力から3行で与えられます。
+合計点（整数）と、小数点を含む正確な平均点（`double` 型・小数第1位まで、または切り捨てではなく `/ 3.0` での計算結果）を出力してください。
+※平均点は小数第1位まで出力（`String.format("%.1f", avg)` または `Math.round(avg * 10) / 10.0` 等）してください。
+
+### 出力形式
+```
+合計: <合計>
+平均: <小数第1位までの平均>
+```
+
+### 入力例
+```
+80
+75
+90
+```
+
+### 出力例
+```
+合計: 245
+平均: 81.7
+```',
+  'easy', 12, ARRAY['出力と変数', 'データ型', 'キャスト'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int a = sc.nextInt();
+        int b = sc.nextInt();
+        int c = sc.nextInt();
+        // 合計と平均（小数第1位まで）を出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int a = sc.nextInt();
+        int b = sc.nextInt();
+        int c = sc.nextInt();
+        int sum = a + b + c;
+        double avg = (double) sum / 3.0;
+        System.out.println("合計: " + sum);
+        System.out.println("平均: " + String.format("%.1f", avg));
+    }
+}', '`int / int` は小数点以下が切り捨てられるため、正確な小数の平均を求めるには `(double) sum / 3.0` のように浮動小数点型へ変換（キャスト）します。',
+  7, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442103', '33333333-3333-4333-8333-333333333301', '1-8. 文字列の基本操作（文字数・大文字変換・先頭3文字抽出）', '## 問題文
+商品コードの文字列（半角英数字・3文字以上）が1行で与えられます。
+以下の3つを順番に出力してください。
+1. 文字数（`length()`）
+2. すべて大文字に変換した文字列（`toUpperCase()`）
+3. 大文字変換後の先頭3文字（`substring(0, 3)`）
+
+### 入力例
+```
+prd-0042
+```
+
+### 出力例
+```
+8
+PRD-0042
+PRD
+```',
+  'easy', 12, ARRAY['出力と変数', '文字列操作', 'String'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String code = sc.next();
+        // 文字数、大文字変換、先頭3文字を順に出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String code = sc.next();
+        String upper = code.toUpperCase();
+        System.out.println(code.length());
+        System.out.println(upper);
+        System.out.println(upper.substring(0, 3));
+    }
+}', '`String` クラスの `length()`, `toUpperCase()`, `substring(start, end)` は業務データ整形で最もよく使う基本メソッドです。',
+  8, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442104', '33333333-3333-4333-8333-333333333301', '1-9. 文字列の一致判定（equals）による簡易ログインチェック', '## 問題文
+Javaでは文字列の中身が同じかどうかを比較するとき、`==` ではなく **`.equals()`** を使います。
+ユーザーIDとパスワードが2行で入力されます。
+ユーザーIDが `"admin"` かつパスワードが `"java2025"` の場合は `LOGIN_OK`、それ以外は `LOGIN_NG` と出力してください。
+
+### 入力例
+```
+admin
+java2025
+```
+
+### 出力例
+```
+LOGIN_OK
+```',
+  'easy', 10, ARRAY['出力と変数', '文字列比較', 'equals'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String userId = sc.next();
+        String password = sc.next();
+        // equals() を使ってログイン判定を行ってください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String userId = sc.next();
+        String password = sc.next();
+        if (userId.equals("admin") && password.equals("java2025")) {
+            System.out.println("LOGIN_OK");
+        } else {
+            System.out.println("LOGIN_NG");
+        }
+    }
+}', '文字列の `==` は参照先（メモリアドレス）の比較になるため、値の一致チェックには必ず `equals()` を使用します。',
+  9, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442105', '33333333-3333-4333-8333-333333333302', '2-6. 1からNまでの合計と偶数合計（forループ基礎）', '## 問題文
+正の整数 `N` が与えられます。
+1から `N` までの「すべての整数の合計」と「偶数のみの合計」をそれぞれ1行ずつ出力してください。
+
+### 入力例
+```
+10
+```
+
+### 出力例
+```
+55
+30
+```',
+  'easy', 12, ARRAY['ループ', 'for文', '条件分岐'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // 1〜nの全合計と偶数合計を求めて出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int totalSum = 0;
+        int evenSum = 0;
+        for (int i = 1; i <= n; i++) {
+            totalSum += i;
+            if (i % 2 == 0) {
+                evenSum += i;
+            }
+        }
+        System.out.println(totalSum);
+        System.out.println(evenSum);
+    }
+}', '1つのループの中で2つの集計変数（全体用と偶数用）を同時に更新すると効率的です。',
+  6, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442106', '33333333-3333-4333-8333-333333333302', '2-7. 指定した段の九九を出力しよう（forループ反復）', '## 問題文
+1〜9の整数 `dan` が与えられます。
+その段の九九（1から9まで掛けた結果）を以下の形式で9行出力してください。
+
+### 入力例
+```
+3
+```
+
+### 出力例
+```
+3 x 1 = 3
+3 x 2 = 6
+3 x 3 = 9
+3 x 4 = 12
+3 x 5 = 15
+3 x 6 = 18
+3 x 7 = 21
+3 x 8 = 24
+3 x 9 = 27
+```',
+  'easy', 10, ARRAY['ループ', 'for文', '出力フォーマット'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int dan = sc.nextInt();
+        // 1〜9まで掛けて9行出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int dan = sc.nextInt();
+        for (int i = 1; i <= 9; i++) {
+            System.out.println(dan + " x " + i + " = " + (dan * i));
+        }
+    }
+}', '`x` や `=` の前後の半角スペースを出力仕様どおりに揃える練習です。',
+  7, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442107', '33333333-3333-4333-8333-333333333302', '2-8. N件のテスト点数から合格者数をカウントしよう', '## 問題文
+受験者数 `N` と、それに続く `N` 件の点数（整数）が標準入力から与えられます。
+**60点以上** を合格とし、合格者数と不合格者数をそれぞれ1行ずつ出力してください。
+
+### 入力例
+```
+5
+80
+55
+60
+42
+91
+```
+
+### 出力例
+```
+合格: 3人
+不合格: 2人
+```',
+  'easy', 15, ARRAY['ループ', '条件分岐', 'カウント'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // n件の点数を読み込み、60点以上・未満をカウントしてください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int pass = 0;
+        int fail = 0;
+        for (int i = 0; i < n; i++) {
+            int score = sc.nextInt();
+            if (score >= 60) {
+                pass++;
+            } else {
+                fail++;
+            }
+        }
+        System.out.println("合格: " + pass + "人");
+        System.out.println("不合格: " + fail + "人");
+    }
+}', '入力件数 `N` を最初に読み込み、その回数だけループして `nextInt()` で1件ずつ判定・カウントするのは実務集計の基本パターンです。',
+  8, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442108', '33333333-3333-4333-8333-333333333302', '2-9. 二重ループで階段パターン（*）を描画しよう', '## 問題文
+高さ `H`（1以上の整数）が与えられます。
+二重の `for` ループを使って、1行目に `*` を1個、2行目に2個、…、`H` 行目に `H` 個出力してください。
+
+### 入力例
+```
+4
+```
+
+### 出力例
+```
+*
+**
+***
+****
+```',
+  'easy', 15, ARRAY['ループ', '二重ループ'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int h = sc.nextInt();
+        // 二重ループで高さhの三角形を出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int h = sc.nextInt();
+        for (int row = 1; row <= h; row++) {
+            String line = "";
+            for (int col = 0; col < row; col++) {
+                line += "*";
+            }
+            System.out.println(line);
+        }
+    }
+}', '外側のループで「何行目か」、内側のループで「その行に何文字並べるか」を制御するのが二重ループの基本構造です。',
+  9, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442109', '33333333-3333-4333-8333-333333333303', '3-4. 配列の逆順出力と平均以上の人数カウント', '## 問題文
+整数 `N` と `N` 個の点数（整数）が与えられます。
+配列に格納したあと、以下の2行を出力してください。
+- 1行目：配列の要素を **後ろから逆順** に半角スペース区切りで出力
+- 2行目：全体の平均点（小数含む）**以上** の人数を出力
+
+### 入力例
+```
+4
+70 80 90 60
+```
+
+### 出力例
+```
+60 90 80 70
+2
+```',
+  'easy', 15, ARRAY['配列', '逆順', '平均集計'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[] scores = new int[n];
+        for (int i = 0; i < n; i++) {
+            scores[i] = sc.nextInt();
+        }
+        // 1行目に逆順、2行目に平均以上の人数を出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[] scores = new int[n];
+        int sum = 0;
+        for (int i = 0; i < n; i++) {
+            scores[i] = sc.nextInt();
+            sum += scores[i];
+        }
+        String rev = "";
+        for (int i = n - 1; i >= 0; i--) {
+            if (i < n - 1) rev += " ";
+            rev += scores[i];
+        }
+        double avg = (double) sum / n;
+        int count = 0;
+        for (int i = 0; i < n; i++) {
+            if (scores[i] >= avg) count++;
+        }
+        System.out.println(rev);
+        System.out.println(count);
+    }
+}', '配列にデータを保持しておくことで、「一度合計から平均を出し、もう一方のループで各要素と平均を比較する」2パス処理が可能になります。',
+  4, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442110', '33333333-3333-4333-8333-333333333303', '3-5. 配列から指定値を探す線形探索メソッド（findIndex）', '## 問題文
+整数配列 `arr` と検索値 `target` を受け取り、最初に見つかった位置のインデックス（0始まり）を返すメソッド `findIndex(int[] arr, int target)` を実装してください。
+見つからない場合は `-1` を返してください。
+
+### 入力形式
+- 1行目：配列の長さ `N`
+- 2行目：`N` 個の整数
+- 3行目：検索したい整数 `target`
+
+### 入力例
+```
+5
+10 25 30 25 50
+25
+```
+
+### 出力例
+```
+1
+```',
+  'easy', 15, ARRAY['配列', 'メソッド', '線形探索'],
+  'import java.util.Scanner;
+
+public class Main {
+    public static int findIndex(int[] arr, int target) {
+        // ここに探索ロジックを実装してください
+        return -1;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[] arr = new int[n];
+        for (int i = 0; i < n; i++) {
+            arr[i] = sc.nextInt();
+        }
+        int target = sc.nextInt();
+        System.out.println(findIndex(arr, target));
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static int findIndex(int[] arr, int target) {
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] == target) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[] arr = new int[n];
+        for (int i = 0; i < n; i++) {
+            arr[i] = sc.nextInt();
+        }
+        int target = sc.nextInt();
+        System.out.println(findIndex(arr, target));
+    }
+}', '一致した瞬間に `return i;` で早期リターンすると、最初に見つかったインデックスを返しつつ無駄な探索も止められます。',
+  5, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442111', '33333333-3333-4333-8333-333333333303', '3-6. 割引＆税込価格を計算するメソッド分割演習', '## 問題文
+定価 `price`（円）と割引率 `discountPercent`（整数%）が入力されます。
+以下の2つのメソッドを定義して組み合わせて使い、最終的な支払金額（整数・各計算ごとに小数点以下切り捨て）を出力してください。
+1. `applyDiscount(int price, int discountPercent)`：割引後の税抜価格を返す（例：`price * (100 - discountPercent) / 100`）
+2. `addTax(int price)`：10%の消費税を加えた税込価格を返す（`price * 110 / 100`）
+
+### 入力例
+```
+2000
+20
+```
+
+### 出力例
+```
+1760
+```',
+  'easy', 15, ARRAY['メソッド', '責務分割'],
+  'import java.util.Scanner;
+
+public class Main {
+    // applyDiscount メソッドと addTax メソッドを定義してください
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int price = sc.nextInt();
+        int discountPercent = sc.nextInt();
+        // 2つのメソッドを呼び出して結果を出力してください
+    }
+}', 'import java.util.Scanner;
+
+public class Main {
+    public static int applyDiscount(int price, int discountPercent) {
+        return price * (100 - discountPercent) / 100;
+    }
+
+    public static int addTax(int price) {
+        return price * 110 / 100;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int price = sc.nextInt();
+        int discountPercent = sc.nextInt();
+        int discounted = applyDiscount(price, discountPercent);
+        int finalPrice = addTax(discounted);
+        System.out.println(finalPrice);
+    }
+}', '「割引」と「課税」のように意味の単位でメソッドを分けると、計算ルールが変わったときも修正箇所が1か所で済みます。',
+  6, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442112', '33333333-3333-4333-8333-333333333304', '4-4. 社員クラス（Employee）の配列管理と一覧出力', '## 問題文
+社員の氏名（`name`）と部署名（`department`）を持つ `Employee` クラスを作成し、自己紹介文字列 `"[部署名] 氏名"` を返すメソッド `formatLabel()` を実装してください。
+`N` 名分の社員データを `Employee[]` 配列に格納し、先頭から順に1行ずつ出力してください。
+
+### 入力例
+```
+2
+山田太郎 開発部
+佐藤花子 営業部
+```
+
+### 出力例
+```
+[開発部] 山田太郎
+[営業部] 佐藤花子
+```',
+  'medium', 20, ARRAY['オブジェクト指向', 'クラス設計', 'オブジェクト配列'],
+  'import java.util.Scanner;
+
+class Employee {
+    // フィールド・コンストラクタ・formatLabel() を実装してください
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // Employee配列に格納して出力してください
+    }
+}', 'import java.util.Scanner;
+
+class Employee {
+    private String name;
+    private String department;
+
+    public Employee(String name, String department) {
+        this.name = name;
+        this.department = department;
+    }
+
+    public String formatLabel() {
+        return "[" + department + "] " + name;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        Employee[] list = new Employee[n];
+        for (int i = 0; i < n; i++) {
+            String name = sc.next();
+            String dept = sc.next();
+            list[i] = new Employee(name, dept);
+        }
+        for (int i = 0; i < n; i++) {
+            System.out.println(list[i].formatLabel());
+        }
+    }
+}', 'データ（フィールド）と表示ロジック（メソッド）を1つのクラスにまとめ、配列で複数管理する設計はEntity/DTOの基礎です。',
+  4, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442113', '33333333-3333-4333-8333-333333333304', '4-5. 在庫アイテムクラス（StockItem）の入庫・出庫と不足ガード', '## 問題文
+商品名（`name`）と在庫数（`stock`）を持つ `StockItem` クラスを実装してください。
+- `restock(int qty)`：在庫を `qty` 個増やす
+- `ship(int qty)`：在庫が `qty` 個以上あれば減らして `true` を返し、足りなければ在庫を変更せず `false` を返す
+
+入力として「商品名」「初期在庫」「操作回数 `Q`」に続き、`Q` 行の操作（`IN 数量` または `OUT 数量`）が与えられます。
+`OUT` が在庫不足で失敗したときだけ `SHORTAGE` と出力し、最後に `<商品名>: <残在庫>` を出力してください。
+
+### 入力例
+```
+Mouse 5
+3
+IN 3
+OUT 10
+OUT 4
+```
+
+### 出力例
+```
+SHORTAGE
+Mouse: 4
+```',
+  'medium', 25, ARRAY['オブジェクト指向', 'カプセル化', '在庫管理'],
+  'import java.util.Scanner;
+
+class StockItem {
+    // フィールド・コンストラクタ・restock・ship・getStock を実装してください
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String name = sc.next();
+        int initialStock = sc.nextInt();
+        int q = sc.nextInt();
+        // StockItem を生成し、q回の IN / OUT 操作を処理してください
+    }
+}', 'import java.util.Scanner;
+
+class StockItem {
+    private String name;
+    private int stock;
+
+    public StockItem(String name, int stock) {
+        this.name = name;
+        this.stock = stock;
+    }
+
+    public void restock(int qty) {
+        this.stock += qty;
+    }
+
+    public boolean ship(int qty) {
+        if (this.stock < qty) {
+            return false;
+        }
+        this.stock -= qty;
+        return true;
+    }
+
+    public String getSummary() {
+        return name + ": " + stock;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String name = sc.next();
+        int initialStock = sc.nextInt();
+        int q = sc.nextInt();
+        StockItem item = new StockItem(name, initialStock);
+        for (int i = 0; i < q; i++) {
+            String cmd = sc.next();
+            int qty = sc.nextInt();
+            if (cmd.equals("IN")) {
+                item.restock(qty);
+            } else if (cmd.equals("OUT")) {
+                if (!item.ship(qty)) {
+                    System.out.println("SHORTAGE");
+                }
+            }
+        }
+        System.out.println(item.getSummary());
+    }
+}', '在庫がマイナスにならないよう `ship()` メソッド内部でガード条件を入れるのが、カプセル化によるデータ整合性の守り方です。',
+  5, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444442114', '33333333-3333-4333-8333-333333333304', '4-6. 【入門総仕上げ】ショッピングカート（CartItem）の合計＆送料無料判定', '## 問題文
+Java入門の総仕上げとして、複数商品をまとめて会計するミニショッピングカートを作成しましょう。
+商品名・単価・数量を持つ `CartItem` クラスを定義し、小計を返す `getSubtotal()` メソッドを実装してください。
+`N` 件の商品を読み込み、合計金額（`total`）を算出したあと、**5000円以上なら送料0円、5000円未満なら送料500円** を加算して以下を出力してください。
+
+### 出力形式
+```
+商品合計: <商品合計>円
+送料: <送料>円
+請求金額: <請求金額>円
+```
+
+### 入力例
+```
+2
+Keyboard 3000 1
+Mouse 1200 2
+```
+
+### 出力例
+```
+商品合計: 5400円
+送料: 0円
+請求金額: 5400円
+```',
+  'medium', 25, ARRAY['オブジェクト指向', '配列', '条件分岐', '総仕上げ'],
+  'import java.util.Scanner;
+
+class CartItem {
+    // フィールド・コンストラクタ・getSubtotal() を実装してください
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        // N件の CartItem を読み込み、商品合計・送料・請求金額を出力してください
+    }
+}', 'import java.util.Scanner;
+
+class CartItem {
+    private String name;
+    private int price;
+    private int quantity;
+
+    public CartItem(String name, int price, int quantity) {
+        this.name = name;
+        this.price = price;
+        this.quantity = quantity;
+    }
+
+    public int getSubtotal() {
+        return price * quantity;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        CartItem[] items = new CartItem[n];
+        int total = 0;
+        for (int i = 0; i < n; i++) {
+            String name = sc.next();
+            int price = sc.nextInt();
+            int qty = sc.nextInt();
+            items[i] = new CartItem(name, price, qty);
+            total += items[i].getSubtotal();
+        }
+        int shipping = (total >= 5000) ? 0 : 500;
+        System.out.println("商品合計: " + total + "円");
+        System.out.println("送料: " + shipping + "円");
+        System.out.println("請求金額: " + (total + shipping) + "円");
+    }
+}', '変数・入力・ループ・配列・条件分岐・クラス設計というJava入門のすべての基礎が1つの業務ロジックとして繋がりました。次はJava初級へ進みましょう！',
+  6, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
   '44444444-4444-4444-8444-444444441401', '33333333-3333-4333-8333-333333331401', 'Step 1：開発環境構築（Eclipse・PostgreSQL・GitHub）＆詳細設計書ダウンロード', '## はじめてのSpring Boot開発：全体構成をつかもう
 
 ここから2か月かけて、実務と同じ **Excel詳細設計書** を読み解きながら **「商品管理システム」** を自分の手でゼロから構築します。
@@ -1876,8 +2883,242 @@ ON CONFLICT (id) DO UPDATE SET
   order_index = EXCLUDED.order_index,
   is_published = EXCLUDED.is_published;
 
--- 5. 新規42演習問題のヒント登録（冪等洗い替え）
-DELETE FROM public.hints WHERE problem_id IN ('44444444-4444-4444-8444-444444441101', '44444444-4444-4444-8444-444444441102', '44444444-4444-4444-8444-444444441103', '44444444-4444-4444-8444-444444441104', '44444444-4444-4444-8444-444444441105', '44444444-4444-4444-8444-444444441106', '44444444-4444-4444-8444-444444441201', '44444444-4444-4444-8444-444444441202', '44444444-4444-4444-8444-444444441203', '44444444-4444-4444-8444-444444441204', '44444444-4444-4444-8444-444444441205', '44444444-4444-4444-8444-444444441206', '44444444-4444-4444-8444-444444441207', '44444444-4444-4444-8444-444444441208', '44444444-4444-4444-8444-444444441209', '44444444-4444-4444-8444-444444441210', '44444444-4444-4444-8444-444444441211', '44444444-4444-4444-8444-444444441212', '44444444-4444-4444-8444-444444441301', '44444444-4444-4444-8444-444444441302', '44444444-4444-4444-8444-444444441303', '44444444-4444-4444-8444-444444441304', '44444444-4444-4444-8444-444444441305', '44444444-4444-4444-8444-444444441306', '44444444-4444-4444-8444-444444441307', '44444444-4444-4444-8444-444444441308', '44444444-4444-4444-8444-444444441309', '44444444-4444-4444-8444-444444441310', '44444444-4444-4444-8444-444444441311', '44444444-4444-4444-8444-444444441312', '44444444-4444-4444-8444-444444441401', '44444444-4444-4444-8444-444444441402', '44444444-4444-4444-8444-444444441403', '44444444-4444-4444-8444-444444441404', '44444444-4444-4444-8444-444444441405', '44444444-4444-4444-8444-444444441406', '44444444-4444-4444-8444-444444441501', '44444444-4444-4444-8444-444444441502', '44444444-4444-4444-8444-444444441503', '44444444-4444-4444-8444-444444441504', '44444444-4444-4444-8444-444444441505', '44444444-4444-4444-8444-444444441506');
+-- 5. 新規演習問題のテストケース登録（冪等洗い替え）
+DELETE FROM public.test_cases WHERE problem_id IN ('44444444-4444-4444-8444-444444441101', '44444444-4444-4444-8444-444444441102', '44444444-4444-4444-8444-444444441103', '44444444-4444-4444-8444-444444441104', '44444444-4444-4444-8444-444444441105', '44444444-4444-4444-8444-444444441106', '44444444-4444-4444-8444-444444441201', '44444444-4444-4444-8444-444444441202', '44444444-4444-4444-8444-444444441203', '44444444-4444-4444-8444-444444441204', '44444444-4444-4444-8444-444444441205', '44444444-4444-4444-8444-444444441206', '44444444-4444-4444-8444-444444441207', '44444444-4444-4444-8444-444444441208', '44444444-4444-4444-8444-444444441209', '44444444-4444-4444-8444-444444441210', '44444444-4444-4444-8444-444444441211', '44444444-4444-4444-8444-444444441212', '44444444-4444-4444-8444-444444441301', '44444444-4444-4444-8444-444444441302', '44444444-4444-4444-8444-444444441303', '44444444-4444-4444-8444-444444441304', '44444444-4444-4444-8444-444444441305', '44444444-4444-4444-8444-444444441306', '44444444-4444-4444-8444-444444441307', '44444444-4444-4444-8444-444444441308', '44444444-4444-4444-8444-444444441309', '44444444-4444-4444-8444-444444441310', '44444444-4444-4444-8444-444444441311', '44444444-4444-4444-8444-444444441312', '44444444-4444-4444-8444-444444442101', '44444444-4444-4444-8444-444444442102', '44444444-4444-4444-8444-444444442103', '44444444-4444-4444-8444-444444442104', '44444444-4444-4444-8444-444444442105', '44444444-4444-4444-8444-444444442106', '44444444-4444-4444-8444-444444442107', '44444444-4444-4444-8444-444444442108', '44444444-4444-4444-8444-444444442109', '44444444-4444-4444-8444-444444442110', '44444444-4444-4444-8444-444444442111', '44444444-4444-4444-8444-444444442112', '44444444-4444-4444-8444-444444442113', '44444444-4444-4444-8444-444444442114', '44444444-4444-4444-8444-444444441401', '44444444-4444-4444-8444-444444441402', '44444444-4444-4444-8444-444444441403', '44444444-4444-4444-8444-444444441404', '44444444-4444-4444-8444-444444441405', '44444444-4444-4444-8444-444444441406', '44444444-4444-4444-8444-444444441501', '44444444-4444-4444-8444-444444441502', '44444444-4444-4444-8444-444444441503', '44444444-4444-4444-8444-444444441504', '44444444-4444-4444-8444-444444441505', '44444444-4444-4444-8444-444444441506');
+
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442101', '公開テスト1：10000円を3人で割り勘', '10000
+3
+', '1人あたり: 3333円
+余り: 1円', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442101', '公開テスト2：ちょうど割り切れる場合', '12000
+4
+', '1人あたり: 3000円
+余り: 0円', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442101', '非公開テスト：端数あり', '5555
+6
+', '1人あたり: 925円
+余り: 5円', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442102', '公開テスト1：80, 75, 90', '80
+75
+90
+', '合計: 245
+平均: 81.7', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442102', '公開テスト2：100, 100, 100', '100
+100
+100
+', '合計: 300
+平均: 100.0', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442102', '非公開テスト：61, 62, 63', '61
+62
+63
+', '合計: 186
+平均: 62.0', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442103', '公開テスト1：prd-0042', 'prd-0042
+', '8
+PRD-0042
+PRD', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442103', '公開テスト2：abc123', 'abc123
+', '6
+ABC123
+ABC', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442103', '非公開テスト：dev_999', 'dev_999
+', '7
+DEV_999
+DEV', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442104', '公開テスト1：正常ログイン', 'admin
+java2025
+', 'LOGIN_OK', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442104', '公開テスト2：パスワード誤り', 'admin
+wrong
+', 'LOGIN_NG', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442104', '非公開テスト：ID誤り', 'guest
+java2025
+', 'LOGIN_NG', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442105', '公開テスト1：N=10', '10
+', '55
+30', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442105', '公開テスト2：N=5', '5
+', '15
+6', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442105', '非公開テスト：N=1', '1
+', '1
+0', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442106', '公開テスト1：3の段', '3
+', '3 x 1 = 3
+3 x 2 = 6
+3 x 3 = 9
+3 x 4 = 12
+3 x 5 = 15
+3 x 6 = 18
+3 x 7 = 21
+3 x 8 = 24
+3 x 9 = 27', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442106', '非公開テスト：7の段', '7
+', '7 x 1 = 7
+7 x 2 = 14
+7 x 3 = 21
+7 x 4 = 28
+7 x 5 = 35
+7 x 6 = 42
+7 x 7 = 49
+7 x 8 = 56
+7 x 9 = 63', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442107', '公開テスト1：5名中3名合格', '5
+80
+55
+60
+42
+91
+', '合格: 3人
+不合格: 2人', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442107', '公開テスト2：全員不合格', '3
+10
+59
+0
+', '合格: 0人
+不合格: 3人', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442107', '非公開テスト：全員合格', '2
+60
+100
+', '合格: 2人
+不合格: 0人', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442108', '公開テスト1：高さ4', '4
+', '*
+**
+***
+****', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442108', '公開テスト2：高さ1', '1
+', '*', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442108', '非公開テスト：高さ5', '5
+', '*
+**
+***
+****
+*****', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442109', '公開テスト1：4件', '4
+70 80 90 60
+', '60 90 80 70
+2', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442109', '公開テスト2：3件（同点）', '3
+50 50 50
+', '50 50 50
+3', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442109', '非公開テスト：5件', '5
+10 20 30 40 100
+', '100 40 30 20 10
+2', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442110', '公開テスト1：重複ありの先頭一致', '5
+10 25 30 25 50
+25
+', '1', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442110', '公開テスト2：見つからない場合', '4
+1 2 3 4
+9
+', '-1', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442110', '非公開テスト：末尾で一致', '3
+7 8 9
+9
+', '2', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442111', '公開テスト1：2000円の20%引き＋税10%', '2000
+20
+', '1760', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442111', '公開テスト2：割引なし', '1000
+0
+', '1100', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442111', '非公開テスト：1500円の10%引き＋税10%', '1500
+10
+', '1485', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442112', '公開テスト1：2名登録', '2
+山田太郎 開発部
+佐藤花子 営業部
+', '[開発部] 山田太郎
+[営業部] 佐藤花子', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442112', '非公開テスト：3名登録', '3
+鈴木 総務
+高橋 人事
+田中 開発
+', '[総務] 鈴木
+[人事] 高橋
+[開発] 田中', true, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442113', '公開テスト1：入庫・不足・出庫', 'Mouse 5
+3
+IN 3
+OUT 10
+OUT 4
+', 'SHORTAGE
+Mouse: 4', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442113', '公開テスト2：ちょうど0になる出庫', 'PC 2
+1
+OUT 2
+', 'PC: 0', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442113', '非公開テスト：連続不足', 'Hub 1
+3
+OUT 2
+OUT 5
+IN 4
+', 'SHORTAGE
+SHORTAGE
+Hub: 5', true, 3);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442114', '公開テスト1：5000円以上で送料無料', '2
+Keyboard 3000 1
+Mouse 1200 2
+', '商品合計: 5400円
+送料: 0円
+請求金額: 5400円', false, 1);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442114', '公開テスト2：5000円未満で送料500円', '2
+Cable 800 2
+Pad 1000 1
+', '商品合計: 2600円
+送料: 500円
+請求金額: 3100円', false, 2);
+INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
+VALUES ('44444444-4444-4444-8444-444444442114', '非公開テスト：ちょうど5000円', '1
+Headset 5000 1
+', '商品合計: 5000円
+送料: 0円
+請求金額: 5000円', true, 3);
+
+-- 6. 新規演習問題のヒント登録（冪等洗い替え）
+DELETE FROM public.hints WHERE problem_id IN ('44444444-4444-4444-8444-444444441101', '44444444-4444-4444-8444-444444441102', '44444444-4444-4444-8444-444444441103', '44444444-4444-4444-8444-444444441104', '44444444-4444-4444-8444-444444441105', '44444444-4444-4444-8444-444444441106', '44444444-4444-4444-8444-444444441201', '44444444-4444-4444-8444-444444441202', '44444444-4444-4444-8444-444444441203', '44444444-4444-4444-8444-444444441204', '44444444-4444-4444-8444-444444441205', '44444444-4444-4444-8444-444444441206', '44444444-4444-4444-8444-444444441207', '44444444-4444-4444-8444-444444441208', '44444444-4444-4444-8444-444444441209', '44444444-4444-4444-8444-444444441210', '44444444-4444-4444-8444-444444441211', '44444444-4444-4444-8444-444444441212', '44444444-4444-4444-8444-444444441301', '44444444-4444-4444-8444-444444441302', '44444444-4444-4444-8444-444444441303', '44444444-4444-4444-8444-444444441304', '44444444-4444-4444-8444-444444441305', '44444444-4444-4444-8444-444444441306', '44444444-4444-4444-8444-444444441307', '44444444-4444-4444-8444-444444441308', '44444444-4444-4444-8444-444444441309', '44444444-4444-4444-8444-444444441310', '44444444-4444-4444-8444-444444441311', '44444444-4444-4444-8444-444444441312', '44444444-4444-4444-8444-444444442101', '44444444-4444-4444-8444-444444442102', '44444444-4444-4444-8444-444444442103', '44444444-4444-4444-8444-444444442104', '44444444-4444-4444-8444-444444442105', '44444444-4444-4444-8444-444444442106', '44444444-4444-4444-8444-444444442107', '44444444-4444-4444-8444-444444442108', '44444444-4444-4444-8444-444444442109', '44444444-4444-4444-8444-444444442110', '44444444-4444-4444-8444-444444442111', '44444444-4444-4444-8444-444444442112', '44444444-4444-4444-8444-444444442113', '44444444-4444-4444-8444-444444442114', '44444444-4444-4444-8444-444444441401', '44444444-4444-4444-8444-444444441402', '44444444-4444-4444-8444-444444441403', '44444444-4444-4444-8444-444444441404', '44444444-4444-4444-8444-444444441405', '44444444-4444-4444-8444-444444441406', '44444444-4444-4444-8444-444444441501', '44444444-4444-4444-8444-444444441502', '44444444-4444-4444-8444-444444441503', '44444444-4444-4444-8444-444444441504', '44444444-4444-4444-8444-444444441505', '44444444-4444-4444-8444-444444441506');
 
 INSERT INTO public.hints (problem_id, step_number, content_md)
 VALUES ('44444444-4444-4444-8444-444444441101', 1, '上のMermaidシーケンス図の登場人物（ブラウザ・Webサーバー・アプリサーバー・データベース）の役割を見直してみましょう。');
@@ -1966,6 +3207,78 @@ VALUES ('44444444-4444-4444-8444-444444441311', 1, '`@media (max-width: 600px) {
 INSERT INTO public.hints (problem_id, step_number, content_md)
 VALUES ('44444444-4444-4444-8444-444444441312', 1, '`.app-header` に `display: flex; justify-content: space-between;`、`.badge-warn` に `background-color: #dc2626;` を指定し、HTMLに検索フォームと商品テーブルを記述します。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442101', 1, '商（割り算の答え）を求める演算子 `/` と、余りを求める演算子 `%` の2つを使います。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442101', 2, '`int perPerson = total / people;` のように変数へ入れてから文字列連結で出力しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442102', 1, '整数同士の割り算 `sum / 3` では小数が消えてしまうため、`3.0` で割るか `(double)` でキャストしましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442102', 2, '小数第1位までの整形には `String.format("%.1f", avg)` が便利です。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442103', 1, '文字列の長さは `.length()`、大文字化は `.toUpperCase()` で取得できます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442103', 2, '先頭から3文字取り出すときは、開始インデックス `0`・終了インデックス `3` を `substring` に渡します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442104', 1, '文字列同士の比較は `==` ではなく `.equals(...)` を使いましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442104', 2, 'IDとパスワードの両方が一致する条件は論理積 `&&` でつなぎます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442105', 1, '合計を貯める変数を2つ（全合計用・偶数合計用）用意し、ループ前に0で初期化しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442105', 2, '偶数かどうかは2で割った余り（`%` 演算子）が0かどうかで判定できます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442105', 3, 'ループ終了後、全合計・偶数合計の順に2行で出力できているか確認しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442106', 1, 'ループ変数を1から9まで1ずつ増やしながら繰り返します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442106', 2, '半角小文字の `x` と `=` の前後に半角スペースが1つずつ入っているか注意しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442106', 3, '文字列連結の中で掛け算を書くときは、括弧で囲んで優先順位を明確にすると安全です。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442107', 1, '合格カウンタと不合格カウンタの2つの変数を用意し、`n` 回のループ内で点数を1つずつ読み込みます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442107', 2, '境界値の「ちょうど60点」は合格に含まれるため、`>` ではなく `>=` を使いましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442107', 3, '不合格者数は `n - pass` で求めることもできます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442108', 1, '外側のループで行番号（1〜h）を回し、内側のループでその行番号と同じ回数だけ `*` をつなげます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442108', 2, '1行分の文字列を空文字から組み立てて、内側ループの後に `println` で出力するとシンプルです。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442108', 3, '行ごとに変数をリセットし忘れないよう、変数の宣言位置を確認しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442109', 1, '配列の末尾インデックスは `n - 1` です。`i--` で `0` まで減らすと逆順に取り出せます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442109', 2, '平均は `(double) sum / n` で小数のまま求めてから各要素と `>=` で比較しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442109', 3, '1行目の末尾に余分なスペースがつかないよう、先頭要素以外でスペースを挟む工夫をしましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442110', 1, '配列の先頭（インデックス0）から順番に `arr[i]` と `target` を比較します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442110', 2, '一致したらすぐに `return` でそのときのインデックスを返すと、最初の位置が返ります。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442110', 3, 'ループを最後まで抜けてしまった場合だけ `-1` を返しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442111', 1, '小数の丸め誤差を避けるため、`* (100 - discountPercent) / 100` のように整数演算で計算すると正確です。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442111', 2, '`applyDiscount` の戻り値をそのまま `addTax` の引数へ渡す流れにしてみましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442112', 1, '`Employee` クラスに `name` と `department` の2つのフィールドとコンストラクタを定義します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442112', 2, '`new Employee[n]` で配列の枠を作り、ループ内で `new Employee(name, dept)` を各要素へ代入します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442113', 1, '在庫数を `private` フィールドにし、増減は必ず `restock` / `ship` メソッド経由にします。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442113', 2, '`ship` では先に `stock < qty` かどうかをチェックし、足りない場合は減算せずに `false` を返しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442113', 3, 'コマンド判定の文字列比較には `.equals("IN")` / `.equals("OUT")` を使います。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442114', 1, '`CartItem` クラスに単価×数量を計算して返す `getSubtotal()` を用意すると、メイン側の集計がすっきりします。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442114', 2, '送料判定は境界値の「ちょうど5000円」が0円になるよう `>= 5000` で比較しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444442114', 3, '請求金額は「商品合計 + 送料」で計算します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
 VALUES ('44444444-4444-4444-8444-444444441401', 1, 'WindowsではEclipseの展開先を `C:\pleiades` のように短い英数字パスにすると、パス長エラーを防げます。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
 VALUES ('44444444-4444-4444-8444-444444441401', 2, 'GitHubリポジトリは講師がコードレビューできるよう **Public**（または講師をCollaborator招待）にしておきましょう。');
@@ -1992,5 +3305,5 @@ VALUES ('44444444-4444-4444-8444-444444441505', 1, '在庫数の増減（承認�
 INSERT INTO public.hints (problem_id, step_number, content_md)
 VALUES ('44444444-4444-4444-8444-444444441506', 1, '提出するURLはチーム共有リポジトリのトップURL（例：`https://github.com/team-xxx/teamops-hub`）を入力してください。');
 
--- 6. 権限確認
-GRANT SELECT ON public.courses, public.chapters, public.lessons, public.problems, public.hints TO authenticated;
+-- 7. 権限確認
+GRANT SELECT ON public.courses, public.chapters, public.lessons, public.problems, public.test_cases, public.hints TO authenticated;

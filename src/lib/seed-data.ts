@@ -12,6 +12,7 @@ import {
   EXTRA_JAVA_CHAPTERS,
   EXTRA_JAVA_PROBLEMS,
 } from "@/lib/java-curriculum-problems";
+import { JAVA_INTRO_EXTRA_PROBLEMS } from "@/lib/java-intro-extra-problems";
 import {
   EXTRA_SQL_CHAPTERS,
   EXTRA_SQL_PROBLEMS,
@@ -126,7 +127,7 @@ export const SEED_COURSES = [
     id: SEED_COURSE_ID,
     title: "Java入門コース：ゼロから学ぶ基礎文法とオブジェクト指向入門（Java 4か月①）",
     description:
-      "標準出力・変数・データ型・四則演算・Scanner入力・条件分岐（if/switch）・ループ・配列・メソッド・クラス設計の基礎まで全16問のコーディング演習で体系的に習得します。",
+      "標準出力・変数・データ型・四則演算・文字列操作・Scanner入力・条件分岐（if/switch）・ループ・二重ループ・配列・線形探索・メソッド分割・クラス設計と在庫/カート演習まで全30問のコーディング演習で基礎を徹底定着させます。",
     order_index: 4,
     is_published: true,
     prerequisite_course_id: SEED_HTMLCSS_COURSE_ID,
@@ -2370,6 +2371,7 @@ Gitの最も基本的な操作であるコミット（\`git commit\`）を作成
   ...LITERACY_PROBLEMS,
   ...EXCEL_PROBLEMS,
   ...HTMLCSS_PROBLEMS,
+  ...JAVA_INTRO_EXTRA_PROBLEMS,
   ...EXTRA_JAVA_PROBLEMS,
   ...EXTRA_SQL_PROBLEMS,
   ...SPRINGBOOT_PROJECT_PROBLEMS,

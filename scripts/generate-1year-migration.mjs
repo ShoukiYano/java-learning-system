@@ -32,6 +32,7 @@ try {
   const litExcel = await server.ssrLoadModule("/src/lib/curriculum-1year-literacy-excel.ts");
   const htmlcss = await server.ssrLoadModule("/src/lib/curriculum-1year-htmlcss.ts");
   const proj = await server.ssrLoadModule("/src/lib/curriculum-1year-projects.ts");
+  const javaIntroExtra = await server.ssrLoadModule("/src/lib/java-intro-extra-problems.ts");
 
   const newChapters = [
     ...litExcel.LITERACY_CHAPTERS,
@@ -45,6 +46,7 @@ try {
     ...litExcel.LITERACY_PROBLEMS,
     ...litExcel.EXCEL_PROBLEMS,
     ...htmlcss.HTMLCSS_PROBLEMS,
+    ...javaIntroExtra.JAVA_INTRO_EXTRA_PROBLEMS,
     ...proj.SPRINGBOOT_PROJECT_PROBLEMS,
     ...proj.TEAM_PROJECT_PROBLEMS,
   ];
@@ -129,8 +131,20 @@ try {
     );
   }
 
-  lines.push("-- 5. 新規42演習問題のヒント登録（冪等洗い替え）");
+  lines.push("-- 5. 新規演習問題のテストケース登録（冪等洗い替え）");
   const probIdList = newProblems.map((p) => sqlStr(p.id)).join(", ");
+  lines.push(`DELETE FROM public.test_cases WHERE problem_id IN (${probIdList});\n`);
+  for (const p of newProblems) {
+    for (const tc of p.test_cases || []) {
+      lines.push(
+        `INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)\n` +
+          `VALUES (${sqlStr(p.id)}, ${sqlStr(tc.name)}, ${sqlStr(tc.input)}, ${sqlStr(tc.expected_output)}, ${Boolean(tc.is_hidden)}, ${tc.order_index});`
+      );
+    }
+  }
+
+  lines.push("");
+  lines.push("-- 6. 新規演習問題のヒント登録（冪等洗い替え）");
   lines.push(`DELETE FROM public.hints WHERE problem_id IN (${probIdList});\n`);
   for (const p of newProblems) {
     for (const h of p.hints || []) {
@@ -142,8 +156,8 @@ try {
   }
 
   lines.push("");
-  lines.push("-- 6. 権限確認");
-  lines.push("GRANT SELECT ON public.courses, public.chapters, public.lessons, public.problems, public.hints TO authenticated;");
+  lines.push("-- 7. 権限確認");
+  lines.push("GRANT SELECT ON public.courses, public.chapters, public.lessons, public.problems, public.test_cases, public.hints TO authenticated;");
   lines.push("");
 
   const outPath = path.join(root, "supabase", "migrations", "20261123_1year_curriculum_expansion.sql");

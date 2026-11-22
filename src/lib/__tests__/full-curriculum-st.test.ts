@@ -24,14 +24,14 @@ describe("Full Curriculum ST: All 68 Problems (Java / SQL / Git) & 90-Day Plan",
         expect(p.test_cases.length, `No test cases for ${p.title}`).toBeGreaterThan(0);
       }
     }
-    expect(SEED_PROBLEMS.length).toBe(110);
+    expect(SEED_PROBLEMS.length).toBe(124);
   });
 
-  it("All 34 Java problems pass 100% of public and hidden test cases with solution_code", () => {
+  it("All 48 Java problems pass 100% of public and hidden test cases with solution_code", () => {
     const javaProblems = SEED_PROBLEMS.filter(
       (p) => detectProblemLanguage(p) === "java"
     );
-    expect(javaProblems.length).toBe(34);
+    expect(javaProblems.length).toBe(48);
     for (const p of javaProblems) {
       for (const tc of p.test_cases) {
         const res = runJavaCode(p.solution_code, {
