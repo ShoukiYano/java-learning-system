@@ -87,7 +87,9 @@ export function parseHtmlCssSubmission(submissionCode: string): { html: string; 
  */
 export function buildLivePreviewHtml(html: string, css: string): string {
   const safeHtml = html.replace(/<script[\s\S]*?<\/script>/gi, "");
-  const safeCss = css.replace(/<\/style>/gi, "");
+  const safeCss = css
+    .replace(/<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "");
   return `<!DOCTYPE html>
 <html lang="ja">
 <head>

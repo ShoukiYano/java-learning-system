@@ -1387,7 +1387,29 @@ export async function getStudentCourseLockStatuses(
   const coursesWithProg = await getCoursesWithProgress(studentId, companyId);
 
   return coursesWithProg.map((c) => {
-    const isSql = c.title.toUpperCase().includes("SQL");
+    const upperTitle = c.title.toUpperCase();
+    const isLiteracy = c.title.includes("ITリテラシー");
+    const isExcel = c.title.includes("Excel");
+    const isHtmlCss = c.title.includes("HTML");
+    const isTeam = c.title.includes("チーム開発");
+    const isSpringBoot = c.title.includes("Spring Boot");
+    const isGit = !isTeam && !isSpringBoot && upperTitle.includes("GIT");
+    const isSql = !isTeam && !isSpringBoot && upperTitle.includes("SQL");
+    const trackLabel = isLiteracy
+      ? "ITリテラシー Track"
+      : isExcel
+      ? "Excel実務 Track"
+      : isHtmlCss
+      ? "HTML & CSS Track"
+      : isTeam
+      ? "チーム開発 Track"
+      : isSpringBoot
+      ? "Spring Boot 個人開発 Track"
+      : isGit
+      ? "Git Version Control Track"
+      : isSql
+      ? "SQL Database Track"
+      : "Java Programming Track";
     const pct =
       c.totalProblems > 0
         ? Math.round((c.completedProblems / c.totalProblems) * 100)
@@ -1398,7 +1420,7 @@ export async function getStudentCourseLockStatuses(
       courseTitle: c.title,
       courseDescription: c.description,
       orderIndex: c.order_index,
-      trackLabel: isSql ? "SQL Database Track" : "Java Programming Track",
+      trackLabel,
       totalProblems: c.totalProblems,
       completedProblems: c.completedProblems,
       progressPercent: pct,

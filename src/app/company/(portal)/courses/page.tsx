@@ -25,6 +25,11 @@ import {
   Layers,
   Tag,
   Lock,
+  Table2,
+  Layout,
+  Rocket,
+  Users,
+  FileSpreadsheet,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -60,13 +65,33 @@ export default async function CompanyCurriculumViewPage() {
       <div className="space-y-8">
         {courseTrees.map(({ course, chapters, problems }) => {
           const upperTitle = course.title.toUpperCase();
-          const isGit = upperTitle.includes("GIT");
-          const isSql = upperTitle.includes("SQL");
-          const trackLabel = isGit
-            ? "Git Version Control Track"
+          const isLiteracy = course.title.includes("ITリテラシー");
+          const isExcel = course.title.includes("Excel");
+          const isHtmlCss = course.title.includes("HTML");
+          const isTeam = course.title.includes("チーム開発");
+          const isSpringBoot = course.title.includes("Spring Boot");
+          const isGit = !isTeam && !isSpringBoot && upperTitle.includes("GIT");
+          const isSql = !isTeam && !isSpringBoot && upperTitle.includes("SQL");
+          const trackLabel = isLiteracy
+            ? "ITリテラシー Track（3日）"
+            : isExcel
+            ? "Excel実務 Track（1か月）"
+            : isHtmlCss
+            ? "HTML & CSS Track（1か月）"
+            : isTeam
+            ? "チーム開発 3人1組（3か月）"
+            : isSpringBoot
+            ? "Spring Boot 個人開発（2か月）"
+            : isGit
+            ? "Git Version Control（3日）"
             : isSql
-            ? "SQL Database Track"
+            ? "SQL Database Track（2か月）"
             : "Java Programming Track";
+          const designDoc = isTeam
+            ? { href: "/docs/team-project-design-spec.xlsx", label: "チーム開発 詳細設計書 (.xlsx)" }
+            : isSpringBoot
+            ? { href: "/docs/product-management-design-spec.xlsx", label: "商品管理システム 詳細設計書 (.xlsx)" }
+            : null;
 
           return (
             <Card key={course.id} className="border-slate-300 shadow-sm">
@@ -92,7 +117,17 @@ export default async function CompanyCurriculumViewPage() {
                   </Link>
                 </div>
                 <CardTitle className="text-xl mt-2 flex items-center gap-2">
-                  {isGit ? (
+                  {isLiteracy ? (
+                    <BookOpen className="h-5 w-5 text-sky-400" />
+                  ) : isExcel ? (
+                    <Table2 className="h-5 w-5 text-emerald-400" />
+                  ) : isHtmlCss ? (
+                    <Layout className="h-5 w-5 text-orange-400" />
+                  ) : isTeam ? (
+                    <Users className="h-5 w-5 text-purple-400" />
+                  ) : isSpringBoot ? (
+                    <Rocket className="h-5 w-5 text-indigo-400" />
+                  ) : isGit ? (
                     <GitBranch className="h-5 w-5 text-emerald-400" />
                   ) : isSql ? (
                     <Database className="h-5 w-5 text-amber-400" />
@@ -104,6 +139,18 @@ export default async function CompanyCurriculumViewPage() {
                 <CardDescription className="text-slate-300 text-xs">
                   {course.description}
                 </CardDescription>
+                {designDoc && (
+                  <div className="pt-2">
+                    <a
+                      href={designDoc.href}
+                      download
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition"
+                    >
+                      <FileSpreadsheet className="h-3.5 w-3.5" />
+                      {designDoc.label} をダウンロード
+                    </a>
+                  </div>
+                )}
               </CardHeader>
 
               <CardContent className="p-6 space-y-6">
@@ -140,14 +187,22 @@ export default async function CompanyCurriculumViewPage() {
                                 <div className="flex items-center gap-2">
                                   <Badge
                                     variant={
-                                      lang === "git"
+                                      lang === "git" || lang === "literacy"
                                         ? "secondary"
-                                        : lang === "sql"
+                                        : lang === "sql" || lang === "htmlcss"
                                         ? "warning"
                                         : "default"
                                     }
                                   >
-                                    {lang === "git"
+                                    {lang === "literacy"
+                                      ? "ITリテラシー"
+                                      : lang === "excel"
+                                      ? "Excel"
+                                      : lang === "htmlcss"
+                                      ? "HTML/CSS"
+                                      : lang === "project"
+                                      ? "実務開発"
+                                      : lang === "git"
                                       ? "Git"
                                       : lang === "sql"
                                       ? "SQL"
