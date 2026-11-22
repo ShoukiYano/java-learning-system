@@ -56,7 +56,7 @@ const SB_STEP1: ProjectStepSpec = {
   stepNumber: 1,
   recommendedBranch: "feature/step1-setup",
   designDocPath: PRODUCT_SPEC_PATH,
-  designDocLabel: "商品管理システム 詳細設計書（Excel・全7シート）",
+  designDocLabel: "商品管理システム 開発者向け詳細設計書 v1.1.0（Excel・全12シート）",
   checklist: [
     "Eclipse（Pleiades All in One / Java 21）をインストールし、ワークスペース文字コードをUTF-8に設定した",
     "PostgreSQL 16をインストールし、pgAdmin 4 または psql でデータベース `product_mgmt_db` を作成した",
@@ -69,7 +69,7 @@ const SB_STEP2: ProjectStepSpec = {
   stepNumber: 2,
   recommendedBranch: "feature/step2-spring-db",
   designDocPath: PRODUCT_SPEC_PATH,
-  designDocLabel: "商品管理システム 詳細設計書（Excel・全7シート）",
+  designDocLabel: "商品管理システム 開発者向け詳細設計書 v1.1.0（Excel・全12シート）",
   checklist: [
     "Spring Initializr（Maven / Java 21）で依存関係（Web / JPA / Thymeleaf / Validation / PostgreSQL Driver）入りプロジェクトを作成した",
     "`application.properties` にPostgreSQL接続情報（URL・ユーザー名・パスワード）を設定した",
@@ -433,7 +433,7 @@ const TEAM_STEP1: ProjectStepSpec = {
   stepNumber: 1,
   recommendedBranch: "feature/team-step1-rules",
   designDocPath: TEAM_SPEC_PATH,
-  designDocLabel: "チーム開発（3人1組）総合業務Webシステム 詳細設計書（Excel・全7シート）",
+  designDocLabel: "TeamOps Hub 開発者向け詳細設計書 v1.1.0（Excel・全13シート）",
   isTeamProject: true,
   checklist: [
     "チーム3名の役割分担（メンバーA：社員・ダッシュボード3画面 / メンバーB：案件・タスク3画面 / メンバーC：備品貸出3画面）を決定した",

@@ -390,39 +390,64 @@ describe("1年間カリキュラム 総合検証テスト (UT / IT / ST)", () =>
       }
     });
 
-    it("配布Excel詳細設計書（.xlsx）2ファイルをZIP展開し全7シート・XML整合性・日本語UTF-8を検証", () => {
+    it("配布Excel詳細設計書 v1.1.0（.xlsx）2ファイルをZIP展開し全シートXML整合性・日本語UTF-8・v1.1.0仕様を検証", () => {
       const docsDir = path.resolve(process.cwd(), "public", "docs");
       const specs = [
         {
           file: "product-management-design-spec.xlsx",
-          keywords: ["商品管理システム", "Maven（pom.xml）", "Pull Request", "CREATE TABLE products", "TC-001", "ProductController"],
+          expectedSheets: 12,
+          keywords: [
+            "商品管理システム",
+            "1.1.0",
+            "Maven（pom.xml",
+            "Pull Request",
+            "CREATE TABLE products",
+            "TC-001",
+            "TC-022",
+            "existsBySkuAndIdNot",
+            "ProductController",
+            "D-01",
+          ],
         },
         {
           file: "team-project-design-spec.xlsx",
-          keywords: ["TeamOps Hub", "Maven（pom.xml）", "Pull Request", "メンバーA", "SCR-00", "CREATE TABLE equipment_loans", "IT-001"],
+          expectedSheets: 13,
+          keywords: [
+            "TeamOps Hub",
+            "1.1.0",
+            "Maven（pom.xml",
+            "Pull Request",
+            "メンバーA",
+            "SCR-00",
+            "CREATE TABLE equipment_loans",
+            "FOR UPDATE",
+            "AccessDeniedException",
+            "IT-001",
+            "IT-012",
+          ],
         },
       ];
 
-      for (const { file, keywords } of specs) {
+      for (const { file, expectedSheets, keywords } of specs) {
         const fullPath = path.join(docsDir, file);
         expect(fs.existsSync(fullPath)).toBe(true);
         const buf = fs.readFileSync(fullPath);
         const entries = extractZipEntries(buf);
 
-        // Must contain core OpenXML parts + 7 worksheets
+        // Must contain core OpenXML parts + all expected worksheets
         expect(entries["[Content_Types].xml"]).toBeDefined();
         expect(entries["_rels/.rels"]).toBeDefined();
         expect(entries["xl/workbook.xml"]).toBeDefined();
         expect(entries["xl/_rels/workbook.xml.rels"]).toBeDefined();
         expect(entries["xl/styles.xml"]).toBeDefined();
         expect(entries["xl/sharedStrings.xml"]).toBeDefined();
-        for (let i = 1; i <= 7; i++) {
+        for (let i = 1; i <= expectedSheets; i++) {
           expect(entries[`xl/worksheets/sheet${i}.xml`], `${file} sheet${i}`).toContain("</worksheet>");
         }
 
         // Verify Excel sheet name constraints (<= 31 chars, no illegal chars \ / ? * [ ] :)
         const sheetNameMatches = [...entries["xl/workbook.xml"].matchAll(/name="([^"]+)"/g)];
-        expect(sheetNameMatches.length).toBe(7);
+        expect(sheetNameMatches.length).toBe(expectedSheets);
         for (const m of sheetNameMatches) {
           const sName = m[1];
           expect(sName.length, `Sheet name too long: ${sName}`).toBeLessThanOrEqual(31);

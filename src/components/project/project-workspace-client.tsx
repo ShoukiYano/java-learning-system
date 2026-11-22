@@ -232,7 +232,7 @@ export function ProjectWorkspaceClient({
                   {spec.designDocLabel}
                 </h2>
                 <p className="text-xs text-slate-600 mt-1">
-                  画面一覧・テーブル定義＆DDL・クラス設計・バリデーション・テスト仕様書まで全7シート収録。ExcelまたはGoogleスプレッドシートで開いて開発を進めましょう。
+                  システム概要・画面設計・URL/クラス設計・DB定義・処理詳細・セキュリティ・テスト仕様書・設計判断ログまで開発者向け粒度（v1.1.0）で収録。ExcelまたはGoogleスプレッドシートで開いて開発を進めましょう。
                 </p>
               </div>
             </div>

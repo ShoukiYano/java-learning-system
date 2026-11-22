@@ -4572,7 +4572,7 @@ gitGraph
 ### 3. Excel詳細設計書をダウンロードしよう
 右側の **「詳細設計書（Excel）ダウンロード」** ボタンから `product-management-design-spec.xlsx` を保存し、ExcelまたはGoogleスプレッドシートで開いて **Sheet 1（表紙・読み方）と Sheet 2（機能要件）** を確認してください。',
   'easy', 90, ARRAY['Spring Boot', 'Eclipse', 'PostgreSQL', 'GitHub', '環境構築'],
-  '{"stepNumber":1,"recommendedBranch":"feature/step1-setup","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・全7シート）","checklist":["Eclipse（Pleiades All in One / Java 21）をインストールし、ワークスペース文字コードをUTF-8に設定した","PostgreSQL 16をインストールし、pgAdmin 4 または psql でデータベース `product_mgmt_db` を作成した","GitHubリポジトリ（例：product-manager）の `main` に初回READMEを作成後、`feature/step1-setup` ブランチを切って `.gitignore` 等を追加し **Pull Request** を作成した","配布のExcel詳細設計書（全7シート）をダウンロードし、Sheet 1〜2に目を通した"]}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/1","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '環境構築はエンジニア実務の第一歩です。つまずいた場合はエラー画面のスクリーンショットを撮って講師質問チャットで相談しましょう。',
+  '{"stepNumber":1,"recommendedBranch":"feature/step1-setup","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 開発者向け詳細設計書 v1.1.0（Excel・全12シート）","checklist":["Eclipse（Pleiades All in One / Java 21）をインストールし、ワークスペース文字コードをUTF-8に設定した","PostgreSQL 16をインストールし、pgAdmin 4 または psql でデータベース `product_mgmt_db` を作成した","GitHubリポジトリ（例：product-manager）の `main` に初回READMEを作成後、`feature/step1-setup` ブランチを切って `.gitignore` 等を追加し **Pull Request** を作成した","配布のExcel詳細設計書（全7シート）をダウンロードし、Sheet 1〜2に目を通した"]}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/1","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '環境構築はエンジニア実務の第一歩です。つまずいた場合はエラー画面のスクリーンショットを撮って講師質問チャットで相談しましょう。',
   1, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4622,7 +4622,7 @@ spring.jpa.show-sql=true
 
 ※パスワードをGitHubに公開したくない場合は `${DB_PASSWORD:postgres}` のように環境変数化すると実務レベルです！',
   'easy', 90, ARRAY['Spring Boot', 'PostgreSQL', 'application.properties'],
-  '{"stepNumber":2,"recommendedBranch":"feature/step2-spring-db","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書（Excel・全7シート）","checklist":["Spring Initializr（Maven / Java 21）で依存関係（Web / JPA / Thymeleaf / Validation / PostgreSQL Driver）入りプロジェクトを作成した","`application.properties` にPostgreSQL接続情報（URL・ユーザー名・パスワード）を設定した","EclipseからSpring Bootを起動し、コンソールエラーなく `http://localhost:8080` に接続できた","`feature/step2-spring-db` ブランチをPushして **Pull Request** を作成した"]}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/2","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '`Started Application in X.XXX seconds` とコンソールに出ればSpring BootとPostgreSQLの疎通は成功です。',
+  '{"stepNumber":2,"recommendedBranch":"feature/step2-spring-db","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 開発者向け詳細設計書 v1.1.0（Excel・全12シート）","checklist":["Spring Initializr（Maven / Java 21）で依存関係（Web / JPA / Thymeleaf / Validation / PostgreSQL Driver）入りプロジェクトを作成した","`application.properties` にPostgreSQL接続情報（URL・ユーザー名・パスワード）を設定した","EclipseからSpring Bootを起動し、コンソールエラーなく `http://localhost:8080` に接続できた","`feature/step2-spring-db` ブランチをPushして **Pull Request** を作成した"]}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/2","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '`Started Application in X.XXX seconds` とコンソールに出ればSpring BootとPostgreSQLの疎通は成功です。',
   2, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4853,7 +4853,7 @@ gitGraph
 
 まずは右側から **チーム開発 詳細設計書（Excel・全7シート）** をダウンロードし、3人で担当（A/B/C）とGitルールを決めましょう！',
   'medium', 120, ARRAY['チーム開発', 'Gitブランチ', '役割分担'],
-  '{"stepNumber":1,"recommendedBranch":"feature/team-step1-rules","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"チーム開発（3人1組）総合業務Webシステム 詳細設計書（Excel・全7シート）","isTeamProject":true,"checklist":["チーム3名の役割分担（メンバーA：社員・ダッシュボード3画面 / メンバーB：案件・タスク3画面 / メンバーC：備品貸出3画面）を決定した","チーム共有GitHubリポジトリを作成し、3名全員をCollaboratorに登録した","`main` ブランチから `develop` ブランチを作成し、Sheet 2 のGit運用ルール（直接Push禁止・PRレビュー必須）を合意し、役割分担表のPRを作成した","Excel詳細設計書（全7シート）を3名全員で読み込み、担当画面と共有テーブルの境界を確認した"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/1","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '最初に「誰がどのファイル・テーブルを触るか」の境界を設計書で合意しておくと、チーム開発のトラブルの8割を未然に防げます。',
+  '{"stepNumber":1,"recommendedBranch":"feature/team-step1-rules","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 開発者向け詳細設計書 v1.1.0（Excel・全13シート）","isTeamProject":true,"checklist":["チーム3名の役割分担（メンバーA：社員・ダッシュボード3画面 / メンバーB：案件・タスク3画面 / メンバーC：備品貸出3画面）を決定した","チーム共有GitHubリポジトリを作成し、3名全員をCollaboratorに登録した","`main` ブランチから `develop` ブランチを作成し、Sheet 2 のGit運用ルール（直接Push禁止・PRレビュー必須）を合意し、役割分担表のPRを作成した","Excel詳細設計書（全7シート）を3名全員で読み込み、担当画面と共有テーブルの境界を確認した"]}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/1","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '最初に「誰がどのファイル・テーブルを触るか」の境界を設計書で合意しておくと、チーム開発のトラブルの8割を未然に防げます。',
   1, true
 )
 ON CONFLICT (id) DO UPDATE SET
