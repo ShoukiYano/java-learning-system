@@ -238,12 +238,23 @@ describe("1年間カリキュラム 総合検証テスト (UT / IT / ST)", () =>
   // ST: システムテスト (System Tests)
   // =========================================================================
   describe("ST: 11コース/110問整合性・Excel詳細設計書OpenXML内部構造・SQLマイグレーション", () => {
-    it("11コース・全110問のマスターデータ整合性とUUID一意性", () => {
+    it("11コース・全110問のマスターデータ整合性とUUID一意性、および1本道開放順チェーン", () => {
       expect(SEED_COURSES.length).toBe(11);
       expect(SEED_PROBLEMS.length).toBe(110);
       expect(new Set(SEED_COURSES.map((c) => c.id)).size).toBe(11);
       expect(new Set(SEED_CHAPTERS.map((c) => c.id)).size).toBe(SEED_CHAPTERS.length);
       expect(new Set(SEED_PROBLEMS.map((p) => p.id)).size).toBe(110);
+
+      // ITリテラシー導入 -> Excel -> HTML&CSS -> Java(入門/初級/中級/上級) -> SQL -> Git -> Spring Boot個人開発 -> チーム開発
+      const sorted = [...SEED_COURSES].sort((a, b) => a.order_index - b.order_index);
+      expect(sorted[0].prerequisite_course_id).toBeNull();
+      expect(sorted[0].title).toContain("ITリテラシー導入");
+      for (let i = 1; i < sorted.length; i++) {
+        expect(
+          sorted[i].prerequisite_course_id,
+          `Course #${i + 1} (${sorted[i].title}) must require Course #${i} (${sorted[i - 1].title})`
+        ).toBe(sorted[i - 1].id);
+      }
     });
 
     it("配布Excel詳細設計書（.xlsx）2ファイルをZIP展開し全7シート・XML整合性・日本語UTF-8を検証", () => {

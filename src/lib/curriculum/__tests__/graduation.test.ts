@@ -102,9 +102,10 @@ describe("90-Day Java Curriculum & Graduation Evaluation", () => {
     expect(alerts[0].recommendedDay).toBe(14);
   });
 
-  it("コース開放の前提チェーン（Java入門→初級→中級→上級＆SQL）が正しく設定されていること", () => {
+  it("コース開放の前提チェーン（ITリテラシー→Excel→HTML&CSS→Java入門〜上級→SQL→Git→個人開発→チーム開発）が正しく設定されていること", () => {
     const byId = new Map(SEED_COURSES.map((c) => [c.id, c]));
-    expect(byId.get(SEED_COURSE_ID)?.prerequisite_course_id).toBeNull();
+    const sorted = [...SEED_COURSES].sort((a, b) => a.order_index - b.order_index);
+    expect(sorted[0].prerequisite_course_id).toBeNull();
     expect(byId.get(SEED_JAVA_BEGINNER_COURSE_ID)?.prerequisite_course_id).toBe(
       SEED_COURSE_ID
     );
@@ -115,7 +116,7 @@ describe("90-Day Java Curriculum & Graduation Evaluation", () => {
       SEED_JAVA_INTERMEDIATE_COURSE_ID
     );
     expect(byId.get(SEED_SQL_COURSE_ID)?.prerequisite_course_id).toBe(
-      SEED_JAVA_INTERMEDIATE_COURSE_ID
+      SEED_JAVA_ADVANCED_COURSE_ID
     );
   });
 });

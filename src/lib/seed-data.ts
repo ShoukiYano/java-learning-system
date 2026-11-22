@@ -111,7 +111,7 @@ export const SEED_COURSES = [
       "ブラウザ上のインタラクティブExcelシートで手を動かしながら、四則演算・SUM/AVERAGE・絶対参照・IF・COUNTIF/SUMIF・VLOOKUP/XLOOKUP・IFERROR・データ突合と月次報告集計を習得します。",
     order_index: 2,
     is_published: true,
-    prerequisite_course_id: null,
+    prerequisite_course_id: SEED_LITERACY_COURSE_ID,
   },
   {
     id: SEED_HTMLCSS_COURSE_ID,
@@ -120,7 +120,7 @@ export const SEED_COURSES = [
       "コードを書いた瞬間に右側のプレビュー画面へ反映される実践演習で、見出し・テーブル・入力フォーム・ボックスモデル・Flexbox・CSS Grid・レスポンシブ対応まで習得します。",
     order_index: 3,
     is_published: true,
-    prerequisite_course_id: null,
+    prerequisite_course_id: SEED_EXCEL_COURSE_ID,
   },
   {
     id: SEED_COURSE_ID,
@@ -129,7 +129,7 @@ export const SEED_COURSES = [
       "標準出力・変数・データ型・四則演算・Scanner入力・条件分岐（if/switch）・ループ・配列・メソッド・クラス設計の基礎まで全16問のコーディング演習で体系的に習得します。",
     order_index: 4,
     is_published: true,
-    prerequisite_course_id: null,
+    prerequisite_course_id: SEED_HTMLCSS_COURSE_ID,
   },
   {
     id: SEED_JAVA_BEGINNER_COURSE_ID,
@@ -165,7 +165,7 @@ export const SEED_COURSES = [
       "SELECT文の基本とWHERE条件指定からスタートし、GROUP BY / HAVING による集計分析、INNER JOIN / LEFT JOIN による複数テーブル結合まで全30問の実践クエリ演習で習得します。",
     order_index: 8,
     is_published: true,
-    prerequisite_course_id: SEED_JAVA_INTERMEDIATE_COURSE_ID,
+    prerequisite_course_id: SEED_JAVA_ADVANCED_COURSE_ID,
   },
   {
     id: SEED_GIT_COURSE_ID,
@@ -174,7 +174,7 @@ export const SEED_COURSES = [
       "以降の開発・チーム開発に不可欠なGit操作を、ブラウザ上でコミットやブランチ分岐・マージ・リベースを視覚化しながら直感的に習得します。",
     order_index: 9,
     is_published: true,
-    prerequisite_course_id: null,
+    prerequisite_course_id: SEED_SQL_COURSE_ID,
   },
   {
     id: SEED_SPRINGBOOT_PROJECT_COURSE_ID,
@@ -183,7 +183,7 @@ export const SEED_COURSES = [
       "Eclipse・Spring Boot・PostgreSQL・GitHubの導入から、配布Excel詳細設計書（全7シート）を読み解いて商品管理システム（検索・CRUD・バリデーション・ログイン）を構築しGitHub URLで提出します。",
     order_index: 10,
     is_published: true,
-    prerequisite_course_id: SEED_JAVA_ADVANCED_COURSE_ID,
+    prerequisite_course_id: SEED_GIT_COURSE_ID,
   },
   {
     id: SEED_TEAM_PROJECT_COURSE_ID,

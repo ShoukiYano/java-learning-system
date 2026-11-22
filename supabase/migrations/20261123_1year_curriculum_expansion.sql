@@ -20,7 +20,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111112', 'Excel実務マスターコース：調査・突合・報告レポート実践（1か月）', 'ブラウザ上のインタラクティブExcelシートで手を動かしながら、四則演算・SUM/AVERAGE・絶対参照・IF・COUNTIF/SUMIF・VLOOKUP/XLOOKUP・IFERROR・データ突合と月次報告集計を習得します。', 2, true, NULL)
+VALUES ('11111111-1111-4111-8111-111111111112', 'Excel実務マスターコース：調査・突合・報告レポート実践（1か月）', 'ブラウザ上のインタラクティブExcelシートで手を動かしながら、四則演算・SUM/AVERAGE・絶対参照・IF・COUNTIF/SUMIF・VLOOKUP/XLOOKUP・IFERROR・データ突合と月次報告集計を習得します。', 2, true, '11111111-1111-4111-8111-111111111111')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -29,7 +29,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111113', 'HTML＆CSS実践コース：リアルタイムプレビュー画面構築（1か月）', 'コードを書いた瞬間に右側のプレビュー画面へ反映される実践演習で、見出し・テーブル・入力フォーム・ボックスモデル・Flexbox・CSS Grid・レスポンシブ対応まで習得します。', 3, true, NULL)
+VALUES ('11111111-1111-4111-8111-111111111113', 'HTML＆CSS実践コース：リアルタイムプレビュー画面構築（1か月）', 'コードを書いた瞬間に右側のプレビュー画面へ反映される実践演習で、見出し・テーブル・入力フォーム・ボックスモデル・Flexbox・CSS Grid・レスポンシブ対応まで習得します。', 3, true, '11111111-1111-4111-8111-111111111112')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -38,7 +38,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111101', 'Java入門コース：ゼロから学ぶ基礎文法とオブジェクト指向入門（Java 4か月①）', '標準出力・変数・データ型・四則演算・Scanner入力・条件分岐（if/switch）・ループ・配列・メソッド・クラス設計の基礎まで全16問のコーディング演習で体系的に習得します。', 4, true, NULL)
+VALUES ('11111111-1111-4111-8111-111111111101', 'Java入門コース：ゼロから学ぶ基礎文法とオブジェクト指向入門（Java 4か月①）', '標準出力・変数・データ型・四則演算・Scanner入力・条件分岐（if/switch）・ループ・配列・メソッド・クラス設計の基礎まで全16問のコーディング演習で体系的に習得します。', 4, true, '11111111-1111-4111-8111-111111111113')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -74,7 +74,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111102', 'SQL実践コース：データ抽出・集計・テーブル結合マスター（2か月）', 'SELECT文の基本とWHERE条件指定からスタートし、GROUP BY / HAVING による集計分析、INNER JOIN / LEFT JOIN による複数テーブル結合まで全30問の実践クエリ演習で習得します。', 8, true, 'c4bd0c61-1a12-4d2a-af9d-ac2eb8a12165')
+VALUES ('11111111-1111-4111-8111-111111111102', 'SQL実践コース：データ抽出・集計・テーブル結合マスター（2か月）', 'SELECT文の基本とWHERE条件指定からスタートし、GROUP BY / HAVING による集計分析、INNER JOIN / LEFT JOIN による複数テーブル結合まで全30問の実践クエリ演習で習得します。', 8, true, 'bb827c60-3d1d-40db-ac42-5da47866d141')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -83,7 +83,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('4107aaa5-10f0-41ca-8c22-a3a99eeebcbb', 'Git実践マスター：ビジュアル分岐・マージ演習（3日間）', '以降の開発・チーム開発に不可欠なGit操作を、ブラウザ上でコミットやブランチ分岐・マージ・リベースを視覚化しながら直感的に習得します。', 9, true, NULL)
+VALUES ('4107aaa5-10f0-41ca-8c22-a3a99eeebcbb', 'Git実践マスター：ビジュアル分岐・マージ演習（3日間）', '以降の開発・チーム開発に不可欠なGit操作を、ブラウザ上でコミットやブランチ分岐・マージ・リベースを視覚化しながら直感的に習得します。', 9, true, '11111111-1111-4111-8111-111111111102')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -92,7 +92,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111114', 'Spring Boot＋SQL 個人開発：商品管理システム構築（2か月・詳細設計書付）', 'Eclipse・Spring Boot・PostgreSQL・GitHubの導入から、配布Excel詳細設計書（全7シート）を読み解いて商品管理システム（検索・CRUD・バリデーション・ログイン）を構築しGitHub URLで提出します。', 10, true, 'bb827c60-3d1d-40db-ac42-5da47866d141')
+VALUES ('11111111-1111-4111-8111-111111111114', 'Spring Boot＋SQL 個人開発：商品管理システム構築（2か月・詳細設計書付）', 'Eclipse・Spring Boot・PostgreSQL・GitHubの導入から、配布Excel詳細設計書（全7シート）を読み解いて商品管理システム（検索・CRUD・バリデーション・ログイン）を構築しGitHub URLで提出します。', 10, true, '4107aaa5-10f0-41ca-8c22-a3a99eeebcbb')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,

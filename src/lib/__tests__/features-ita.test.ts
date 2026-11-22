@@ -102,23 +102,35 @@ describe("全機能結合テスト（Features ITA：全問題採点・企業・�
     expect(errJson.status).toBe("compile_error");
   });
 
-  it("F-ITA-03: コース前提解放チェーン（Java入門→初級→中級→上級＆SQL）が正しく構成されている", async () => {
+  it("F-ITA-03: コース前提解放チェーン（ITリテラシー→Excel→HTML&CSS→Java入門〜上級→SQL→Git→Spring Boot個人開発→チーム開発）が正しく構成されている", async () => {
     const courses = await getCoursesWithProgress(
       "demo-student-id",
       "00000000-0000-4000-8000-000000000001"
     );
     const byTitle = (kw: string) => courses.find((c) => c.title.includes(kw));
+    const lit = byTitle("ITリテラシー");
+    const excel = byTitle("Excel");
+    const html = byTitle("HTML");
     const intro = byTitle("Java入門");
     const beg = byTitle("Java初級");
     const mid = byTitle("Java中級");
     const adv = byTitle("Java上級");
-    const sql = byTitle("SQL");
+    const sql = byTitle("SQL実践");
+    const git = byTitle("Git実践");
+    const sb = byTitle("Spring Boot");
+    const team = byTitle("チーム開発");
 
-    expect(intro?.isLocked).toBe(false);
+    expect(lit?.isLocked).toBe(false);
+    expect(excel?.prerequisite_course_id).toBe(lit?.id);
+    expect(html?.prerequisite_course_id).toBe(excel?.id);
+    expect(intro?.prerequisite_course_id).toBe(html?.id);
     expect(beg?.prerequisite_course_id).toBe(intro?.id);
     expect(mid?.prerequisite_course_id).toBe(beg?.id);
     expect(adv?.prerequisite_course_id).toBe(mid?.id);
-    expect(sql?.prerequisite_course_id).toBe(mid?.id);
+    expect(sql?.prerequisite_course_id).toBe(adv?.id);
+    expect(git?.prerequisite_course_id).toBe(sql?.id);
+    expect(sb?.prerequisite_course_id).toBe(git?.id);
+    expect(team?.prerequisite_course_id).toBe(sb?.id);
   });
 
   it("F-ITA-04: 企業機能（CSV一括登録・100点修了判定保存・遅れアラート基準・進捗マトリクス）", async () => {
