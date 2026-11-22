@@ -1162,15 +1162,15 @@ public class Main {
     hints: [
       {
         step_number: 1,
-        content_md: `最大値を保持する変数 \`int max = nums[0];\` と、合計用の \`int sum = 0;\` を用意します。`,
+        content_md: "最大値と合計値をそれぞれ別の変数で管理し、配列の先頭から末尾まで順番に走査する構成を考えましょう。",
       },
       {
         step_number: 2,
-        content_md: `ループで各要素を見て、\`if (nums[i] > max) { max = nums[i]; }\` で最大値を更新します。`,
+        content_md: "最大値用の変数は 0 で初期化すると負の数だけの配列で誤判定になります。配列の最初の要素を初期値にするのが定石です。",
       },
       {
         step_number: 3,
-        content_md: `最後に \`System.out.println(max + " " + sum);\` で出力します。`,
+        content_md: "ループ内で「合計への加算」と「現在の最大値との比較・更新」の2つを行い、出力形式（空白区切りなど）を仕様と照合してください。",
       },
     ],
   },
@@ -1271,15 +1271,15 @@ public class Main {
     hints: [
       {
         step_number: 1,
-        content_md: `まず \`if (x < 2) return false;\` で 1 以下の数を除外します。`,
+        content_md: "素数の定義（1より大きく、1とその数自身以外の約数を持たない整数）をそのまま条件に落とし込みましょう。",
       },
       {
         step_number: 2,
-        content_md: `\`for (int i = 2; i < x; i++)\`（または \`i * i <= x\`）で割り切れる数がないか調べます。`,
+        content_md: "2未満の数は先に除外し、2から対象の数の平方根付近（または対象未満）まで割り切れる数があるかをループで調べます。",
       },
       {
         step_number: 3,
-        content_md: `ループの中で \`if (x % i == 0) return false;\` とし、ループを抜けたら \`return true;\` を返します。`,
+        content_md: "1つでも割り切れる数が見つかった時点で素数ではないと確定できます。ループを最後まで抜けた場合の戻り値も確認しましょう。",
       },
     ],
   },
@@ -1363,15 +1363,15 @@ public class Main {
     hints: [
       {
         step_number: 1,
-        content_md: `再帰の終了条件として、\`if (n <= 1) return 1;\` を最初に書きます。`,
+        content_md: "再帰メソッドは「終了条件（ベースケース）」と「問題を1段階小さくして自分自身を呼ぶ処理」の2つで構成します。",
       },
       {
         step_number: 2,
-        content_md: `$n! = n \\times (n - 1)!$ なので、自分自身を \`factorial(n - 1)\` として呼び出せます。`,
+        content_md: "0の階乗・1の階乗がいくつになるかを終了条件として最初に判定し、無限再帰を防ぎましょう。",
       },
       {
         step_number: 3,
-        content_md: `\`return n * factorial(n - 1);\` を返せば完成です。`,
+        content_md: "引数が2以上のときは、現在の値と「引数を1減らして再帰呼び出しした結果」を掛け合わせて返します。",
       },
     ],
   },
@@ -1479,15 +1479,15 @@ public class Main {
     hints: [
       {
         step_number: 1,
-        content_md: `コンストラクタはクラス名と同じ名前 \`public Product(String name, int price)\` で定義します（戻り値型は書きません）。`,
+        content_md: "クラスに必要なデータ（フィールド）と、インスタンス生成時に初期値を受け取るコンストラクタの役割を整理しましょう。",
       },
       {
         step_number: 2,
-        content_md: `コンストラクタの中で \`this.name = name; this.price = price;\` を代入します。`,
+        content_md: "フィールド名とコンストラクタの仮引数名が同じ場合は、`this` キーワードを使ってインスタンス側のフィールドを明示します。",
       },
       {
         step_number: 3,
-        content_md: `\`public int getTotalPrice(int quantity) { return this.price * quantity; }\` を追加します。`,
+        content_md: "出力用メソッドでは、問題文で指定された記号・スペース・改行の並びと1文字も違わないか確認してください。",
       },
     ],
   },
@@ -1611,15 +1611,15 @@ public class Main {
     hints: [
       {
         step_number: 1,
-        content_md: `\`public void deposit(int amount) { this.balance += amount; }\` で預け入れを実装します。`,
+        content_md: "残高フィールドを外部から直接書き換えられないようアクセス修飾子で保護し、入金・出金メソッド経由でのみ操作する設計にします。",
       },
       {
         step_number: 2,
-        content_md: `\`withdraw\` では \`if (this.balance >= amount)\` のときだけ \`this.balance -= amount;\` を実行します。`,
+        content_md: "出金処理では、要求金額が現在の残高を超えていないかを先に検証し、残高不足時の振る舞いを分岐させましょう。",
       },
       {
         step_number: 3,
-        content_md: `残高が足りない場合の \`else\` ブロックで \`System.out.println("Insufficient funds");\` を出力します。`,
+        content_md: "境界ケース（残高ちょうどを出金した場合や、残高不足の直後に再度操作した場合）でも残高が正しく保たれるか確認してください。",
       },
     ],
   },
@@ -1731,15 +1731,15 @@ public class Main {
     hints: [
       {
         step_number: 1,
-        content_md: `\`VipMember\` クラスの中に \`public int getDiscountedPrice(int price)\` メソッドを定義します。`,
+        content_md: "共通の振る舞いを持つ親クラスを継承し、割引ルールが異なる部分だけを子クラス側で上書き（オーバーライド）します。",
       },
       {
         step_number: 2,
-        content_md: `20%引きは元の価格の80%なので \`return price * 80 / 100;\` と計算できます。`,
+        content_md: "親クラスのフィールドやメソッドを子クラスから利用したい場合は、アクセス修飾子や `super` の使い方に着目しましょう。",
       },
       {
         step_number: 3,
-        content_md: `\`@Override\` アノテーションを付けておくと、メソッド名のタイポを防げます。`,
+        content_md: "割引後の金額計算では、整数演算の順序によって端数が切り捨てられるタイミングに注意してください。",
       },
     ],
   },

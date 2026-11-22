@@ -331,9 +331,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "「または」は `||` 演算子で記述します。" },
-      { step_number: 2, content_md: "条件式は `isPremium == 1 || amount >= 5000` となります。" },
-      { step_number: 3, content_md: "条件を満たせば `FREE_SHIPPING`、そうでなければ `STANDARD_SHIPPING` を出力します。" },
+      {
+        step_number: 1,
+        content_md: "送料無料になる条件が「どちらか一方を満たせばよい（論理和）」なのか「両方必須（論理積）」なのかを問題文から整理しましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "Javaの論理演算子（`||` / `&&`）と比較演算子を組み合わせて、2つの条件を1つの `if` 文にまとめます。",
+      },
+      {
+        step_number: 3,
+        content_md: "境界値（ちょうど基準金額のとき、通常会員かつ基準未満のとき）が仕様通りの文字列を出力するか確認してください。",
+      },
     ],
   },
   {
@@ -419,9 +428,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "`switch (code) { case 200: ... break; default: ... }` の構文を使います。" },
-      { step_number: 2, content_md: "どの `case` にも一致しない場合は `default:` で `UNKNOWN` を出力します。" },
-      { step_number: 3, content_md: "すべての `case` に `break;` が入っているか確認してください。" },
+      {
+        step_number: 1,
+        content_md: "値ごとの固定分岐には `switch` 文を使うと、複数のステータスコードを見通しよく整理できます。",
+      },
+      {
+        step_number: 2,
+        content_md: "想定されている各ステータスコードに対応する分岐と、どれにも当てはまらない場合の既定分岐（`default`）を用意しましょう。",
+      },
+      {
+        step_number: 3,
+        content_md: "各分岐の末尾に `break` を書き忘れると次の分岐まで実行されてしまう（フォールスルー）ので注意してください。",
+      },
     ],
   },
 
@@ -507,9 +525,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "店舗ごとの合計変数 `rowSum` は外側ループの中で毎回 `0` にリセットします。" },
-      { step_number: 2, content_md: "店舗番号は `i + 1` と括弧で囲んで文字列結合します。" },
-      { step_number: 3, content_md: "各行の `rowSum` を `grandTotal` に加算し、ループ後に `GrandTotal: ` を出力します。" },
+      {
+        step_number: 1,
+        content_md: "二重ループを使い、外側のループで「店舗（行）」、内側のループで「日別売上（列）」を順番に集計する構造を組み立てましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "店舗ごとの小計変数は「外側ループの開始ごとに初期化」、全店舗の総合計変数は「外側ループの外で初期化」するのがポイントです。",
+      },
+      {
+        step_number: 3,
+        content_md: "店舗番号は0始まりではなく1始まりで表示される点と、出力ラベルの綴り・空白を確認してください。",
+      },
     ],
   },
   {
@@ -586,9 +613,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "`public static int calcPrice(int price)` と `public static int calcPrice(int price, int discount)` の2つを定義します。" },
-      { step_number: 2, content_md: "2引数版では `price - discount` が負になったときに `0` に丸めます。" },
-      { step_number: 3, content_md: "最後に `calcPrice(base)` を呼び出すとコードがスッキリします。" },
+      {
+        step_number: 1,
+        content_md: "同じメソッド名でも引数の個数が異なれば別メソッドとして定義できる「オーバーロード」を活用しましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "割引あり版では、割引額が元の価格を上回った場合に結果がマイナスにならないよう下限チェックを入れてください。",
+      },
+      {
+        step_number: 3,
+        content_md: "割引なし版と割引あり版で共通する計算ロジックがあれば、片方からもう片方を呼び出すと重複を減らせます。",
+      },
     ],
   },
   {
@@ -681,9 +717,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "`private static int nextId = 1;` とインスタンス変数 `id`, `title` を宣言します。" },
-      { step_number: 2, content_md: "コンストラクタ内で `this.id = nextId; nextId++;` を行います。" },
-      { step_number: 3, content_md: "発行済み件数は `nextId - 1` で求められます。" },
+      {
+        step_number: 1,
+        content_md: "インスタンスごとに持つ値（個別ID・タイトル）と、クラス全体で共有する値（次に採番する連番）を分けて考えましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "共有カウンタには `static` フィールドを使い、コンストラクタが呼ばれるたびに採番とカウントアップを行います。",
+      },
+      {
+        step_number: 3,
+        content_md: "これまで発行された総件数を返す静的メソッドで、初期値と採番タイミングによる1ズレが起きないか確認してください。",
+      },
     ],
   },
   {
@@ -794,9 +839,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "`class CreditCardPayment implements Payment` のようにインターフェースを実装します。" },
-      { step_number: 2, content_md: "カード手数料は `(amount * 3) / 100` です。" },
-      { step_number: 3, content_md: "銀行振込は `amount <= 0` なら `0`、それ以外は `220` を返します。" },
+      {
+        step_number: 1,
+        content_md: "共通のインターフェースを各決済クラスで実装することで、呼び出し側は具体的な決済手段を意識せず同じメソッド名で処理できます。",
+      },
+      {
+        step_number: 2,
+        content_md: "決済手段ごとに異なる手数料ルール（割合計算か固定額か、0円以下のときの扱い）を各クラスの実装メソッド内に閉じ込めましょう。",
+      },
+      {
+        step_number: 3,
+        content_md: "割合計算を整数で行う場合、先に掛け算してから割り算しないと途中で0に切り捨てられてしまう点に注意してください。",
+      },
     ],
   },
 
@@ -879,9 +933,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "`customers.size()` 回ループして `customers.get(i)` を取り出します。" },
-      { step_number: 2, content_md: "`name.contains(keyword)` が true なら出力し、ヒット件数をカウントします。" },
-      { step_number: 3, content_md: "ループ終了後にヒット件数が 0 なら `NOT_FOUND` を出力します。" },
+      {
+        step_number: 1,
+        content_md: "登録された顧客名を `ArrayList` に格納し、先頭から順に部分一致する要素だけを抽出して出力する流れを組み立てましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "文字列に特定キーワードが含まれるかどうかの判定には、`String` クラスの検索系メソッドが活用できます。",
+      },
+      {
+        step_number: 3,
+        content_md: "1件も一致しなかった場合にだけ専用メッセージを出すため、ヒット件数を数えるカウンタ（またはフラグ）を用意してください。",
+      },
     ],
   },
   {
@@ -949,9 +1012,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "`map.containsKey(cat)` でキーの存在を確認します。" },
-      { step_number: 2, content_md: "既存値に `amount` を足して `map.put(cat, current + amount)` で更新します。" },
-      { step_number: 3, content_md: "最後の `target` がマップに無い場合は `0` を出力します。" },
+      {
+        step_number: 1,
+        content_md: "カテゴリ名をキー、売上累計を値として保持する `HashMap` を使うと、カテゴリが増減しても柔軟に集計できます。",
+      },
+      {
+        step_number: 2,
+        content_md: "同じカテゴリが複数回登場したときは、すでに登録済みの累計額を取り出して今回の金額を加算し、上書き保存します。",
+      },
+      {
+        step_number: 3,
+        content_md: "最後に照会するカテゴリが一度も登場していない場合のデフォルト出力（0など）を忘れずに処理してください。",
+      },
     ],
   },
   {
@@ -1022,9 +1094,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "`String[] cols = line.split(\",\");` でカンマ分割します。" },
-      { step_number: 2, content_md: "単価は `cols[1].trim()`、個数は `cols[2].trim()` を `Integer.parseInt` に渡します。" },
-      { step_number: 3, content_md: "`total += price * qty;` で累積加算します。" },
+      {
+        step_number: 1,
+        content_md: "1行のCSV文字列をカンマ区切りで配列に分割し、各列の役割（商品名・単価・数量など）に応じて取り出しましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "分割直後の各項目は文字列型（`String`）なので、計算に使う数値列は整数型へ変換する必要があります。",
+      },
+      {
+        step_number: 3,
+        content_md: "前後に空白が含まれる可能性や、行ごとの小計を全体合計へ加算し忘れていないかを確認してください。",
+      },
     ],
   },
   {
@@ -1115,9 +1196,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "まず `qty <= 0` をチェックし、`throw new IllegalArgumentException(\"INVALID_QTY\");` を実行します。" },
-      { step_number: 2, content_md: "次に `qty > stock` をチェックし、`throw new IllegalStateException(\"OUT_OF_STOCK\");` を実行します。" },
-      { step_number: 3, content_md: "両方通過したら `return stock - qty;` を返します。" },
+      {
+        step_number: 1,
+        content_md: "不正な引数（0以下など）と、現在の業務状態によるエラー（在庫不足）を別の例外クラスで投げ分ける設計を考えましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "入力値の妥当性チェックを先に行い、続いて在庫数との比較チェック、最後に正常系の残数返却という順序で整理します。",
+      },
+      {
+        step_number: 3,
+        content_md: "呼び出し側で例外の種類ごとに適切にキャッチされるよう、スローする例外クラス名とメッセージが仕様と一致しているか確認してください。",
+      },
     ],
   },
 
@@ -1232,9 +1322,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "`save` は `store.put(id, name);` で登録・更新の両方に対応できます。" },
-      { step_number: 2, content_md: "`findById` は `store.containsKey(id)` が false なら `\"NOT_FOUND\"` を返します。" },
-      { step_number: 3, content_md: "`deleteById` は `store.remove(id);` を呼び出します。" },
+      {
+        step_number: 1,
+        content_md: "データ保存層（DAO）の内部に `HashMap` を持たせ、登録・更新・検索・削除の各操作をメソッドとして切り出しましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "新規登録と既存更新は、同じキーに対する上書き挙動を利用すると1つの保存メソッドで統一的に扱えます。",
+      },
+      {
+        step_number: 3,
+        content_md: "存在しないIDで検索されたときの戻り値や、削除後に再検索したときの挙動が仕様通りか確認してください。",
+      },
     ],
   },
   {
@@ -1322,9 +1421,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "`name.trim().length() == 0` で空文字・空白のみを検知します。" },
-      { step_number: 2, content_md: "`!email.contains(\"@\")` でメール形式エラーを検知します。" },
-      { step_number: 3, content_md: "`errors.size() == 0` なら `201 CREATED`、それ以外は `400 BAD_REQUEST` と各エラーを出力します。" },
+      {
+        step_number: 1,
+        content_md: "複数の入力チェックを1つずつ実行し、違反があればエラーリストへ蓄積していく方式にすると、全エラーをまとめて返せます。",
+      },
+      {
+        step_number: 2,
+        content_md: "氏名の空文字・空白のみチェックや、メールアドレスの形式チェックには `String` の標準メソッドを活用しましょう。",
+      },
+      {
+        step_number: 3,
+        content_md: "すべてのチェックを終えたあと、エラーリストが空かどうかで成功ステータスと失敗ステータスを切り替えます。",
+      },
     ],
   },
   {
@@ -1426,9 +1534,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "文字列の一致判定は `==` ではなく `d.status.equals(\"WON\")` を使います。" },
-      { step_number: 2, content_md: "一致するたびに `wonCount++` と `wonBudget += d.budget` を行います。" },
-      { step_number: 3, content_md: "指定の2行フォーマットで出力してください。" },
+      {
+        step_number: 1,
+        content_md: "案件リストを走査し、指定されたステータスに一致する案件だけを抽出して件数と予算合計をそれぞれ集計しましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "Javaで文字列の中身が一致するかを比較する際は、参照比較（`==`）ではなく値比較メソッドを使う点に注意してください。",
+      },
+      {
+        step_number: 3,
+        content_md: "対象案件が0件のケースでもエラーにならず、件数0・合計0が正しく出力されるか確認しましょう。",
+      },
     ],
   },
   {
@@ -1503,9 +1620,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "「以上」「以下」なので `>=` と `<=` を使用します。" },
-      { step_number: 2, content_md: "`return age >= 18 && age <= 65;` の1行で表現できます。" },
-      { step_number: 3, content_md: "17→false, 18→true, 65→true, 66→false になるか確認してください。" },
+      {
+        step_number: 1,
+        content_md: "境界値分析の基本として「下限ちょうど」「下限の1つ下」「上限ちょうど」「上限の1つ上」の4パターンを意識しましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "「以上」「以下」を含む範囲判定では、比較演算子に等号（`=`）が含まれているかが重要なチェックポイントです。",
+      },
+      {
+        step_number: 3,
+        content_md: "条件を満たす範囲を1つの論理式で簡潔に表現し、境界の前後で期待通りの真偽値が返るか検証してください。",
+      },
     ],
   },
 
@@ -1599,9 +1725,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "二重ループで隣り合う要素 `arr[j]` と `arr[j + 1]` を比較します。" },
-      { step_number: 2, content_md: "`arr[j] > arr[j + 1]` のとき、一時変数 `tmp` を使って2つの値を交換します。" },
-      { step_number: 3, content_md: "ソート後、中央値は `nums[n / 2]` で取得できます。" },
+      {
+        step_number: 1,
+        content_md: "中央値を求めるには、まず配列を小さい順（昇順）に並べ替える必要があります。並べ替え処理と中央値算出をメソッドに分けましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "要素数が奇数のときは真ん中の1要素、偶数のときは中央2要素の平均になるため、要素数の偶奇で分岐させます。",
+      },
+      {
+        step_number: 3,
+        content_md: "ソート処理では配列の範囲外アクセスが起きないようループ上限に注意し、要素数1や同値を含むケースでも確認してください。",
+      },
     ],
   },
   {
@@ -1727,9 +1862,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "`FullTimeEmployee` と `PartTimeEmployee` にそれぞれ2つの `private int` フィールドとコンストラクタを用意します。" },
-      { step_number: 2, content_md: "両クラスに `implements Payable` を付け、`public int calcMonthlyPay()` を実装します。" },
-      { step_number: 3, content_md: "正社員は `baseSalary + overtimeHours * 2500`、アルバイトは `hourlyWage * workHours` を返します。" },
+      {
+        step_number: 1,
+        content_md: "正社員とアルバイトで異なる給与計算ロジックを、共通インターフェースの実装クラスとしてそれぞれ表現しましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "各クラスに必要な入力値をフィールドとして保持し、コンストラクタで受け取って計算メソッドから参照できるようにします。",
+      },
+      {
+        step_number: 3,
+        content_md: "インターフェース型の変数や配列として扱うことで、雇用形態が異なっても統一的に給与を取得・出力できることを確認してください。",
+      },
     ],
   },
 
@@ -1808,9 +1952,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "`counts.containsKey(path)` で既存回数を確認し、`+ 1` して `counts.put(path, next)` します。" },
-      { step_number: 2, content_md: "`if (next > topCount)` のとき `topCount = next; topPath = path;` を更新します。" },
-      { step_number: 3, content_md: "最後に `\"Top: \" + topPath + \" (\" + topCount + \")\"` の形式で出力します。" },
+      {
+        step_number: 1,
+        content_md: "アクセス先ごとの出現回数を `HashMap` で数えながら、同時に「現時点での最多アクセス先と回数」を追跡しましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "マップへ加算した直後の回数と現在の最大回数を比較し、上回ったときだけ最多情報を更新するとシンプルに書けます。",
+      },
+      {
+        step_number: 3,
+        content_md: "同率1位が発生した場合の優先ルール（最初に出現したものを優先するか等）が比較演算子（`>` か `>=` か）に反映されているか確認してください。",
+      },
     ],
   },
   {
@@ -1890,9 +2043,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "`for` ループの内側に `try { ... } catch (Exception e) { ... }` を書きます。" },
-      { step_number: 2, content_md: "`try` 内で `Integer.parseInt(raw)` して `sum` に足します。" },
-      { step_number: 3, content_md: "`catch` 内で `skipped++` を実行します。" },
+      {
+        step_number: 1,
+        content_md: "不正な数値データが含まれていてもループ全体が止まらないよう、1件ごとの変換処理を例外ハンドリングで囲みましょう。",
+      },
+      {
+        step_number: 2,
+        content_md: "正常に変換できた値だけを合計へ加算し、変換に失敗して例外が発生した件数を別のカウンタで記録します。",
+      },
+      {
+        step_number: 3,
+        content_md: "例外を握りつぶすだけでなく「何件スキップしたか」を仕様通りの形式で出力できているか確認してください。",
+      },
     ],
   },
 
@@ -1995,9 +2157,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "総ページ数の切り上げは `(n + size - 1) / size` で計算できます。" },
-      { step_number: 2, content_md: "開始位置は `start = (page - 1) * size`、終了位置は `Math.min(start + size, n)`（または `if (end > n) end = n;`）です。" },
-      { step_number: 3, content_md: "`page < 1 || start >= n` のときは `EMPTY` を出力します。" },
+      {
+        step_number: 1,
+        content_md: "ページネーションでは「総ページ数（切り上げ計算）」「開始インデックス」「終了インデックス」の3つを整理するのがコツです。",
+      },
+      {
+        step_number: 2,
+        content_md: "1始まりのページ番号を0始まりの配列インデックスへ変換し、最終ページで配列の末尾を超えないよう上限を制限しましょう。",
+      },
+      {
+        step_number: 3,
+        content_md: "0以下や総ページ数を超えるページ番号が指定された場合の異常系出力も忘れずに分岐させてください。",
+      },
     ],
   },
   {
@@ -2087,9 +2258,18 @@ public class Main {
       },
     ],
     hints: [
-      { step_number: 1, content_md: "文字列比較には必ず `from.equals(\"...\")` を使います。" },
-      { step_number: 2, content_md: "`DRAFT`, `CONFIRMED`, `SHIPPED` の3つの許可ルートだけ `true` を返します。" },
-      { step_number: 3, content_md: "`DELIVERED` や `CANCELLED` や未知の遷移はすべて末尾の `return false;` で拒否します。" },
+      {
+        step_number: 1,
+        content_md: "状態遷移バリデーションでは、許可されている「遷移元 → 遷移先」の組み合わせだけをホワイトリスト方式で定義すると安全です。",
+      },
+      {
+        step_number: 2,
+        content_md: "文字列比較のメソッドを使って現在のステータスと次のステータスの組み合わせを判定し、許可ルートのみ `true` を返します。",
+      },
+      {
+        step_number: 3,
+        content_md: "完了・キャンセル済みからの再遷移や、想定外の文字列が渡された場合はすべて拒否（`false`）になるよう末尾を閉じておきましょう。",
+      },
     ],
   },
 ];
