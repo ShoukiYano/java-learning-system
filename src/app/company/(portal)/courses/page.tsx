@@ -73,19 +73,19 @@ export default async function CompanyCurriculumViewPage() {
           const isGit = !isTeam && !isSpringBoot && upperTitle.includes("GIT");
           const isSql = !isTeam && !isSpringBoot && upperTitle.includes("SQL");
           const trackLabel = isLiteracy
-            ? "ITリテラシー Track（3日）"
+            ? "ITリテラシー Track"
             : isExcel
-            ? "Excel実務 Track（1か月）"
+            ? "Excel実務 Track"
             : isHtmlCss
-            ? "HTML & CSS Track（1か月）"
+            ? "HTML & CSS Track"
             : isTeam
-            ? "チーム開発 3人1組（3か月）"
+            ? "チーム開発 3人1組"
             : isSpringBoot
-            ? "Spring Boot 個人開発（2か月）"
+            ? "Spring Boot 個人開発"
             : isGit
-            ? "Git Version Control（3日）"
+            ? "Git Version Control"
             : isSql
-            ? "SQL Database Track（2か月）"
+            ? "SQL Database Track"
             : "Java Programming Track";
           const designDoc = isTeam
             ? {

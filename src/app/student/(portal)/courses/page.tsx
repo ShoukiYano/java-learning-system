@@ -60,19 +60,19 @@ export default async function StudentCoursesPage() {
           const isSql = !isSpringBoot && !isTeam && course.title.toUpperCase().includes("SQL");
 
           const trackBadge = isLiteracy
-            ? { label: "ITリテラシー Track（3日）", cls: "bg-sky-100 text-sky-800 border-sky-300" }
+            ? { label: "ITリテラシー Track", cls: "bg-sky-100 text-sky-800 border-sky-300" }
             : isExcel
-            ? { label: "Excel実務 Track（1か月）", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" }
+            ? { label: "Excel実務 Track", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" }
             : isHtmlCss
-            ? { label: "HTML & CSS Track（1か月）", cls: "bg-orange-100 text-orange-800 border-orange-300" }
+            ? { label: "HTML & CSS Track", cls: "bg-orange-100 text-orange-800 border-orange-300" }
             : isTeam
-            ? { label: "チーム開発 3人1組（3か月）", cls: "bg-purple-700 text-white" }
+            ? { label: "チーム開発 3人1組", cls: "bg-purple-700 text-white" }
             : isSpringBoot
-            ? { label: "Spring Boot 個人開発（2か月）", cls: "bg-indigo-700 text-white" }
+            ? { label: "Spring Boot 個人開発", cls: "bg-indigo-700 text-white" }
             : isGitTrack
-            ? { label: "Git Version Control（3日）", cls: "bg-purple-100 text-purple-700 border-purple-300" }
+            ? { label: "Git Version Control", cls: "bg-purple-100 text-purple-700 border-purple-300" }
             : isSql
-            ? { label: "SQL Database Track（2か月）", cls: "bg-amber-100 text-amber-800 border-amber-300" }
+            ? { label: "SQL Database Track", cls: "bg-amber-100 text-amber-800 border-amber-300" }
             : course.title.includes("上級")
             ? { label: "Java上級 Track", cls: "bg-rose-600 text-white" }
             : course.title.includes("中級")
