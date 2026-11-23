@@ -88,6 +88,9 @@ export interface ProjectStepSpec {
   stepNumber: number;
   designDocPath: string;
   designDocLabel: string;
+  /** Optional screen design mockup Excel path */
+  mockupDocPath?: string;
+  mockupDocLabel?: string;
   checklist: string[];
   /** Recommended feature branch name for this step (e.g. "feature/step1-setup") */
   recommendedBranch?: string;

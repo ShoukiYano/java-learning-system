@@ -237,14 +237,26 @@ export function ProjectWorkspaceClient({
               </div>
             </div>
 
-            <a
-              href={spec.designDocPath}
-              download
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm transition"
-            >
-              <Download className="h-4 w-4" />
-              詳細設計書（Excel）をダウンロード
-            </a>
+            <div className="space-y-2">
+              <a
+                href={spec.designDocPath}
+                download
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm transition"
+              >
+                <Download className="h-4 w-4" />
+                詳細設計書（Excel）をダウンロード
+              </a>
+              {spec.mockupDocPath && (
+                <a
+                  href={spec.mockupDocPath}
+                  download
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 text-xs font-bold shadow-xs transition"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                  {spec.mockupDocLabel || "画面設計モックアップ（Excel）"} をダウンロード
+                </a>
+              )}
+            </div>
           </div>
 
           {/* Checklist & GitHub Submission Form */}

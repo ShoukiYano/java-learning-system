@@ -88,9 +88,19 @@ export default async function CompanyCurriculumViewPage() {
             ? "SQL Database Track（2か月）"
             : "Java Programming Track";
           const designDoc = isTeam
-            ? { href: "/docs/team-project-design-spec.xlsx", label: "チーム開発 詳細設計書 (.xlsx)" }
+            ? {
+                href: "/docs/team-project-design-spec.xlsx",
+                label: "TeamOps Hub 詳細設計書 (.xlsx)",
+                mockupHref: "/docs/team-project-mockup.xlsx",
+                mockupLabel: "画面設計モックアップ (.xlsx)",
+              }
             : isSpringBoot
-            ? { href: "/docs/product-management-design-spec.xlsx", label: "商品管理システム 詳細設計書 (.xlsx)" }
+            ? {
+                href: "/docs/product-management-design-spec.xlsx",
+                label: "商品管理システム 詳細設計書 (.xlsx)",
+                mockupHref: "/docs/product-management-mockup.xlsx",
+                mockupLabel: "画面設計モックアップ (.xlsx)",
+              }
             : null;
 
           return (
@@ -140,7 +150,7 @@ export default async function CompanyCurriculumViewPage() {
                   {course.description}
                 </CardDescription>
                 {designDoc && (
-                  <div className="pt-2">
+                  <div className="pt-2 flex flex-wrap gap-2">
                     <a
                       href={designDoc.href}
                       download
@@ -148,6 +158,14 @@ export default async function CompanyCurriculumViewPage() {
                     >
                       <FileSpreadsheet className="h-3.5 w-3.5" />
                       {designDoc.label} をダウンロード
+                    </a>
+                    <a
+                      href={designDoc.mockupHref}
+                      download
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition"
+                    >
+                      <Layout className="h-3.5 w-3.5" />
+                      {designDoc.mockupLabel} をダウンロード
                     </a>
                   </div>
                 )}

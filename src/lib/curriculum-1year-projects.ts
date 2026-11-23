@@ -5,10 +5,22 @@ export const SEED_SPRINGBOOT_PROJECT_COURSE_ID = "11111111-1111-4111-8111-111111
 export const SEED_TEAM_PROJECT_COURSE_ID = "11111111-1111-4111-8111-111111111115";
 
 const PRODUCT_SPEC_PATH = "/docs/product-management-design-spec.xlsx";
+const PRODUCT_MOCKUP_PATH = "/docs/product-management-mockup.xlsx";
 const TEAM_SPEC_PATH = "/docs/team-project-design-spec.xlsx";
+const TEAM_MOCKUP_PATH = "/docs/team-project-mockup.xlsx";
 
 function projStarter(spec: ProjectStepSpec): string {
-  return JSON.stringify(spec);
+  const isTeam = spec.designDocPath === TEAM_SPEC_PATH;
+  const enriched: ProjectStepSpec = {
+    ...spec,
+    mockupDocPath: spec.mockupDocPath ?? (isTeam ? TEAM_MOCKUP_PATH : PRODUCT_MOCKUP_PATH),
+    mockupDocLabel:
+      spec.mockupDocLabel ??
+      (isTeam
+        ? "TeamOps Hub 画面設計モックアップ（Excel・全11シート）"
+        : "商品管理システム 画面設計モックアップ（Excel・全8シート）"),
+  };
+  return JSON.stringify(enriched);
 }
 
 function projSolution(spec: ProjectStepSpec, repoName: string): string {
@@ -56,7 +68,7 @@ const SB_STEP1: ProjectStepSpec = {
   stepNumber: 1,
   recommendedBranch: "feature/step1-setup",
   designDocPath: PRODUCT_SPEC_PATH,
-  designDocLabel: "商品管理システム 開発者向け詳細設計書 v1.1.0（Excel・全12シート）",
+  designDocLabel: "商品管理システム 開発者向け詳細設計書 v1.1.0（Excel・全13シート）",
   checklist: [
     "Eclipse（Pleiades All in One / Java 21）をインストールし、ワークスペース文字コードをUTF-8に設定した",
     "PostgreSQL 16をインストールし、pgAdmin 4 または psql でデータベース `product_mgmt_db` を作成した",
@@ -69,7 +81,7 @@ const SB_STEP2: ProjectStepSpec = {
   stepNumber: 2,
   recommendedBranch: "feature/step2-spring-db",
   designDocPath: PRODUCT_SPEC_PATH,
-  designDocLabel: "商品管理システム 開発者向け詳細設計書 v1.1.0（Excel・全12シート）",
+  designDocLabel: "商品管理システム 開発者向け詳細設計書 v1.1.0（Excel・全13シート）",
   checklist: [
     "Spring Initializr（Maven / Java 21）で依存関係（Web / JPA / Thymeleaf / Validation / PostgreSQL Driver）入りプロジェクトを作成した",
     "`application.properties` にPostgreSQL接続情報（URL・ユーザー名・パスワード）を設定した",
@@ -433,7 +445,7 @@ const TEAM_STEP1: ProjectStepSpec = {
   stepNumber: 1,
   recommendedBranch: "feature/team-step1-rules",
   designDocPath: TEAM_SPEC_PATH,
-  designDocLabel: "TeamOps Hub 開発者向け詳細設計書 v1.1.0（Excel・全13シート）",
+  designDocLabel: "TeamOps Hub 開発者向け詳細設計書 v1.1.0（Excel・全16シート）",
   isTeamProject: true,
   checklist: [
     "チーム3名の役割分担（メンバーA：社員・ダッシュボード3画面 / メンバーB：案件・タスク3画面 / メンバーC：備品貸出3画面）を決定した",
@@ -489,10 +501,10 @@ const TEAM_STEP5: ProjectStepSpec = {
   stepNumber: 5,
   recommendedBranch: "fix/team-step5-test-fixes",
   designDocPath: TEAM_SPEC_PATH,
-  designDocLabel: "TeamOps Hub 詳細設計書 v1.1.0（12_テスト仕様・計画・判断ログ）",
+  designDocLabel: "TeamOps Hub 詳細設計書 v1.1.0（13_テスト仕様・計画・判断ログ）",
   isTeamProject: true,
   checklist: [
-    "12_テスト仕様 の横断結合テスト（IT-001〜IT-012）をチーム全員で実施した",
+    "13_テスト仕様 の横断結合テスト（IT-001〜IT-012）をチーム全員で実施した",
     "見つかったバグをGitHub Issuesに登録し、`fix/...` ブランチ→PRで修正・クローズした",
     "備品貸出の承認/返却トランザクションや案件進捗率の自動計算など異常系も含めて動作確認した",
     "テスト完了済みの `develop` から `main` ブランチへリリースPRを作成した",
@@ -503,7 +515,7 @@ const TEAM_STEP6: ProjectStepSpec = {
   stepNumber: 6,
   recommendedBranch: "release/v1.0-final",
   designDocPath: TEAM_SPEC_PATH,
-  designDocLabel: "TeamOps Hub 開発者向け詳細設計書 v1.1.0（Excel・全13シート）",
+  designDocLabel: "TeamOps Hub 開発者向け詳細設計書 v1.1.0（Excel・全16シート）",
   isTeamProject: true,
   checklist: [
     "チーム共有リポジトリの `README.md` にシステム概要・3名の担当画面・環境構築＆起動手順・テストアカウントを記載した",
@@ -668,10 +680,10 @@ flowchart TD
     lesson_id: "33333333-3333-4333-8333-333333331503",
     chapter_id: "22222222-2222-4222-8222-222222221503",
     language: "project",
-    title: "Team Step 5：横断結合テスト（12_テスト仕様：IT-001〜IT-012）実施＆バグ改修",
+    title: "Team Step 5：横断結合テスト（13_テスト仕様：IT-001〜IT-012）実施＆バグ改修",
     description_md: `## 3人分の機能を横断する結合テスト
 
-Excel詳細設計書の **12_テスト仕様・計画・判断ログ（IT-001〜IT-012）** を使って、担当者同士でクロスチェック（他人が作った画面をテスト）しましょう。
+Excel詳細設計書の **13_テスト仕様・計画・判断ログ（IT-001〜IT-012）** を使って、担当者同士でクロスチェック（他人が作った画面をテスト）しましょう。
 
 ### バグが見つかったときの流れ
 1. GitHub の **Issues** タブに再現手順とスクリーンショットを起票する

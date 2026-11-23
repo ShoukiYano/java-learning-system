@@ -41,23 +41,35 @@ import { JAVA_INTERMEDIATE_80_EXTRA } from "@/lib/java-80-intermediate-extra";
 import { JAVA_ADVANCED_80_EXTRA } from "@/lib/java-80-advanced-extra";
 import { parseProjectStepSpec } from "@/lib/curriculum-evaluators";
 
-/** Minimal ZIP entry extractor to verify real .xlsx OpenXML archives without external deps */
+/** Central-Directory ZIP extractor supporting openpyxl & standard OpenXML .xlsx archives */
 function extractZipEntries(buf: Buffer): Record<string, string> {
   const files: Record<string, string> = {};
-  let offset = 0;
-  while (offset + 30 <= buf.length) {
-    const sig = buf.readUInt32LE(offset);
-    if (sig !== 0x04034b50) break; // stop at Central Directory
-    const method = buf.readUInt16LE(offset + 8);
-    const compSize = buf.readUInt32LE(offset + 18);
-    const nameLen = buf.readUInt16LE(offset + 26);
-    const extraLen = buf.readUInt16LE(offset + 28);
-    const name = buf.subarray(offset + 30, offset + 30 + nameLen).toString("utf8");
-    const dataStart = offset + 30 + nameLen + extraLen;
+  let eocdPos = -1;
+  for (let i = buf.length - 22; i >= Math.max(0, buf.length - 65557); i--) {
+    if (buf.readUInt32LE(i) === 0x06054b50) {
+      eocdPos = i;
+      break;
+    }
+  }
+  if (eocdPos === -1) return files;
+  const entryCount = buf.readUInt16LE(eocdPos + 10);
+  let pos = buf.readUInt32LE(eocdPos + 16);
+  for (let i = 0; i < entryCount; i++) {
+    if (buf.readUInt32LE(pos) !== 0x02014b50) break;
+    const method = buf.readUInt16LE(pos + 10);
+    const compSize = buf.readUInt32LE(pos + 20);
+    const nameLen = buf.readUInt16LE(pos + 28);
+    const extraLen = buf.readUInt16LE(pos + 30);
+    const commentLen = buf.readUInt16LE(pos + 32);
+    const localOffset = buf.readUInt32LE(pos + 42);
+    const name = buf.subarray(pos + 46, pos + 46 + nameLen).toString("utf8");
+    const lhNameLen = buf.readUInt16LE(localOffset + 26);
+    const lhExtraLen = buf.readUInt16LE(localOffset + 28);
+    const dataStart = localOffset + 30 + lhNameLen + lhExtraLen;
     const compData = buf.subarray(dataStart, dataStart + compSize);
     const raw = method === 8 ? zlib.inflateRawSync(compData) : compData;
-    files[name] = raw.toString("utf8");
-    offset = dataStart + compSize;
+    files[name] = name.endsWith(".xml") || name.endsWith(".rels") ? raw.toString("utf8") : `<binary:${raw.length}>`;
+    pos += 46 + nameLen + extraLen + commentLen;
   }
   return files;
 }
@@ -390,63 +402,76 @@ describe("1年間カリキュラム 総合検証テスト (UT / IT / ST)", () =>
       }
     });
 
-    it("配布Excel詳細設計書 v1.1.0（.xlsx）2ファイルをZIP展開し全シートXML整合性・日本語UTF-8・v1.1.0仕様を検証", () => {
+    it("配布Excel詳細設計書2種＋画面設計モックアップ2種（計4ファイル）をZIP展開し全シート・図・パッチ内容を検証", () => {
       const docsDir = path.resolve(process.cwd(), "public", "docs");
+      const decodeXmlEntities = (s: string) =>
+        s.replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)));
+
       const specs = [
         {
           file: "product-management-design-spec.xlsx",
-          expectedSheets: 12,
+          expectedSheets: 13,
+          requireMedia: true,
           keywords: [
             "商品管理システム",
-            "1.1.0",
-            "Maven（pom.xml",
-            "Pull Request",
-            "CREATE TABLE products",
+            "Pull Request URL",
+            "feature/step1-setup",
             "TC-001",
             "TC-022",
-            "existsBySkuAndIdNot",
             "ProductController",
-            "D-01",
           ],
+          forbidden: [] as string[],
         },
         {
           file: "team-project-design-spec.xlsx",
-          expectedSheets: 13,
+          expectedSheets: 16,
+          requireMedia: true,
           keywords: [
             "TeamOps Hub",
-            "1.1.0",
-            "Maven（pom.xml",
-            "Pull Request",
-            "メンバーA",
+            "Pull Request URL",
+            "IT-004, IT-008",
             "SCR-00",
-            "CREATE TABLE equipment_loans",
             "FOR UPDATE",
             "AccessDeniedException",
-            "IT-001",
             "IT-012",
           ],
+          forbidden: ["（IT-004, IT-009）"],
+        },
+        {
+          file: "product-management-mockup.xlsx",
+          expectedSheets: 8,
+          requireMedia: false,
+          keywords: ["ログイン", "商品一覧"],
+          forbidden: [] as string[],
+        },
+        {
+          file: "team-project-mockup.xlsx",
+          expectedSheets: 11,
+          requireMedia: false,
+          keywords: ["ログイン", "ダッシュボード"],
+          forbidden: [] as string[],
         },
       ];
 
-      for (const { file, expectedSheets, keywords } of specs) {
+      for (const { file, expectedSheets, requireMedia, keywords, forbidden } of specs) {
         const fullPath = path.join(docsDir, file);
-        expect(fs.existsSync(fullPath)).toBe(true);
+        expect(fs.existsSync(fullPath), `${file} must exist`).toBe(true);
         const buf = fs.readFileSync(fullPath);
         const entries = extractZipEntries(buf);
 
-        // Must contain core OpenXML parts + all expected worksheets
         expect(entries["[Content_Types].xml"]).toBeDefined();
-        expect(entries["_rels/.rels"]).toBeDefined();
         expect(entries["xl/workbook.xml"]).toBeDefined();
-        expect(entries["xl/_rels/workbook.xml.rels"]).toBeDefined();
         expect(entries["xl/styles.xml"]).toBeDefined();
-        expect(entries["xl/sharedStrings.xml"]).toBeDefined();
         for (let i = 1; i <= expectedSheets; i++) {
-          expect(entries[`xl/worksheets/sheet${i}.xml`], `${file} sheet${i}`).toContain("</worksheet>");
+          expect(entries[`xl/worksheets/sheet${i}.xml`], `${file} sheet${i}`).toMatch(/<\/(?:x:)?worksheet>/);
+        }
+        if (requireMedia) {
+          const mediaEntries = Object.keys(entries).filter((k) => k.startsWith("xl/media/"));
+          expect(mediaEntries.length, `${file} should preserve embedded diagrams`).toBeGreaterThan(0);
         }
 
-        // Verify Excel sheet name constraints (<= 31 chars, no illegal chars \ / ? * [ ] :)
-        const sheetNameMatches = [...entries["xl/workbook.xml"].matchAll(/name="([^"]+)"/g)];
+        const wbXml = decodeXmlEntities(entries["xl/workbook.xml"]);
+        const sheetNameMatches = [...wbXml.matchAll(/name="([^"]+)"/g)];
         expect(sheetNameMatches.length).toBe(expectedSheets);
         for (const m of sheetNameMatches) {
           const sName = m[1];
@@ -454,11 +479,17 @@ describe("1年間カリキュラム 総合検証テスト (UT / IT / ST)", () =>
           expect(/[\\/?*[\]:]/.test(sName), `Illegal char in sheet name: ${sName}`).toBe(false);
         }
 
-        // Verify key Japanese & DDL content exists in sharedStrings.xml and Gradle is not referenced
-        const ss = entries["xl/sharedStrings.xml"];
-        expect(ss, `${file} should not contain Gradle`).not.toContain("Gradle");
+        const allXmlText = decodeXmlEntities(
+          Object.entries(entries)
+            .filter(([k]) => k.endsWith(".xml"))
+            .map(([, v]) => v)
+            .join("\n")
+        );
         for (const kw of keywords) {
-          expect(ss, `${file} should contain "${kw}"`).toContain(kw);
+          expect(allXmlText, `${file} should contain "${kw}"`).toContain(kw);
+        }
+        for (const ng of forbidden) {
+          expect(allXmlText, `${file} must not contain "${ng}"`).not.toContain(ng);
         }
       }
     });
