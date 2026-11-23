@@ -61,7 +61,7 @@ const SB_STEP1: ProjectStepSpec = {
     "Eclipse（Pleiades All in One / Java 21）をインストールし、ワークスペース文字コードをUTF-8に設定した",
     "PostgreSQL 16をインストールし、pgAdmin 4 または psql でデータベース `product_mgmt_db` を作成した",
     "GitHubリポジトリ（例：product-manager）の `main` に初回READMEを作成後、`feature/step1-setup` ブランチを切って `.gitignore` 等を追加し **Pull Request** を作成した",
-    "配布のExcel詳細設計書（全7シート）をダウンロードし、Sheet 1〜2に目を通した",
+    "配布のExcel詳細設計書 v1.1.0（全12シート）をダウンロードし、00_表紙〜02_機能要件に目を通した",
   ],
 };
 
@@ -82,9 +82,9 @@ const SB_STEP3: ProjectStepSpec = {
   stepNumber: 3,
   recommendedBranch: "feature/step3-db-entity",
   designDocPath: PRODUCT_SPEC_PATH,
-  designDocLabel: "商品管理システム 詳細設計書（Excel・Sheet 4 テーブル定義）",
+  designDocLabel: "商品管理システム 詳細設計書 v1.1.0（06_DB設計）",
   checklist: [
-    "詳細設計書 Sheet 4 のDDLを実行し、`users`・`categories`・`products` の3テーブルを作成した",
+    "詳細設計書 06_DB設計 のテーブル定義から `users`・`categories`・`products` の3テーブルを作成し、`ddl-auto=validate` で起動整合を確認した",
     "初期データ（カテゴリ3件以上、サンプル商品5件以上）をINSERTした",
     "Entityクラス（`User`, `Category`, `Product`）とRepositoryインターフェースを作成した",
     "`feature/step3-db-entity` ブランチでDDL・Entity・RepositoryをPushし **Pull Request** を作成した",
@@ -95,7 +95,7 @@ const SB_STEP4: ProjectStepSpec = {
   stepNumber: 4,
   recommendedBranch: "feature/step4-product-list",
   designDocPath: PRODUCT_SPEC_PATH,
-  designDocLabel: "商品管理システム 詳細設計書（Excel・Sheet 3 & 5）",
+  designDocLabel: "商品管理システム 詳細設計書 v1.1.0（03_画面設計・04_URL・05_クラス設計）",
   checklist: [
     "`GET /products` で論理削除されていない商品一覧（カテゴリ名付き）が表示される",
     "在庫数が10未満の商品に赤色の警告バッジが表示される",
@@ -108,10 +108,10 @@ const SB_STEP5: ProjectStepSpec = {
   stepNumber: 5,
   recommendedBranch: "feature/step5-product-crud",
   designDocPath: PRODUCT_SPEC_PATH,
-  designDocLabel: "商品管理システム 詳細設計書（Excel・Sheet 5 & 6）",
+  designDocLabel: "商品管理システム 詳細設計書 v1.1.0（07_処理詳細・08_検証・エラー）",
   checklist: [
     "商品新規登録（`GET /products/new` → `POST /products`）がPRGパターンで動作しフラッシュメッセージが出る",
-    "Sheet 6 の入力バリデーション（必須・SKU形式・単価/在庫0以上・SKU重複チェック）がすべて動作する",
+    "08_検証・エラー の入力バリデーション（必須・SKU形式・単価0〜1000万・在庫0〜999,999・SKU重複チェック）がすべて動作する",
     "商品編集（`GET /products/{id}/edit` → `POST /products/{id}`）と論理削除（`is_deleted = true`）が動作する",
     "`feature/step5-product-crud` ブランチをPushし **Pull Request** を作成した",
   ],
@@ -121,10 +121,10 @@ const SB_STEP6: ProjectStepSpec = {
   stepNumber: 6,
   recommendedBranch: "feature/step6-security-final",
   designDocPath: PRODUCT_SPEC_PATH,
-  designDocLabel: "商品管理システム 詳細設計書（Excel・Sheet 7 テスト仕様書）",
+  designDocLabel: "商品管理システム 詳細設計書 v1.1.0（10_テスト仕様：TC-001〜TC-022）",
   checklist: [
     "Spring Securityによるログイン・ログアウト（BCrypt暗号化・未ログイン時 `/login` リダイレクト）を実装した",
-    "詳細設計書 Sheet 7 の単体・結合テスト（TC-001〜TC-012）をすべて実施し合格を確認した",
+    "詳細設計書 10_テスト仕様 の単体・結合テスト（TC-001〜TC-022）をすべて実施し合格を確認した",
     "`README.md` にDB作成手順・起動方法・テスト用ログインID/パスワードを記載した",
     "`feature/step6-security-final` ブランチから最終 **Pull Request** を作成し、PR URLを提出した",
   ],
@@ -175,7 +175,7 @@ gitGraph
 - **レビュー待ちで先へ進むとき**：前のStepブランチから次のブランチ（例：\`git switch -c feature/step2-spring-db\`）を切れば、レビューを待たずに開発を継続できます
 
 ### 3. Excel詳細設計書をダウンロードしよう
-右側の **「詳細設計書（Excel）ダウンロード」** ボタンから \`product-management-design-spec.xlsx\` を保存し、ExcelまたはGoogleスプレッドシートで開いて **Sheet 1（表紙・読み方）と Sheet 2（機能要件）** を確認してください。`,
+右側の **「詳細設計書（Excel）ダウンロード」** ボタンから \`product-management-design-spec.xlsx\` を保存し、ExcelまたはGoogleスプレッドシートで開いて **00_表紙・読み方 / 01_システム概要・環境 / 02_機能要件** を確認してください。`,
     difficulty: "easy",
     estimated_minutes: 90,
     tags: ["Spring Boot", "Eclipse", "PostgreSQL", "GitHub", "環境構築"],
@@ -240,10 +240,10 @@ spring.jpa.show-sql=true
     lesson_id: "33333333-3333-4333-8333-333333331402",
     chapter_id: "22222222-2222-4222-8222-222222221402",
     language: "project",
-    title: "Step 3：詳細設計書（Sheet 4）からDB構築・Entity・Repository実装",
+    title: "Step 3：詳細設計書（06_DB設計）からDB構築・Entity・Repository実装",
     description_md: `## データベース構造（ER図）とJPAマッピング
 
-Excel詳細設計書の **Sheet 4（テーブル定義・DDL）** を開いて、3つのテーブルの関係を確認しましょう。
+Excel詳細設計書の **06_DB設計（テーブル定義・制約・初期データ）** を開いて、3つのテーブルの関係を確認しましょう。
 
 \`\`\`mermaid
 erDiagram
@@ -273,7 +273,7 @@ erDiagram
 \`\`\`
 
 ### 作業内容
-1. Sheet 4 末尾の \`CREATE TABLE\` 文を pgAdmin 4 で実行し、3テーブルを作成する
+1. 06_DB設計 のテーブル定義をもとに \`CREATE TABLE\` 文を作成（参考DDL骨格で答え合わせ可）して pgAdmin 4 で実行し、\`ddl-auto=validate\` で整合確認する
 2. カテゴリ3件以上・商品5件以上のテストデータを \`INSERT\` する
 3. \`entity\` パッケージに \`Category\`, \`Product\`, \`User\` を、\`repository\` パッケージに各 \`JpaRepository\` を実装する`,
     difficulty: "medium",
@@ -281,7 +281,7 @@ erDiagram
     tags: ["PostgreSQL", "DDL", "JPA", "Entity"],
     starter_code: projStarter(SB_STEP3),
     solution_code: projSolution(SB_STEP3, "product-manager"),
-    explanation_md: "テーブル定義書（Sheet 4）のカラム名・型・NOT NULL制約とEntityのフィールドを一致させるのがポイントです。",
+    explanation_md: "06_DB設計 のカラム名・型・NOT NULL制約とEntityのフィールド（論理削除は `deleted`・D-05）を一致させ、`ddl-auto=validate` を通すのがポイントです。",
     order_index: 3,
     test_cases: [],
     hints: [
@@ -296,7 +296,7 @@ erDiagram
     title: "Step 4：商品一覧・複合検索・詳細表示（MVCアーキテクチャ実装）",
     description_md: `## Spring BootのMVC処理フロー
 
-Excel詳細設計書の **Sheet 3（画面一覧・項目定義）** と **Sheet 5（クラス・URL設計）** に従って一覧・検索・詳細機能を実装します。
+Excel詳細設計書の **03_画面設計・04_URL・IF設計・05_クラス設計** に従って一覧・検索・詳細機能を実装します。
 
 \`\`\`mermaid
 sequenceDiagram
@@ -340,7 +340,7 @@ sequenceDiagram
     title: "Step 5：商品新規登録・編集・論理削除＆バリデーション実装",
     description_md: `## 二重送信を防ぐPRGパターンと入力チェック
 
-Excel詳細設計書の **Sheet 6（バリデーション・エラー）** の全ルールを \`ProductForm\` と \`ProductService\` に実装しましょう。
+Excel詳細設計書の **07_処理詳細・08_検証・エラー** の全ルール（新規=\`existsBySku\` / 編集=\`existsBySkuAndIdNot\` 等）を \`ProductForm\` と \`ProductService\` に実装しましょう。
 
 \`\`\`mermaid
 flowchart LR
@@ -370,18 +370,18 @@ flowchart LR
     lesson_id: "33333333-3333-4333-8333-333333331403",
     chapter_id: "22222222-2222-4222-8222-222222221403",
     language: "project",
-    title: "Step 6：ログイン認証・テスト仕様書（Sheet 7）全件確認＆GitHub最終提出",
+    title: "Step 6：ログイン認証・テスト仕様書（10_テスト仕様）全件確認＆GitHub最終PR提出",
     description_md: `## ログイン認証の組み込みと最終品質チェック
 
 1. **Spring Security の導入**：
    - \`pom.xml\` に \`spring-boot-starter-security\` を追加
    - \`SecurityConfig\` で \`/login\`・静的CSS以外の全URLを認証必須に設定
    - \`BCryptPasswordEncoder\` でパスワードを安全に照合
-2. **テスト仕様書（Sheet 7）の実施**：
-   - \`TC-001\`〜\`TC-012\` を1つずつ自分のブラウザとPostgreSQLで確認し、Excelの判定欄をすべて「OK」にする
+2. **テスト仕様書（10_テスト仕様）の実施**：
+   - \`TC-001\`〜\`TC-022\`（基本12件＋推奨境界/セキュリティ10件）をブラウザとPostgreSQLで確認し、Excelの判定欄をすべて「合格」にする
 3. **README.md の整備＆最終Push**：
    - 別のエンジニアが \`git clone\` して動かせるよう、DB作成SQL・起動コマンド・テストアカウント情報を \`README.md\` に記載
-   - 最終版のGitHub URLを下のフォームから提出してください！`,
+   - 最終ステップの **GitHub Pull Request URL（\`/pull/番号\`）** を下のフォームから提出してください！`,
     difficulty: "hard",
     estimated_minutes: 180,
     tags: ["Spring Security", "テスト", "GitHub提出"],
@@ -438,8 +438,8 @@ const TEAM_STEP1: ProjectStepSpec = {
   checklist: [
     "チーム3名の役割分担（メンバーA：社員・ダッシュボード3画面 / メンバーB：案件・タスク3画面 / メンバーC：備品貸出3画面）を決定した",
     "チーム共有GitHubリポジトリを作成し、3名全員をCollaboratorに登録した",
-    "`main` ブランチから `develop` ブランチを作成し、Sheet 2 のGit運用ルール（直接Push禁止・PRレビュー必須）を合意し、役割分担表のPRを作成した",
-    "Excel詳細設計書（全7シート）を3名全員で読み込み、担当画面と共有テーブルの境界を確認した",
+    "`main` ブランチから `develop` ブランチを作成し、03_Git・PR運用 のルール（直接Push禁止・PRレビュー必須）を合意し、役割分担表のPRを作成した",
+    "Excel詳細設計書 v1.1.0（全13シート）を3名全員で読み込み、02_チーム分担・所有権・IF で担当画面とファイル所有権・IF契約を確認した",
   ],
 };
 
@@ -447,10 +447,10 @@ const TEAM_STEP2: ProjectStepSpec = {
   stepNumber: 2,
   recommendedBranch: "feature/team-step2-common-base",
   designDocPath: TEAM_SPEC_PATH,
-  designDocLabel: "チーム開発 詳細設計書（Excel・Sheet 3 & 5）",
+  designDocLabel: "TeamOps Hub 詳細設計書 v1.1.0（05_画面設計・08_DB設計）",
   isTeamProject: true,
   checklist: [
-    "Sheet 5 の共通DDL（6テーブル）を全員のローカルPostgreSQLに投入し、共通 `schema.sql` / `data.sql` を `develop` へPRマージした",
+    "08_DB設計 のテーブル定義から共通6テーブルを全員のローカルPostgreSQL（`teamops_db`）へ構築し、`ddl-auto=validate` を通して `develop` へPRマージした",
     "共通ログイン機能（SCR-00 `/login`・Spring Security・ADMIN/USERロール制御）が動作する",
     "共通ヘッダー／ナビゲーションレイアウト（`layout.html`）を作成し、全10画面へのリンク枠を配置した",
     "3名全員が最新の `develop` を `git pull` してローカルで起動確認できた",
@@ -461,11 +461,11 @@ const TEAM_STEP3: ProjectStepSpec = {
   stepNumber: 3,
   recommendedBranch: "feature/your-role-pages",
   designDocPath: TEAM_SPEC_PATH,
-  designDocLabel: "チーム開発 詳細設計書（Excel・Sheet 4 & 6）",
+  designDocLabel: "TeamOps Hub 詳細設計書 v1.1.0（05_画面設計・07_クラス設計・10_状態遷移・排他）",
   isTeamProject: true,
   checklist: [
     "自分の担当3ページすべてについて、機能ごとに `feature/...` ブランチを切って実装した",
-    "担当分のController / Service / Repository / Thymeleafテンプレートを Sheet 4・Sheet 6 の仕様通りに実装した",
+    "担当分のController / Service / Repository / Thymeleafテンプレートを 05_画面設計・07_クラス設計・10_状態遷移・排他 の仕様通りに実装した",
     "GitHub上で `develop` 宛のPull Requestを作成し、変更内容と動作確認スクショを記載した",
     "他メンバーのPRを最低1件以上コードレビューし、コメント・Approveを行った",
   ],
@@ -475,13 +475,13 @@ const TEAM_STEP4: ProjectStepSpec = {
   stepNumber: 4,
   recommendedBranch: "feature/team-step4-integration",
   designDocPath: TEAM_SPEC_PATH,
-  designDocLabel: "チーム開発 詳細設計書（Excel・Sheet 2 & 6）",
+  designDocLabel: "TeamOps Hub 詳細設計書 v1.1.0（02_チーム分担・所有権・IF・03_Git・PR運用）",
   isTeamProject: true,
   checklist: [
     "全員の担当3ページ（計9ページ＋ログイン＝全10画面）が `develop` ブランチへマージされた",
     "マージ時に発生したコンフリクト（共通ナビ・設定ファイル等）を `git merge origin/develop` で適切に解消した",
     "メンバーAで登録した社員がメンバーBのタスク担当者やメンバーCの貸出申請者として正しく連携表示される",
-    "権限マトリクス（Sheet 3：USERがADMIN専用URLへアクセスすると403になる等）を確認した",
+    "権限マトリクス（05_画面設計・11_検証・セキュリティ：USERがADMIN専用URLや他人の貸出詳細へアクセスすると403になる等）を確認した",
   ],
 };
 
@@ -489,10 +489,10 @@ const TEAM_STEP5: ProjectStepSpec = {
   stepNumber: 5,
   recommendedBranch: "fix/team-step5-test-fixes",
   designDocPath: TEAM_SPEC_PATH,
-  designDocLabel: "チーム開発 詳細設計書（Excel・Sheet 7 結合テスト仕様書）",
+  designDocLabel: "TeamOps Hub 詳細設計書 v1.1.0（12_テスト仕様・計画・判断ログ）",
   isTeamProject: true,
   checklist: [
-    "Sheet 7 の横断結合テスト（IT-001〜IT-007）をチーム全員で実施した",
+    "12_テスト仕様 の横断結合テスト（IT-001〜IT-012）をチーム全員で実施した",
     "見つかったバグをGitHub Issuesに登録し、`fix/...` ブランチ→PRで修正・クローズした",
     "備品貸出の承認/返却トランザクションや案件進捗率の自動計算など異常系も含めて動作確認した",
     "テスト完了済みの `develop` から `main` ブランチへリリースPRを作成した",
@@ -503,13 +503,13 @@ const TEAM_STEP6: ProjectStepSpec = {
   stepNumber: 6,
   recommendedBranch: "release/v1.0-final",
   designDocPath: TEAM_SPEC_PATH,
-  designDocLabel: "チーム開発 詳細設計書（Excel・全7シート）",
+  designDocLabel: "TeamOps Hub 開発者向け詳細設計書 v1.1.0（Excel・全13シート）",
   isTeamProject: true,
   checklist: [
     "チーム共有リポジトリの `README.md` にシステム概要・3名の担当画面・環境構築＆起動手順・テストアカウントを記載した",
     "GitHubのPull Requests履歴・Insights/Contributorsで3名全員の開発貢献が確認できる",
     "デモ発表用の画面遷移シナリオを確認し、全10画面がエラーなく動作することを確認した",
-    "チーム共有GitHubリポジトリURLを下のフォームから提出した",
+    "最終リリース用の **GitHub Pull Request URL（`/pull/番号`）** を下のフォームから提出した",
   ],
 };
 
@@ -553,7 +553,7 @@ gitGraph
     merge develop id: "最終リリース"
 \`\`\`
 
-まずは右側から **チーム開発 詳細設計書（Excel・全7シート）** をダウンロードし、3人で担当（A/B/C）とGitルールを決めましょう！`,
+まずは右側から **TeamOps Hub 詳細設計書 v1.1.0（Excel・全13シート）** をダウンロードし、3人で担当（A/B/C）・ファイル所有権・IF契約・Gitルールを決めましょう！`,
     difficulty: "medium",
     estimated_minutes: 120,
     tags: ["チーム開発", "Gitブランチ", "役割分担"],
@@ -587,8 +587,8 @@ erDiagram
 \`\`\`
 
 ### 確認するExcelシート
-- **Sheet 3**：全10画面のURLと ADMIN / USER 権限マトリクス
-- **Sheet 5**：全6テーブルのDDL（\`schema.sql\`）`,
+- **05_画面設計 / 11_検証・セキュリティ**：全10画面のURLと ADMIN / USER 権限マトリクス
+- **08_DB設計**：全6テーブル定義・制約・初期データ`,
     difficulty: "medium",
     estimated_minutes: 180,
     tags: ["チーム開発", "Spring Security", "DB設計"],
@@ -609,7 +609,7 @@ erDiagram
     title: "Team Step 3：担当3ページの実装とPull Request相互レビュー",
     description_md: `## 各自のブランチで3ページを実装し、PRでレビューし合う
 
-Excel詳細設計書の **Sheet 4（画面項目詳細設計）** と **Sheet 6（クラス・API担当設計）** を見ながら、自分の担当3ページを実装しましょう。
+Excel詳細設計書の **05_画面設計・07_クラス設計・10_状態遷移・排他** を見ながら、自分の担当3ページを実装しましょう。
 
 ### 毎日の開発サイクル
 1. \`git switch develop && git pull origin develop\`
@@ -668,10 +668,10 @@ flowchart TD
     lesson_id: "33333333-3333-4333-8333-333333331503",
     chapter_id: "22222222-2222-4222-8222-222222221503",
     language: "project",
-    title: "Team Step 5：横断結合テスト（Sheet 7）実施＆GitHub Issueでのバグ改修",
+    title: "Team Step 5：横断結合テスト（12_テスト仕様：IT-001〜IT-012）実施＆バグ改修",
     description_md: `## 3人分の機能を横断する結合テスト
 
-Excel詳細設計書の **Sheet 7（結合・受入テスト仕様書：IT-001〜IT-007）** を使って、担当者同士でクロスチェック（他人が作った画面をテスト）しましょう。
+Excel詳細設計書の **12_テスト仕様・計画・判断ログ（IT-001〜IT-012）** を使って、担当者同士でクロスチェック（他人が作った画面をテスト）しましょう。
 
 ### バグが見つかったときの流れ
 1. GitHub の **Issues** タブに再現手順とスクリーンショットを起票する
@@ -698,7 +698,7 @@ Excel詳細設計書の **Sheet 7（結合・受入テスト仕様書：IT-001�
     title: "Team Step 6：成果発表・README整備＆チームGitHubリポジトリ最終提出",
     description_md: `## 1年間カリキュラムの集大成：最終提出
 
-チーム全員で以下の最終確認を行い、**チーム共有GitHubリポジトリURL** を提出してください。
+チーム全員で以下の最終確認を行い、最終リリースPRの **GitHub Pull Request URL（\`/pull/番号\`）** を提出してください。
 
 ### 最終チェック
 - \`README.md\` に以下が分かりやすくまとまっていること
@@ -716,7 +716,7 @@ Excel詳細設計書の **Sheet 7（結合・受入テスト仕様書：IT-001�
     order_index: 6,
     test_cases: [],
     hints: [
-      { step_number: 1, content_md: "提出するURLはチーム共有リポジトリのトップURL（例：`https://github.com/team-xxx/teamops-hub`）を入力してください。" },
+      { step_number: 1, content_md: "提出するURLは最終リリース用Pull RequestのURL（例：`https://github.com/team-xxx/teamops-hub/pull/6`）を入力してください。" },
     ],
   },
 ];
