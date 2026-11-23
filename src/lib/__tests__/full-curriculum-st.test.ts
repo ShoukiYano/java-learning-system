@@ -24,7 +24,7 @@ describe("Full Curriculum ST: All 68 Problems (Java / SQL / Git) & 90-Day Plan",
         expect(p.test_cases.length, `No test cases for ${p.title}`).toBeGreaterThan(0);
       }
     }
-    expect(SEED_PROBLEMS.length).toBe(156);
+    expect(SEED_PROBLEMS.length).toBe(176);
   });
 
   it("All 80 Java problems pass 100% of public and hidden test cases with solution_code", () => {

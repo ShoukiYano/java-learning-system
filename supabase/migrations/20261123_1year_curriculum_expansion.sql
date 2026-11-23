@@ -210,7 +210,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221401', '11111111-1111-4111-8111-111111111114', '第1章（1〜2週目）：開発環境構築（Eclipse・Spring Boot・PostgreSQL・GitHub）', 'はじめての方でも迷わず進められるよう、IDE・DB・GitHubの導入から疎通確認までをステップバイステップで進めます。', 1, true)
+VALUES ('22222222-2222-4222-8222-222222221401', '11111111-1111-4111-8111-111111111114', '第1章（1〜2週目）：環境構築と「はじめてのSpring Boot画面」（Step 1〜4）', 'Eclipse・PostgreSQL・Spring Boot導入から、はじめてブラウザに1画面と共通ヘッダーを出すまでを1歩ずつ進めます。', 1, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -219,7 +219,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221402', '11111111-1111-4111-8111-111111111114', '第2章（3〜5週目）：Excel詳細設計書の読み解き＆商品CRUD実装', '配布のExcel詳細設計書を見ながら、DB構築・商品一覧・検索・詳細・新規登録・編集・論理削除・バリデーションを実装します。', 2, true)
+VALUES ('22222222-2222-4222-8222-222222221402', '11111111-1111-4111-8111-111111111114', '第2章（3〜4週目）：DB構築と「見る機能（Read）」（Step 5〜8）', '3テーブルDDL作成、Entity/Repositoryのvalidate突破、商品一覧・在庫少バッジ・複合検索・詳細画面を順に作ります。', 2, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -228,7 +228,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221403', '11111111-1111-4111-8111-111111111114', '第3章（6〜8週目）：ログイン認証・単体/結合テスト＆GitHub最終提出', 'Spring Securityによるログイン認証とテスト仕様書に基づく全項目検証を行い、GitHub URLで最終提出します。', 3, true)
+VALUES ('22222222-2222-4222-8222-222222221403', '11111111-1111-4111-8111-111111111114', '第3章（5〜6週目）：「作る・直す・消す（CRUD）」と入力チェック（Step 9〜12）', '新規登録（PRG）、形式＆業務バリデーション（SKU重複）、編集、論理削除を1機能ずつ丁寧に実装します。', 3, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -237,7 +237,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221501', '11111111-1111-4111-8111-111111111115', '第1章（1か月目）：チーム開発の流れ・役割分担（1人3画面）＆共通基盤構築', '3人1組での役割分担・Gitブランチ運用ルール策定・共通ログイン＆6テーブルDBの土台を全員で構築します。', 1, true)
+VALUES ('22222222-2222-4222-8222-222222221404', '11111111-1111-4111-8111-111111111114', '第4章（7〜8週目）：ログイン認証・エラー画面・テスト＆最終提出（Step 13〜16）', 'Spring Security認証、共通エラー画面、テスト仕様書TC-001〜022検証、README整備で実務品質へ仕上げます。', 4, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -246,7 +246,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221502', '11111111-1111-4111-8111-111111111115', '第2章（2か月目）：担当3ページの並行開発・Pull Requestレビュー＆コンフリクト解消', '各自のfeatureブランチで担当3ページを実装し、GitHub Pull Requestによる相互コードレビューと競合解消を実践します。', 2, true)
+VALUES ('22222222-2222-4222-8222-222222221501', '11111111-1111-4111-8111-111111111115', '第1章（1か月目）：チーム始動・Git運用・共通基盤の協働構築（Step 1〜5）', '3名分担と所有権合意、共通6テーブルDB、ADMIN/USER認証、403保護、共通ナビ＆IF契約スタブまで全員で土台を固めます。', 1, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -255,7 +255,25 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221503', '11111111-1111-4111-8111-111111111115', '第3章（3か月目）：横断結合テスト・バグ改修・成果発表＆GitHub最終提出', '3名の機能を統合した全10画面の横断結合テストを実施し、実務品質のチームリポジトリをGitHub URLで提出します。', 3, true)
+VALUES ('22222222-2222-4222-8222-222222221502', '11111111-1111-4111-8111-111111111115', '第2章（2か月目）：担当3画面の並行開発とPR相互レビュー（Step 6〜11）', '各自の専有パッケージで1画面ずつ小さくPRを出し合い、相互レビュー・状態遷移・排他ロック・単体テストを完遂します。', 2, true)
+ON CONFLICT (id) DO UPDATE SET
+  course_id = EXCLUDED.course_id,
+  title = EXCLUDED.title,
+  description = EXCLUDED.description,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
+VALUES ('22222222-2222-4222-8222-222222221503', '11111111-1111-4111-8111-111111111115', '第3章（3か月目前半）：横断統合・コンフリクト解消・結合テスト（Step 12〜14）', 'IF契約の本接続、コンフリクト解消実践、権限総当たり＆同時承認排他検証、横断結合テストIT-001〜012とIssue改修を行います。', 3, true)
+ON CONFLICT (id) DO UPDATE SET
+  course_id = EXCLUDED.course_id,
+  title = EXCLUDED.title,
+  description = EXCLUDED.description,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
+VALUES ('22222222-2222-4222-8222-222222221504', '11111111-1111-4111-8111-111111111115', '第4章（3か月目後半）：リリースPR・GitHub監査・デモ発表＆最終提出（Step 15〜16）', 'develop→mainリリース、3名全員のGitHub貢献監査（IT-007）、README整備と最終デモ発表で集大成を迎えます。', 4, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -353,7 +371,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.lessons (id, chapter_id, title, content_md, order_index, is_published)
-VALUES ('33333333-3333-4333-8333-333333331401', '22222222-2222-4222-8222-222222221401', 'Eclipse / PostgreSQL / Spring Boot 導入と接続確認', '', 1, true)
+VALUES ('33333333-3333-4333-8333-333333331401', '22222222-2222-4222-8222-222222221401', '環境構築・DB疎通・初画面表示', '', 1, true)
 ON CONFLICT (id) DO UPDATE SET
   chapter_id = EXCLUDED.chapter_id,
   title = EXCLUDED.title,
@@ -361,7 +379,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.lessons (id, chapter_id, title, content_md, order_index, is_published)
-VALUES ('33333333-3333-4333-8333-333333331402', '22222222-2222-4222-8222-222222221402', '詳細設計書ベースでの商品管理CRUD構築', '', 1, true)
+VALUES ('33333333-3333-4333-8333-333333331402', '22222222-2222-4222-8222-222222221402', 'DB設計実装・商品一覧/検索/詳細', '', 1, true)
 ON CONFLICT (id) DO UPDATE SET
   chapter_id = EXCLUDED.chapter_id,
   title = EXCLUDED.title,
@@ -369,7 +387,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.lessons (id, chapter_id, title, content_md, order_index, is_published)
-VALUES ('33333333-3333-4333-8333-333333331403', '22222222-2222-4222-8222-222222221403', '認証機能・品質検証・GitHub最終提出', '', 1, true)
+VALUES ('33333333-3333-4333-8333-333333331403', '22222222-2222-4222-8222-222222221403', '新規登録・バリデーション・編集・論理削除', '', 1, true)
 ON CONFLICT (id) DO UPDATE SET
   chapter_id = EXCLUDED.chapter_id,
   title = EXCLUDED.title,
@@ -377,7 +395,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.lessons (id, chapter_id, title, content_md, order_index, is_published)
-VALUES ('33333333-3333-4333-8333-333333331501', '22222222-2222-4222-8222-222222221501', 'チーム体制構築・Gitフロー・共通認証基盤', '', 1, true)
+VALUES ('33333333-3333-4333-8333-333333331404', '22222222-2222-4222-8222-222222221404', 'Spring Security・品質検証・最終提出', '', 1, true)
 ON CONFLICT (id) DO UPDATE SET
   chapter_id = EXCLUDED.chapter_id,
   title = EXCLUDED.title,
@@ -385,7 +403,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.lessons (id, chapter_id, title, content_md, order_index, is_published)
-VALUES ('33333333-3333-4333-8333-333333331502', '22222222-2222-4222-8222-222222221502', 'ブランチ並行開発・PRレビュー・画面結合', '', 1, true)
+VALUES ('33333333-3333-4333-8333-333333331501', '22222222-2222-4222-8222-222222221501', '体制構築・6テーブルDB・共通認証・IFスタブ', '', 1, true)
 ON CONFLICT (id) DO UPDATE SET
   chapter_id = EXCLUDED.chapter_id,
   title = EXCLUDED.title,
@@ -393,7 +411,23 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.lessons (id, chapter_id, title, content_md, order_index, is_published)
-VALUES ('33333333-3333-4333-8333-333333331503', '22222222-2222-4222-8222-222222221503', '結合テスト・品質仕上げ・最終発表提出', '', 1, true)
+VALUES ('33333333-3333-4333-8333-333333331502', '22222222-2222-4222-8222-222222221502', '担当3画面実装・PR相互レビュー・UT', '', 1, true)
+ON CONFLICT (id) DO UPDATE SET
+  chapter_id = EXCLUDED.chapter_id,
+  title = EXCLUDED.title,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.lessons (id, chapter_id, title, content_md, order_index, is_published)
+VALUES ('33333333-3333-4333-8333-333333331503', '22222222-2222-4222-8222-222222221503', '全10画面結合・権限/排他検証・結合テスト', '', 1, true)
+ON CONFLICT (id) DO UPDATE SET
+  chapter_id = EXCLUDED.chapter_id,
+  title = EXCLUDED.title,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.lessons (id, chapter_id, title, content_md, order_index, is_published)
+VALUES ('33333333-3333-4333-8333-333333331504', '22222222-2222-4222-8222-222222221504', 'リリース・監査・最終発表提出', '', 1, true)
 ON CONFLICT (id) DO UPDATE SET
   chapter_id = EXCLUDED.chapter_id,
   title = EXCLUDED.title,
@@ -4532,47 +4566,46 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
-  '44444444-4444-4444-8444-444444441401', '33333333-3333-4333-8333-333333331401', 'Step 1：開発環境構築（Eclipse・PostgreSQL・GitHub）＆詳細設計書ダウンロード', '## はじめてのSpring Boot開発：全体構成をつかもう
+  '44444444-4444-4444-8444-444444441401', '33333333-3333-4333-8333-333333331401', 'Step 1：ツール導入（Eclipse / PostgreSQL / GitHub）＆設計書・モックアップ確認', '### 🎯 この単元でやること（ゴール）
+Java 21のEclipse、PostgreSQL 16（DB `product_mgmt_db`）、GitHubリポジトリを準備し、配布Excel設計書と画面モックアップの全体像をつかみます。
 
-ここから2か月かけて、実務と同じ **Excel詳細設計書** を読み解きながら **「商品管理システム」** を自分の手でゼロから構築します。
+### 💡 なぜこの単元が必要か
+実務ではいきなりコードを書かず、最初に開発環境を揃え、設計書から「どんな画面・テーブルを作るか」を把握してから着手します。
+
+### 📖 見るべき設計書・モックアップ
+右のボタンから2つのExcelをダウンロードし、詳細設計書 `00_表紙・読み方`〜`02_機能要件` と、画面設計モックアップの全シートをざっと眺めてください。
 
 ```mermaid
 flowchart LR
-    Dev["Eclipse（Java 21）<br/>コード作成・起動"] --> App["Spring Boot 3<br/>Controller / Service / JPA"]
-    App <--> DB[("PostgreSQL 16<br/>product_mgmt_db")]
-    App --> View["Thymeleaf HTML/CSS<br/>ブラウザ画面"]
-    Dev -->|git push| GH["GitHub リポジトリ<br/>（課題の提出先）"]
+  Dev["Eclipse (Java 21)"] --> App["Spring Boot 3.3"]
+  App <--> DB[("PostgreSQL 16\nproduct_mgmt_db")]
+  App --> View["Thymeleaf HTML/CSS"]
+  Dev -->|PR提出| GH["GitHub"]
 ```
 
-### 1. ツールの導入手順
-1. **Eclipse（Pleiades All in One Java Full Edition）**：公式サイトからダウンロードし、フォルダ解凍後に起動。メニュー「ウィンドウ → 設定 → 一般 → ワークスペース」でテキストファイル・エンコードを **UTF-8** に設定します。
-2. **PostgreSQL 16**：インストーラーを実行（ポート `5432`、スーパーユーザー `postgres` のパスワードを控えておく）。付属の **pgAdmin 4** を開き、データベース `product_mgmt_db` を作成します。
-3. **GitHub**：個人開発用のリポジトリ（例：`product-manager`）を作成し、ローカルPCに `git clone` しておきます。
+### 🛠️ 最初に作るファイルと書く順番
+1. Eclipse（Pleiades All in One Java 21）をインストールし、ワークスペース文字コードを **UTF-8** に設定する
+2. PostgreSQL 16 をインストールし、pgAdmin 4 でデータベース `product_mgmt_db`（UTF-8）を作成する
+3. GitHubで `product-manager` リポジトリを作成（`Add a README file` にチェック）し、ローカルへ `git clone` する
+4. リポジトリ直下に `.gitignore`（`target/` や `.env` を除外）を作成する
 
-### 2. ブランチ分割＆Pull Request URL提出ルール（講師レビューを確実にする進め方）
-このコースでは `main` ブランチへ直接上書きPushせず、**各Stepごとにブランチを切って Pull Request（PR）URL を提出** します。これにより、講師がレビューする前に次のStepを進めていても、各Stepの差分（Files changed）を正確にレビューできます。
+### ✅ 動作確認のしかた（成功のサイン）
+- pgAdmin 4 で `product_mgmt_db` が表示されている
+- ターミナルで `git status` がエラーなく動く
+- 詳細設計書（全13シート）とモックアップ（全8シート）を開いて確認できた
 
-```mermaid
-gitGraph
-    commit id: "main初回: README.md"
-    branch feature/step1-setup
-    checkout feature/step1-setup
-    commit id: "Step1: .gitignore等 → PR#1提出"
-    branch feature/step2-spring-db
-    checkout feature/step2-spring-db
-    commit id: "Step2: Spring Boot作成 → PR#2提出"
-    checkout main
-    merge feature/step1-setup id: "レビューOK後マージ"
+### ⚠️ よくあるエラーと対処法
+- WindowsでEclipseを深いフォルダに解凍するとパス長エラーになります → `C:\pleiades` など短い英数字パスへ配置しましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step01-setup
+git add . && git commit -m "feat: Step 1 完了"
+git push -u origin feature/step01-setup
 ```
-
-- **初回準備**：GitHubでリポジトリ作成時に「Add a README file」にチェックを入れて `main` の初期コミットを作る
-- **各Stepの提出**：`git switch -c feature/step1-setup` のようにブランチを切り、Commit → Push → GitHubで **Pull Request作成** → `https://github.com/ユーザー名/リポジトリ名/pull/1` を提出する
-- **レビュー待ちで先へ進むとき**：前のStepブランチから次のブランチ（例：`git switch -c feature/step2-spring-db`）を切れば、レビューを待たずに開発を継続できます
-
-### 3. Excel詳細設計書をダウンロードしよう
-右側の **「詳細設計書（Excel）ダウンロード」** ボタンから `product-management-design-spec.xlsx` を保存し、ExcelまたはGoogleスプレッドシートで開いて **00_表紙・読み方 / 01_システム概要・環境 / 02_機能要件** を確認してください。',
-  'easy', 90, ARRAY['Spring Boot', 'Eclipse', 'PostgreSQL', 'GitHub', '環境構築'],
-  '{"stepNumber":1,"recommendedBranch":"feature/step1-setup","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 開発者向け詳細設計書 v1.1.0（Excel・全13シート）","checklist":["Eclipse（Pleiades All in One / Java 21）をインストールし、ワークスペース文字コードをUTF-8に設定した","PostgreSQL 16をインストールし、pgAdmin 4 または psql でデータベース `product_mgmt_db` を作成した","GitHubリポジトリ（例：product-manager）の `main` に初回READMEを作成後、`feature/step1-setup` ブランチを切って `.gitignore` 等を追加し **Pull Request** を作成した","配布のExcel詳細設計書 v1.1.0（全12シート）をダウンロードし、00_表紙〜02_機能要件に目を通した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/1","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '環境構築はエンジニア実務の第一歩です。つまずいた場合はエラー画面のスクリーンショットを撮って講師質問チャットで相談しましょう。',
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'easy', 60, ARRAY['Spring Boot', '環境構築', 'PostgreSQL', 'GitHub'],
+  '{"stepNumber":1,"recommendedBranch":"feature/step01-setup","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 開発者向け詳細設計書 v1.1.0（全13シート）","checklist":["Eclipse（Java 21）を導入し文字コードをUTF-8に設定した","PostgreSQL 16 で `product_mgmt_db` を作成した","詳細設計書（全13シート）と画面モックアップ（全8シート）を確認した","`feature/step01-setup` ブランチから最初のPull Requestを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/1","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step01-setup）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '環境構築と設計書の読み込みが終われば、あとは1ステップずつ小さく作って動かすだけです！',
   1, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4593,36 +4626,49 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
-  '44444444-4444-4444-8444-444444441402', '33333333-3333-4333-8333-333333331401', 'Step 2：Spring Bootプロジェクト作成とPostgreSQL接続確認', '## Spring BootとPostgreSQLを繋ぐ
+  '44444444-4444-4444-8444-444444441402', '33333333-3333-4333-8333-333333331401', 'Step 2：Spring Initializr（Maven）雛形作成 ＆ PostgreSQL接続疎通確認', '### 🎯 この単元でやること（ゴール）
+Spring Boot 3.3（Maven / Java 21）のプロジェクト雛形を作り、PostgreSQLへエラーなく起動接続できる状態にします。
 
-### 1. Spring InitializrでMavenプロジェクト雛形を作成
-Eclipseの「新規 → Spring スターター・プロジェクト」（または [start.spring.io](https://start.spring.io/)）で以下を選択します。
-- **Type（ビルドツール）**: **Maven**（実務で最もよく使われる `pom.xml` 管理方式）
-- **Language**: Java / **Java**: 21 / **Packaging**: Jar
-- **Dependencies（依存関係）**:
-  - `Spring Web`
-  - `Thymeleaf`
-  - `Spring Data JPA`
-  - `Validation`
-  - `PostgreSQL Driver`
-  - `Spring Boot DevTools`
+### 💡 なぜこの単元が必要か
+コードを書く前に「Spring BootとPostgreSQLが確実に繋がっている」状態を作っておくと、後でエラーが出たときに原因を切り分けやすくなります。
 
-> **Maven（`pom.xml`）の基本操作**
-> - ライブラリを追加・変更したときは、Eclipseでプロジェクトを右クリック → **「Maven → プロジェクトの更新（Alt + F5）」** を実行します。
-> - ターミナルから起動・ビルドするときは `./mvnw spring-boot:run`（Windowsは `mvnw.cmd spring-boot:run`）や `mvn clean package` を使用します。
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `01_システム概要・環境`（§2 技術スタック / §3 pom.xml / §6 application.properties）
 
-### 2. `src/main/resources/application.properties` の設定例
+### 🛠️ 最初に作るファイルと書く順番
+1. Spring Initializr（start.spring.io または Eclipse新規）で **Maven / Java 21 / Jar** を選択する
+2. 依存関係に `Spring Web`, `Thymeleaf`, `Spring Data JPA`, `Validation`, `PostgreSQL Driver`, `Spring Boot DevTools` を追加（※Spring SecurityはStep 13で追加）
+3. `src/main/resources/application.properties` にPostgreSQL接続設定を書く
+4. Eclipseから `ProductApplication.java` を「Spring Boot アプリケーション」として起動する
+
+### 🧩 最初の一歩（src/main/resources/application.properties）
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/product_mgmt_db
-spring.datasource.username=postgres
-spring.datasource.password=あなたのパスワード
+spring.datasource.username=${DB_USER:postgres}
+spring.datasource.password=${DB_PASSWORD:postgres}
 spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.open-in-view=false
 spring.jpa.show-sql=true
+spring.thymeleaf.cache=false
 ```
 
-※パスワードをGitHubに公開したくない場合は `${DB_PASSWORD:postgres}` のように環境変数化すると実務レベルです！',
-  'easy', 90, ARRAY['Spring Boot', 'PostgreSQL', 'application.properties'],
-  '{"stepNumber":2,"recommendedBranch":"feature/step2-spring-db","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 開発者向け詳細設計書 v1.1.0（Excel・全13シート）","checklist":["Spring Initializr（Maven / Java 21）で依存関係（Web / JPA / Thymeleaf / Validation / PostgreSQL Driver）入りプロジェクトを作成した","`application.properties` にPostgreSQL接続情報（URL・ユーザー名・パスワード）を設定した","EclipseからSpring Bootを起動し、コンソールエラーなく `http://localhost:8080` に接続できた","`feature/step2-spring-db` ブランチをPushして **Pull Request** を作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/2","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '`Started Application in X.XXX seconds` とコンソールに出ればSpring BootとPostgreSQLの疎通は成功です。',
+### ✅ 動作確認のしかた（成功のサイン）
+- Eclipseコンソールに `Started ProductApplication in X.XXX seconds` と表示される
+- 起動直後に赤い `Exception` や `Connection refused` が出ていない
+
+### ⚠️ よくあるエラーと対処法
+- `Connection refused` が出る → PostgreSQLサービスが起動しているか、ポート `5432` とパスワードが合っているか確認しましょう。
+- Maven依存が反映されない → プロジェクト右クリック →「Maven → プロジェクトの更新（Alt+F5）」を実行します。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step02-spring-db
+git add . && git commit -m "feat: Step 2 完了"
+git push -u origin feature/step02-spring-db
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'easy', 60, ARRAY['Spring Boot', 'Maven', 'PostgreSQL'],
+  '{"stepNumber":2,"recommendedBranch":"feature/step02-spring-db","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（01_システム概要・環境）","checklist":["Maven / Java 21 のSpring Bootプロジェクトを作成した","`application.properties` に `product_mgmt_db` への接続設定を記述した","起動ログに `Started ProductApplication` がエラーなく出た","`feature/step02-spring-db` ブランチをPushしてPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/2","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step02-spring-db）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'Spring BootとPostgreSQLの疎通確認が完了しました。次はいよいよブラウザに最初の1画面を表示します！',
   2, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4643,43 +4689,49 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
-  '44444444-4444-4444-8444-444444441403', '33333333-3333-4333-8333-333333331402', 'Step 3：詳細設計書（06_DB設計）からDB構築・Entity・Repository実装', '## データベース構造（ER図）とJPAマッピング
+  '44444444-4444-4444-8444-444444441403', '33333333-3333-4333-8333-333333331401', 'Step 3：はじめての Controller ＋ Thymeleaf で「最初の1画面」を表示する', '### 🎯 この単元でやること（ゴール）
+Spring BootのMVCの最小単位である「Controller（受付）→ Thymeleaf（HTML画面）」を自分で書き、`http://localhost:8080/products` に仮画面を表示します。
 
-Excel詳細設計書の **06_DB設計（テーブル定義・制約・初期データ）** を開いて、3つのテーブルの関係を確認しましょう。
+### 💡 なぜこの単元が必要か
+いきなりDBと繋ぐ前に「URLにアクセスしたらControllerのメソッドが呼ばれ、HTMLが返る」仕組みを体で理解すると、この先の学習が圧倒的に楽になります。
 
-```mermaid
-erDiagram
-    categories ||--o{ products : "1対多 (category_id)"
-    categories {
-        bigint id PK
-        varchar name UK
-        int sort_order
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `04_URL・IF設計`（URL一覧）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `src/main/java/com/example/product/controller/AuthController.java` を作り、`GET /` を `/products` へリダイレクトさせる
+2. `src/main/java/com/example/product/controller/ProductController.java` を作り、`@GetMapping("/products")` で `"products/list"` を返す
+3. `src/main/resources/templates/products/list.html` を作り、`<h1>商品一覧（作成中）</h1>` と表示させる
+
+### 🧩 最初の一歩（最初に書く ProductController.java（最小版））
+```java
+@Controller
+@RequestMapping("/products")
+public class ProductController {
+    @GetMapping
+    public String list(Model model) {
+        model.addAttribute("pageTitle", "商品一覧");
+        return "products/list"; // templates/products/list.html を表示！
     }
-    products {
-        bigint id PK
-        varchar sku UK
-        varchar name
-        bigint category_id FK
-        int price
-        int stock
-        text description
-        boolean is_deleted
-    }
-    users {
-        bigint id PK
-        varchar email UK
-        varchar password_hash
-        varchar full_name
-        varchar role
-    }
+}
 ```
 
-### 作業内容
-1. 06_DB設計 のテーブル定義をもとに `CREATE TABLE` 文を作成（参考DDL骨格で答え合わせ可）して pgAdmin 4 で実行し、`ddl-auto=validate` で整合確認する
-2. カテゴリ3件以上・商品5件以上のテストデータを `INSERT` する
-3. `entity` パッケージに `Category`, `Product`, `User` を、`repository` パッケージに各 `JpaRepository` を実装する',
-  'medium', 120, ARRAY['PostgreSQL', 'DDL', 'JPA', 'Entity'],
-  '{"stepNumber":3,"recommendedBranch":"feature/step3-db-entity","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（06_DB設計）","checklist":["詳細設計書 06_DB設計 のテーブル定義から `users`・`categories`・`products` の3テーブルを作成し、`ddl-auto=validate` で起動整合を確認した","初期データ（カテゴリ3件以上、サンプル商品5件以上）をINSERTした","Entityクラス（`User`, `Category`, `Product`）とRepositoryインターフェースを作成した","`feature/step3-db-entity` ブランチでDDL・Entity・RepositoryをPushし **Pull Request** を作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/3","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '06_DB設計 のカラム名・型・NOT NULL制約とEntityのフィールド（論理削除は `deleted`・D-05）を一致させ、`ddl-auto=validate` を通すのがポイントです。',
+### ✅ 動作確認のしかた（成功のサイン）
+- ブラウザで `http://localhost:8080/` を開くと自動で `/products` に移動する
+- 画面に `商品一覧` と日本語が文字化けせず表示される
+
+### ⚠️ よくあるエラーと対処法
+- `Whitelabel Error Page (404)` が出る → `@Controller` の付け忘れ、または `templates/products/list.html` のフォルダ名スペルミスを確認しましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step03-first-page
+git add . && git commit -m "feat: Step 3 完了"
+git push -u origin feature/step03-first-page
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'easy', 60, ARRAY['Spring Boot', 'Controller', 'Thymeleaf'],
+  '{"stepNumber":3,"recommendedBranch":"feature/step03-first-page","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（03_画面設計・04_URL・IF設計）","checklist":["`AuthController` で `GET /` → `redirect:/products` を実装した","`ProductController` で `GET /products` を受け取り `products/list` を返した","ブラウザで `http://localhost:8080/products` にHTMLが表示された","`feature/step03-first-page` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/3","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step03-first-page）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '`@Controller` がURLを受け取り、戻り値の文字列に対応する `templates/*.html` を返すのがSpring MVCの基本です。',
   3, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4700,34 +4752,44 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
-  '44444444-4444-4444-8444-444444441404', '33333333-3333-4333-8333-333333331402', 'Step 4：商品一覧・複合検索・詳細表示（MVCアーキテクチャ実装）', '## Spring BootのMVC処理フロー
+  '44444444-4444-4444-8444-444444441404', '33333333-3333-4333-8333-333333331401', 'Step 4：共通ヘッダー（layout.html）＆ 共通CSS（style.css）の土台作成', '### 🎯 この単元でやること（ゴール）
+全画面で使い回す共通ヘッダー（`templates/fragments/layout.html`）と共通スタイルシート（`static/css/style.css`）を作成し、一覧画面から読み込みます。
 
-Excel詳細設計書の **03_画面設計・04_URL・IF設計・05_クラス設計** に従って一覧・検索・詳細機能を実装します。
+### 💡 なぜこの単元が必要か
+先に共通デザインとフラッシュメッセージ・赤バッジ・エラー文字のCSSクラスを用意しておくと、以降の画面作成で見た目に迷わずロジックに集中できます。
 
-```mermaid
-sequenceDiagram
-    participant Browser as ブラウザ
-    participant Ctrl as ProductController
-    participant Svc as ProductService
-    participant Repo as ProductRepository
-    participant DB as PostgreSQL
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `03_画面設計 §2` ＋ 画面モックアップ（共通ヘッダー・色使い）
 
-    Browser->>Ctrl: GET /products?keyword=PC&categoryId=1
-    Ctrl->>Svc: search(keyword, categoryId)
-    Svc->>Repo: findActiveByCondition(...)
-    Repo->>DB: SELECT ... WHERE is_deleted = false ...
-    DB-->>Repo: 商品リスト
-    Repo-->>Svc: List<Product>
-    Svc-->>Ctrl: List<Product>
-    Ctrl-->>Browser: templates/products/list.html
+### 🛠️ 最初に作るファイルと書く順番
+1. `src/main/resources/templates/fragments/layout.html` を作り、`th:fragment="header"` でシステム名とヘッダー枠を定義する
+2. `src/main/resources/static/css/style.css` を作り、`.badge-low`（赤バッジ）・`.flash-success`・`.error`・`.data-table` の基本CSSを書く
+3. `templates/products/list.html` から `<link rel="stylesheet" th:href="@{/css/style.css}">` と `th:replace="~{fragments/layout :: header}"` を読み込む
+
+### 🧩 最初の一歩（templates/fragments/layout.html の書き出し）
+```html
+<header th:fragment="header" class="app-header">
+  <a th:href="@{/products}" class="brand">商品管理システム</a>
+  <!-- Step 13でここにログイン者氏名とログアウトボタンを追加します -->
+</header>
 ```
 
-### 実装ポイント
-- `is_deleted = false` の商品だけを取得する
-- 在庫数（`stock`）が `10` 未満の行に `th:if="${p.stock < 10}"` で警告バッジを出す
-- 商品名クリックで `/products/{id}` の詳細画面へ遷移できるようにする',
-  'medium', 180, ARRAY['Spring Boot', 'Thymeleaf', '一覧・検索'],
-  '{"stepNumber":4,"recommendedBranch":"feature/step4-product-list","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（03_画面設計・04_URL・05_クラス設計）","checklist":["`GET /products` で論理削除されていない商品一覧（カテゴリ名付き）が表示される","在庫数が10未満の商品に赤色の警告バッジが表示される","商品名（部分一致）とカテゴリ選択による複合検索が動作し、検索条件が画面に保持される","`feature/step4-product-list` ブランチで商品一覧・検索・詳細をPushし **Pull Request** を作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/4","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', 'Controllerはリクエスト受付と画面返却だけを担当し、検索条件の組み立てや業務ルールはService層へ分離しましょう。',
+### ✅ 動作確認のしかた（成功のサイン）
+- `http://localhost:8080/products` に共通ヘッダーとCSSスタイルが適用されて表示される
+- ブラウザ開発者ツール（F12 → Network）で `style.css` が `200 OK` で読み込まれている
+
+### ⚠️ よくあるエラーと対処法
+- CSSが効かない → `static/css/style.css` の置き場所を確認し、`href="/css/style.css"` ではなく `th:href="@{/css/style.css}"` を使いましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step04-layout-css
+git add . && git commit -m "feat: Step 4 完了"
+git push -u origin feature/step04-layout-css
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'easy', 60, ARRAY['Thymeleaf', 'CSS', '共通部品'],
+  '{"stepNumber":4,"recommendedBranch":"feature/step04-layout-css","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（03_画面設計 §2 共通部品）","checklist":["`templates/fragments/layout.html` に `th:fragment=\"header\"` を作成した","`static/css/style.css` にテーブル・バッジ・フラッシュ・エラー用のスタイルを作成した","`products/list.html` に共通ヘッダーとCSSが反映された","`feature/step04-layout-css` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/4","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step04-layout-css）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'Thymeleafの `th:fragment` / `th:replace` を使うことで、ヘッダーを修正したいときも1ファイル直すだけで全画面へ反映できます。',
   4, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4748,24 +4810,66 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
-  '44444444-4444-4444-8444-444444441405', '33333333-3333-4333-8333-333333331402', 'Step 5：商品新規登録・編集・論理削除＆バリデーション実装', '## 二重送信を防ぐPRGパターンと入力チェック
+  '44444444-4444-4444-8444-444444441405', '33333333-3333-4333-8333-333333331402', 'Step 5：PostgreSQL 3テーブルDDL作成（users / categories / products）＆初期データ投入', '### 🎯 この単元でやること（ゴール）
+詳細設計書 `06_DB設計` を読みながら、PostgreSQLに3つのテーブル（`users`, `categories`, `products`）を作成し、初期カテゴリ3件・初期商品5件を投入します。
 
-Excel詳細設計書の **07_処理詳細・08_検証・エラー** の全ルール（新規=`existsBySku` / 編集=`existsBySkuAndIdNot` 等）を `ProductForm` と `ProductService` に実装しましょう。
+### 💡 なぜこの単元が必要か
+実務では「設計書のテーブル定義を見て自分でSQL(DDL)を書き、制約（PRIMARY KEY / UNIQUE / FOREIGN KEY / CHECK）をDB側にも張る」ことがデータ品質の要です。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `06_DB設計`（§1 ER図〜§6 初期データ）
 
 ```mermaid
-flowchart LR
-    Form["登録・編集画面<br/>form.html"] -->|POST /products| Val{"@Valid 検証 &<br/>SKU重複チェック"}
-    Val -->|エラーあり| Back["form.htmlを再表示<br/>入力値保持＋赤字エラー"]
-    Val -->|OK| Save["ServiceでDB保存<br/>@Transactional"]
-    Save -->|Redirect 302| List["GET /products<br/>完了フラッシュ表示"]
+erDiagram
+  categories ||--o{ products : "1対多 (category_id)"
+  categories { bigint id PK
+ varchar name UK
+ int sort_order }
+  products { bigint id PK
+ varchar sku UK
+ varchar name
+ bigint category_id FK
+ int price
+ int stock
+ boolean is_deleted }
+  users { bigint id PK
+ varchar email UK
+ varchar password_hash
+ varchar role }
 ```
 
-### 実装ポイント
-- **PRG（Post-Redirect-Get）パターン**：登録・更新・削除のPOST後は必ず `return "redirect:/products";` を使い、ブラウザのリロードによる二重登録を防止します。
-- **論理削除**：`DELETE FROM` は使わず、`product.setDeleted(true)` に更新してデータを保全します。',
-  'hard', 240, ARRAY['Spring Boot', 'CRUD', 'Validation', '論理削除'],
-  '{"stepNumber":5,"recommendedBranch":"feature/step5-product-crud","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（07_処理詳細・08_検証・エラー）","checklist":["商品新規登録（`GET /products/new` → `POST /products`）がPRGパターンで動作しフラッシュメッセージが出る","08_検証・エラー の入力バリデーション（必須・SKU形式・単価0〜1000万・在庫0〜999,999・SKU重複チェック）がすべて動作する","商品編集（`GET /products/{id}/edit` → `POST /products/{id}`）と論理削除（`is_deleted = true`）が動作する","`feature/step5-product-crud` ブランチをPushし **Pull Request** を作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/5","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', 'Bean Validation（`@NotBlank`, `@Min`, `@Pattern`）＋業務バリデーション（SKU重複チェック）の組み合わせは実務の必須スキルです。',
-  5, true
+### 🛠️ 最初に作るファイルと書く順番
+1. プロジェクト内に `sql/schema.sql` を作り、外部キーの依存順（①`users` → ②`categories` → ③`products`）で `CREATE TABLE` 文を書く
+2. `sql/data.sql` を作り、カテゴリ3件（PC・周辺機器 / 書籍 / オフィス用品）とサンプル商品5件（在庫10未満を含む）の `INSERT` 文を書く
+3. pgAdmin 4 のクエリツールで `schema.sql` → `data.sql` の順に実行する
+
+### 🧩 最初の一歩（sql/schema.sql の書き出し例）
+```sql
+CREATE TABLE categories (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    sort_order INTEGER NOT NULL DEFAULT 0
+);
+-- 続けて users と products（price >= 0, stock >= 0, is_deleted DEFAULT FALSE）を作成
+```
+
+### ✅ 動作確認のしかた（成功のサイン）
+- pgAdmin 4 で `SELECT * FROM categories;` が3件、`SELECT * FROM products;` が5件返る
+- `price = -1` を試しにINSERTすると `CHECK` 制約エラーで弾かれることを確認する
+
+### ⚠️ よくあるエラーと対処法
+- `products` を `categories` より先に作ろうとすると外部キーエラーになります → 親テーブル（`categories`）を先に作りましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step05-db-ddl
+git add . && git commit -m "feat: Step 5 完了"
+git push -u origin feature/step05-db-ddl
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['PostgreSQL', 'SQL', 'DDL'],
+  '{"stepNumber":5,"recommendedBranch":"feature/step05-db-ddl","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（06_DB設計）","checklist":["`sql/schema.sql` で `users`・`categories`・`products` の3テーブルと制約を作成した","`sql/data.sql` で初期カテゴリ3件・初期商品5件を投入した","pgAdmin 4 で `SELECT` してデータが入っていることを確認した","`feature/step05-db-ddl` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/5","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step05-db-ddl）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'DB側にも `UNIQUE` や `CHECK (price >= 0)` を張っておくことで、万一プログラムにバグがあっても不正データを防ぐ二重防御になります。',
+  1, true
 )
 ON CONFLICT (id) DO UPDATE SET
   lesson_id = EXCLUDED.lesson_id,
@@ -4785,20 +4889,54 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
-  '44444444-4444-4444-8444-444444441406', '33333333-3333-4333-8333-333333331403', 'Step 6：ログイン認証・テスト仕様書（10_テスト仕様）全件確認＆GitHub最終PR提出', '## ログイン認証の組み込みと最終品質チェック
+  '44444444-4444-4444-8444-444444441406', '33333333-3333-4333-8333-333333331402', 'Step 6：Entity 3クラス＆Repository作成 → `ddl-auto=validate` 起動整合を突破する', '### 🎯 この単元でやること（ゴール）
+PostgreSQLの3テーブルに対応するJavaの `Entity` 3クラスと `Repository` 3インターフェースを作成し、`spring.jpa.hibernate.ddl-auto=validate` でエラーなく起動させます。
 
-1. **Spring Security の導入**：
-   - `pom.xml` に `spring-boot-starter-security` を追加
-   - `SecurityConfig` で `/login`・静的CSS以外の全URLを認証必須に設定
-   - `BCryptPasswordEncoder` でパスワードを安全に照合
-2. **テスト仕様書（10_テスト仕様）の実施**：
-   - `TC-001`〜`TC-022`（基本12件＋推奨境界/セキュリティ10件）をブラウザとPostgreSQLで確認し、Excelの判定欄をすべて「合格」にする
-3. **README.md の整備＆最終Push**：
-   - 別のエンジニアが `git clone` して動かせるよう、DB作成SQL・起動コマンド・テストアカウント情報を `README.md` に記載
-   - 最終ステップの **GitHub Pull Request URL（`/pull/番号`）** を下のフォームから提出してください！',
-  'hard', 180, ARRAY['Spring Security', 'テスト', 'GitHub提出'],
-  '{"stepNumber":6,"recommendedBranch":"feature/step6-security-final","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（10_テスト仕様：TC-001〜TC-022）","checklist":["Spring Securityによるログイン・ログアウト（BCrypt暗号化・未ログイン時 `/login` リダイレクト）を実装した","詳細設計書 10_テスト仕様 の単体・結合テスト（TC-001〜TC-022）をすべて実施し合格を確認した","`README.md` にDB作成手順・起動方法・テスト用ログインID/パスワードを記載した","`feature/step6-security-final` ブランチから最終 **Pull Request** を作成し、PR URLを提出した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/6","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '商品管理システムの完遂おめでとうございます！この開発経験と設計書読解力を武器に、いよいよ最終段階の「3人1組チーム開発」へ挑戦しましょう。',
-  6, true
+### 💡 なぜこの単元が必要か
+EntityとDBテーブルの列名・型が1文字でもズレていると後々謎のバグになります。`validate` モードで起動成功させることが「DBとJavaが完全に噛み合った」証明です。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `05_クラス設計`（§3 Repository / §4 Entity）＋ `06_DB設計`
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `entity/Category.java`, `entity/Product.java`, `entity/User.java` を作成する（Entityには `@Data` を付けず `@Getter` `@Setter` を個別に付与）
+2. `Product.java` の論理削除フラグはDB列 `is_deleted` に `@Column(name = "is_deleted") private boolean deleted = false;` とマッピングする（D-05）
+3. `repository/CategoryRepository.java`, `ProductRepository.java`, `UserRepository.java`（`JpaRepository` 継承）を作成する
+4. Spring Bootを起動して `validate` チェックを通す
+
+### 🧩 最初の一歩（entity/Product.java の重要ポイント）
+```java
+@Entity
+@Table(name = "products")
+@Getter @Setter
+public class Product {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
+    @Column(name = "is_deleted", nullable = false)
+    private boolean deleted = false;
+}
+```
+
+### ✅ 動作確認のしかた（成功のサイン）
+- Eclipseから起動し、`Schema-validation` エラーが出ずに `Started ProductApplication` が表示される
+
+### ⚠️ よくあるエラーと対処法
+- `Schema-validation: missing column [is_deleted]` 等が出たら、`@Column(name = "...")` とPostgreSQLの列名を1文字ずつ見比べましょう。
+- Java側フィールド名を `isDeleted` にするとLombokやJPAと衝突しやすいので、必ず `deleted` にしてください。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step06-entity-repo
+git add . && git commit -m "feat: Step 6 完了"
+git push -u origin feature/step06-entity-repo
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['Spring Data JPA', 'Entity', 'Repository'],
+  '{"stepNumber":6,"recommendedBranch":"feature/step06-entity-repo","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（05_クラス設計・06_DB設計）","checklist":["`Category`, `Product`, `User` の3 Entity を作成した（`Product` の論理削除は `deleted`）","3つの `JpaRepository` インターフェースを作成した","`ddl-auto=validate` のままエラーなく起動できた","`feature/step06-entity-repo` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/6","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step06-entity-repo）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '`ddl-auto=validate` を突破できれば、DBとJavaクラスの土台は完璧です！',
+  2, true
 )
 ON CONFLICT (id) DO UPDATE SET
   lesson_id = EXCLUDED.lesson_id,
@@ -4818,42 +4956,651 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
-  '44444444-4444-4444-8444-444444441501', '33333333-3333-4333-8333-333333331501', 'Team Step 1：チーム開発の流れ・役割分担（1人3ページ）＆Git運用ルール策定', '## 3人1組チーム開発：社内統合業務システム「TeamOps Hub」
+  '44444444-4444-4444-8444-444444441407', '33333333-3333-4333-8333-333333331402', 'Step 7：商品一覧表示（GET /products）＆在庫少バッジ（10未満赤バッジ）実装', '### 🎯 この単元でやること（ゴール）
+PostgreSQLに入れたサンプル商品5件を `Controller → Service → Repository` の3層経由で取得し、一覧テーブルと「在庫10未満の赤バッジ」を表示します。
 
-1年間カリキュラムの集大成です！3人で力を合わせ、**共通ログイン機能（1画面）＋ 1人3ページ × 3名（計9画面）＝ 全10画面** の本格Webシステムを構築します。
+### 💡 なぜこの単元が必要か
+ここで初めてDBのデータがブラウザ画面に届きます！10未満のしきい値は定数クラス（`ProductConstants`）に置く実務作法も身につけます。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `03_画面設計`（SCR-02）＋ `05_クラス設計` ＋ モックアップ（商品一覧シート）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `constant/ProductConstants.java` を作り `public static final int LOW_STOCK_THRESHOLD = 10;` を定義する
+2. `ProductRepository` に `JOIN FETCH p.category` 付きの未削除全件取得クエリ（ID昇順）を書く
+3. `service/ProductService.java` と `service/CategoryService.java` を作成する（`@Transactional(readOnly = true)`）
+4. `ProductController#list` で `products` を `Model` に詰め、`templates/products/list.html` に `th:each` でテーブル描画する
+
+### 🧩 最初の一歩（templates/products/list.html の在庫少バッジ部分）
+```html
+<tr th:each="p : ${products}">
+  <td th:text="${p.sku}"></td>
+  <td th:text="${p.name}"></td>
+  <td th:text="${p.category.name}"></td>
+  <td th:text="${#numbers.formatInteger(p.price, 1, ''COMMA'') + ''円''}"></td>
+  <td>
+    <span th:text="${p.stock}"></span>
+    <span th:if="${p.stock < lowStockThreshold}" class="badge-low">在庫少</span>
+  </td>
+</tr>
+```
+
+### ✅ 動作確認のしかた（成功のサイン）
+- `http://localhost:8080/products` に初期商品5件がカテゴリ名・3桁カンマ単価付きで表示される
+- 在庫8の「メカニカルキーボード」と在庫3の「USB-Cハブ」にだけ赤色の「在庫少」バッジが出る
+
+### ⚠️ よくあるエラーと対処法
+- `LazyInitializationException` が出た → `ProductRepository` のJPQLに `JOIN FETCH p.category` を入れ忘れています。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step07-product-list
+git add . && git commit -m "feat: Step 7 完了"
+git push -u origin feature/step07-product-list
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['Spring Boot', 'Thymeleaf', 'Service', '一覧表示'],
+  '{"stepNumber":7,"recommendedBranch":"feature/step07-product-list","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（03_画面設計・05_クラス設計）","checklist":["`ProductConstants.LOW_STOCK_THRESHOLD = 10` を定義した","Controller → Service → Repository 経由で未削除商品一覧を取得できた","単価の3桁区切り＋「円」表示と、在庫10未満の赤バッジが表示された","`feature/step07-product-list` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/7","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step07-product-list）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'これでDBから画面までの1本の道（Read）が開通しました！次は検索と詳細画面を追加します。',
+  3, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441408', '33333333-3333-4333-8333-333333331402', 'Step 8：複合検索（商品名＋カテゴリ＋LIKEエスケープ）＆ 商品詳細画面（GET /products/{id}）', '### 🎯 この単元でやること（ゴール）
+商品名（部分一致・大小無視）とカテゴリのAND検索（条件保持・クリア付き）と、商品名クリックで開く商品詳細画面（`/products/{id}`）を実装します。
+
+### 💡 なぜこの単元が必要か
+実務の一覧画面では複合検索＋条件保持が必須です。また `%` や `_` のLIKEエスケープを学ぶことでSQLの罠を防げるようになります。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `03_画面設計`（SCR-02/03）・`07_処理詳細`（P-02）＋ モックアップ（商品詳細シート）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `ProductService#search(keyword, categoryId)` で `null`→`""`・`trim()`・`\`/`%`/`_` エスケープを実装する
+2. `ProductRepository` に `searchActive(escapedKeyword, categoryId)` と `findActiveById(id)`（`JOIN FETCH`付き）を実装する
+3. `exception/ProductNotFoundException.java` を作り、`ProductService#findById` で未存在・削除済み時に投げる
+4. `ProductController#detail` と `templates/products/detail.html` を作り、一覧の商品名にリンクを張る
+
+### 🧩 最初の一歩（ProductService#search のエスケープ処理）
+```java
+String normalized = (keyword == null) ? "" : keyword.trim();
+String escaped = normalized
+    .replace("\\", "\\\\")
+    .replace("%", "\\%")
+    .replace("_", "\\_");
+return productRepository.searchActive(escaped, categoryId);
+```
+
+### ✅ 動作確認のしかた（成功のサイン）
+- 「マウス」＋カテゴリ「PC・周辺機器」で検索し、該当商品だけが表示されフォームに検索条件が残る
+- 「クリア」リンクで全件に戻る。`%` だけ検索して全件ヒットしないこと（0件になること）を確認する
+- 商品名クリックで `/products/1` が開き、SKU・単価・在庫・説明・登録/更新日時が表示される
+
+### ⚠️ よくあるエラーと対処法
+- PostgreSQLで `keyword` に `null` を渡すと型推論エラーになることがあります → Serviceで必ず `""` へ正規化してからRepositoryへ渡しましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step08-search-detail
+git add . && git commit -m "feat: Step 8 完了"
+git push -u origin feature/step08-search-detail
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 120, ARRAY['Spring Boot', 'JPQL', '複合検索', '詳細画面'],
+  '{"stepNumber":8,"recommendedBranch":"feature/step08-search-detail","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（02_機能要件 FN-004/005・07_処理詳細）","checklist":["商品名（大小無視・部分一致）＋カテゴリの複合検索と検索条件保持が動く","`%` や `_` を検索しても文字通りに検索される（LIKEエスケープ）","商品詳細画面（`/products/{id}`）に全項目が表示される","`feature/step08-search-detail` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/8","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step08-search-detail）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'これで「見る機能（一覧・検索・詳細）」がすべて完成しました！次の章からデータを書き換える機能（Create/Update/Delete）へ進みます。',
+  4, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441409', '33333333-3333-4333-8333-333333331403', 'Step 9：商品新規登録（GET /products/new → POST /products）＆ PRGパターン実装', '### 🎯 この単元でやること（ゴール）
+新規登録画面（`form.html`）から商品を1件DBへ保存し、`redirect:/products`（PRGパターン）で一覧へ戻して緑の完了フラッシュメッセージを出します。
+
+### 💡 なぜこの単元が必要か
+まずはバリデーションを乗せる前に「フォーム入力 → POST → DBへINSERT → リダイレクト」という登録の基本パイプラインを確実に動かします。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `03_画面設計`（SCR-04）・`04_URL・IF設計`（No.7, 8）＋ モックアップ（商品登録シート）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `form/ProductForm.java` を作成する（Entityと分離した入力受け取り専用クラス）
+2. `ProductService#create(ProductForm)` を実装する（`@Transactional` で `Product` へ詰替えて `save`）
+3. `ProductController` に `GET /products/new` と `POST /products` を追加し、`RedirectAttributes` で完了メッセージを積んで `redirect:/products` を返す
+4. `templates/products/form.html` を作成し、一覧画面に「＋ 新規登録」ボタンを配置する
+
+### 🧩 最初の一歩（PRGパターンの Controller 書き出し）
+```java
+@PostMapping
+public String create(@ModelAttribute ProductForm productForm, RedirectAttributes ra) {
+    productService.create(productForm);
+    ra.addFlashAttribute("message", "商品を登録しました");
+    return "redirect:/products"; // F5更新での二重登録を防ぐ！
+}
+```
+
+### ✅ 動作確認のしかた（成功のサイン）
+- `/products/new` から新商品（例：`PRD-0099`）を登録すると `/products` へ移動し「商品を登録しました」が出る
+- 一覧画面でF5（リロード）を押しても、商品が二重登録されない
+- pgAdmin 4 で `products` テーブルに新しい行が追加されている
+
+### ⚠️ よくあるエラーと対処法
+- カテゴリプルダウンの値が届かない → `<select th:field="*{categoryId}">` の名前が `ProductForm` のフィールド名と一致しているか確認しましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step09-product-create
+git add . && git commit -m "feat: Step 9 完了"
+git push -u origin feature/step09-product-create
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['Spring Boot', 'POST', 'PRGパターン', 'Thymeleaf'],
+  '{"stepNumber":9,"recommendedBranch":"feature/step09-product-create","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（03_画面設計 SCR-04・04_URL・IF設計）","checklist":["`ProductForm` と `templates/products/form.html` を作成した","`GET /products/new` → `POST /products` でDBに新規登録できる","PRGパターンでリダイレクトされ、完了フラッシュメッセージが表示される","`feature/step09-product-create` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/9","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step09-product-create）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'Entityを直接フォームに使わず `ProductForm` を挟むことで、次のStep 10のバリデーションがとても綺麗に書けるようになります。',
+  1, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441410', '33333333-3333-4333-8333-333333331403', 'Step 10：形式バリデーション（@Valid・messages.properties）＆入力エラー再表示', '### 🎯 この単元でやること（ゴール）
+`ProductForm` に全入力チェック（必須・SKU形式・文字数・単価0〜1000万・在庫0〜999,999）を実装し、NG時に「入力値を消さず・各欄の下に赤字エラー」を出します。
+
+### 💡 なぜこの単元が必要か
+画面入力のチェックを省くと、不正な値でDBエラー（500画面）になってしまいます。Bean ValidationはSpring Boot実務で毎回必ず使う必須技術です。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `08_検証・エラー`（全検証ルール・`messages.properties` 文言）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `ProductForm.java` に `@NotBlank`, `@Pattern(regexp = "^[A-Z0-9-]{3,32}$")`, `@Size`, `@NotNull`, `@Min`, `@Max` を付与する
+2. `src/main/resources/messages.properties` を作り、日本語エラーメッセージを定義する
+3. `ProductController` に `@InitBinder`（前後空白除去＋空文字→null）を追加し、`create` に `@Valid` と `BindingResult` を付ける
+4. `form.html` の各入力欄の下に `<p class="error" th:if="${#fields.hasErrors(''...'')}" th:errors="*{...}"></p>` を追加する
+
+### 🧩 最初の一歩（Controller の BindingResult チェック（重要ルール））
+```java
+// ★BindingResult は必ず @Valid の直後に書くこと！
+@PostMapping
+public String create(@Valid @ModelAttribute ProductForm productForm,
+                     BindingResult bindingResult, RedirectAttributes ra, Model model) {
+    if (bindingResult.hasErrors()) {
+        model.addAttribute("categories", categoryService.findAllOrdered()); // 再セット必須！
+        return "products/form"; // リダイレクトせず直接返す
+    }
+    ...
+```
+
+### ✅ 動作確認のしかた（成功のサイン）
+- 空のまま「登録する」を押すと、全必須項目の下に日本語の赤字エラーが表示される
+- 小文字SKU（`prd-1`）や単価 `-100` を入れると弾かれ、他の入力欄の値は消えずに保持される
+- エラー再表示時もカテゴリプルダウンの選択肢が空にならない
+
+### ⚠️ よくあるエラーと対処法
+- エラー再表示時にカテゴリプルダウンが空になる → `if (bindingResult.hasErrors())` の中で `categories` を `Model` に詰め直すのを忘れています！
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step10-form-validation
+git add . && git commit -m "feat: Step 10 完了"
+git push -u origin feature/step10-form-validation
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['Bean Validation', 'messages.properties', 'エラー処理'],
+  '{"stepNumber":10,"recommendedBranch":"feature/step10-form-validation","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（08_検証・エラー）","checklist":["`ProductForm` に設計書 `08_検証・エラー` の全アノテーションを設定した","`messages.properties` で日本語エラーメッセージが表示される","`@InitBinder` で前後空白を除去し、エラー時に値とカテゴリ選択肢が保持される","`feature/step10-form-validation` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/10","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step10-form-validation）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '形式チェック（`@Valid`）が整いました。次はDBを見ないと判定できない「SKU重複チェック」を実装します。',
+  2, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441411', '33333333-3333-4333-8333-333333331403', 'Step 11：業務バリデーション（SKU重複チェック・カテゴリ存在確認・saveAndFlush）', '### 🎯 この単元でやること（ゴール）
+`BusinessException` を作成し、Service層で「既存SKU（削除済み含む）との重複」「存在しないカテゴリID」を検知してフォームの該当欄へ赤字エラーを表示します。
+
+### 💡 なぜこの単元が必要か
+「形式は正しいがDB上すでに使われているSKU」は `@Valid` では防げません。Service層で業務例外を投げてControllerで `bindingResult.rejectValue` する流れは実務の王道パターンです。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `06_DB設計 §7`・`07_処理詳細`・`08_検証・エラー`
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `exception/BusinessException.java`（`field` と `messageCode` を持つ `RuntimeException`）を作成する
+2. `ProductRepository` に `existsBySku(String sku)` と `existsBySkuAndIdNot(String sku, Long id)` を追加する
+3. `ProductService#create` でカテゴリ存在確認→`existsBySku`→`saveAndFlush`（`DataIntegrityViolationException` も重複エラーへ変換）を実装する
+4. `ProductController#create` で `BusinessException` を `catch` し、`bindingResult.rejectValue(ex.getField(), ex.getMessageCode())` でフォーム再表示する
+
+### 🧩 最初の一歩（ProductService#create の重複チェック＆競合防御）
+```java
+if (productRepository.existsBySku(form.getSku())) {
+    throw new BusinessException("sku", "product.sku.duplicate");
+}
+try {
+    return productRepository.saveAndFlush(p);
+} catch (DataIntegrityViolationException e) {
+    throw new BusinessException("sku", "product.sku.duplicate");
+}
+```
+
+### ✅ 動作確認のしかた（成功のサイン）
+- 既存の `PRD-0001` で新規登録すると、SKU欄の下に「このSKUはすでに登録されています」と赤字表示され登録されない
+- 存在しないカテゴリIDを送信しても500エラーにならず入力エラーとして扱われる
+
+### ⚠️ よくあるエラーと対処法
+- 通常の `save()` だとメソッド終了時までSQLが飛ばず `try-catch` で一意制約違反を捕まえられません → `saveAndFlush()` を使うのがポイントです。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step11-business-validation
+git add . && git commit -m "feat: Step 11 完了"
+git push -u origin feature/step11-business-validation
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['業務バリデーション', 'BusinessException', 'トランザクション'],
+  '{"stepNumber":11,"recommendedBranch":"feature/step11-business-validation","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（07_処理詳細・08_検証・エラー）","checklist":["`BusinessException` を作成し、SKU重複・カテゴリ不正を検知できる","`saveAndFlush` で同時登録のDB一意制約違反も業務エラーへ変換している","重複SKUで登録すると500画面にならずSKU欄の下に赤字エラーが出る","`feature/step11-business-validation` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/11","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step11-business-validation）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'これで形式チェック（Form）＋業務チェック（Service）＋DB制約（PostgreSQL）の3重防御が完成しました！',
+  3, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441412', '33333333-3333-4333-8333-333333331403', 'Step 12：商品編集（GET /products/{id}/edit → POST /products/{id}）＆ 論理削除実装', '### 🎯 この単元でやること（ゴール）
+新規と共通の `form.html` を使って商品編集（自分のSKU維持OK／他商品SKU重複NG）を実装し、確認ダイアログ付きの論理削除（`is_deleted = true`）を完成させます。
+
+### 💡 なぜこの単元が必要か
+編集時のSKU重複判定（`existsBySkuAndIdNot`）と、データを消さずに保全する論理削除（`deleted = true`）は業務システムで頻出の重要パターンです。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `03_画面設計`（SCR-05）・`07_処理詳細`（編集・論理削除）＋ モックアップ（商品編集シート）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `ProductService` に `findFormById(id)`・`update(id, form)`（`existsBySkuAndIdNot`使用）・`softDelete(id)`（`p.setDeleted(true)`）を追加する
+2. `ProductController` に `GET /products/{id}/edit`、`POST /products/{id}`、`POST /products/{id}/delete` を追加する
+3. `templates/products/form.html` で `productId != null` のとき見出しを「商品編集」、送信先を `/products/{id}` へ切り替える
+4. `list.html` と `detail.html` に編集リンクと `onsubmit="return confirm(...)"` 付きのPOST削除フォームを追加する
+
+### 🧩 最初の一歩（ProductService#softDelete（物理削除は絶対禁止！））
+```java
+@Transactional
+public void softDelete(Long id) {
+    Product p = findById(id); // 未存在・削除済みは404例外
+    p.setDeleted(true);       // DELETE文は使わずフラグだけtrueに更新！
+}
+```
+
+### ✅ 動作確認のしかた（成功のサイン）
+- 編集画面で既存値が初期表示され、SKUを変えずに商品名だけ変更して更新できる
+- 編集画面で他商品のSKU（例：`PRD-0002`）へ変更しようとすると重複エラーになる
+- 削除ボタン→キャンセルで何も起きず、OKで一覧から消える。pgAdmin 4 で行が残り `is_deleted = true` になっている
+
+### ⚠️ よくあるエラーと対処法
+- 編集で `existsBySku` を使ってしまうと、自分のSKUとぶつかって毎回エラーになります → 編集は必ず `existsBySkuAndIdNot(sku, id)` を使います。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step12-edit-softdelete
+git add . && git commit -m "feat: Step 12 完了"
+git push -u origin feature/step12-edit-softdelete
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'hard', 120, ARRAY['Spring Boot', 'CRUD', '編集', '論理削除'],
+  '{"stepNumber":12,"recommendedBranch":"feature/step12-edit-softdelete","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（02_機能要件 FN-007/008・07_処理詳細）","checklist":["商品編集が動作し、自分自身のSKU維持OK・他商品SKU重複NGになっている","更新時に `updated_at` のみ更新され `created_at` が変わらない","論理削除で一覧から非表示になり、DB上は `is_deleted = true` で行が残っている","`feature/step12-edit-softdelete` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/12","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step12-edit-softdelete）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'これで商品管理の全CRUD機能（一覧・検索・詳細・登録・編集・論理削除）がすべて完成しました！',
+  4, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441413', '33333333-3333-4333-8333-333333331404', 'Step 13：Spring Security 導入（SecurityConfig・LoginUser・BCrypt初期ユーザー）', '### 🎯 この単元でやること（ゴール）
+`spring-boot-starter-security` を導入し、PostgreSQLの `users` テーブル＋`BCryptPasswordEncoder` で認証するバックエンド基盤を構築します。
+
+### 💡 なぜこの単元が必要か
+実務の社内システムに認証は必須です。パスワードを平文で保存せずBCryptハッシュ化する仕組みと、`UserDetailsService` の動きを理解します。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `09_セキュリティ` ＋ `06_DB設計 §6`（初期ユーザー）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `pom.xml` に `spring-boot-starter-security` と `thymeleaf-extras-springsecurity6` を追加し、Maven更新を実行する
+2. `security/LoginUser.java`（`UserDetails` 実装・`fullName` を保持）と `security/CustomUserDetailsService.java`（`findByEmail`）を作成する
+3. `config/SecurityConfig.java` を作成し、`/login`・`/error`・`/css/**` 以外の全URLを `authenticated()` にし、`BCryptPasswordEncoder` をBean定義する
+4. `config/DataInitializer.java`（`CommandLineRunner`）で初期ユーザー（`admin@example.com` / `user@example.com`）をBCryptハッシュ化して自動投入する
+
+### 🧩 最初の一歩（SecurityConfig.java の要点）
+```java
+.authorizeHttpRequests(auth -> auth
+    .requestMatchers("/login", "/error", "/css/**", "/js/**", "/images/**").permitAll()
+    .anyRequest().authenticated()
+)
+.formLogin(login -> login
+    .loginPage("/login").usernameParameter("email")
+    .defaultSuccessUrl("/products", true).failureUrl("/login?error").permitAll()
+)
+```
+
+### ✅ 動作確認のしかた（成功のサイン）
+- 未ログインで `http://localhost:8080/products` にアクセスすると `/login` へ自動リダイレクトされる
+- pgAdmin 4 で `SELECT email, password_hash FROM users;` を実行し、`$2a$10$...` 形式のBCryptハッシュが入っている
+
+### ⚠️ よくあるエラーと対処法
+- HTMLのメールアドレス欄の `name` と `usernameParameter("email")` がズレていると認証が通りません。両方 `email` に統一しましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step13-security-core
+git add . && git commit -m "feat: Step 13 完了"
+git push -u origin feature/step13-security-core
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'hard', 120, ARRAY['Spring Security', 'BCrypt', '認証'],
+  '{"stepNumber":13,"recommendedBranch":"feature/step13-security-core","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（09_セキュリティ・06_DB設計 §6）","checklist":["`pom.xml` にSpring Security依存関係を追加した","`LoginUser`・`CustomUserDetailsService`・`SecurityConfig` を実装した","初期ユーザーがBCryptハッシュで `users` テーブルに保存された","`feature/step13-security-core` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/13","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step13-security-core）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '認証バックエンドが完成しました。次は専用のログイン画面・ログアウトボタン・404/500エラー画面を整えます！',
+  1, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441414', '33333333-3333-4333-8333-333333331404', 'Step 14：ログイン画面・POSTログアウト・共通エラー画面（GlobalExceptionHandler 404/500）', '### 🎯 この単元でやること（ゴール）
+ログイン画面（`login.html`）、ヘッダーのログイン氏名＆POSTログアウトボタン、および404/500用の自作エラー画面（`GlobalExceptionHandler`＋`error.html`）を完成させます。
+
+### 💡 なぜこの単元が必要か
+Whitelabel Error Pageやスタックトレースをユーザーに見せないこと、ログアウトをCSRF保護付きPOSTにすることは実務セキュリティの必須要件です。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `03_画面設計`（SCR-01, SCR-06）・`08_検証・エラー`（例外→画面対応）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `AuthController` に `@GetMapping("/login")` を追加し、`templates/login.html` を作成する（`param.error` / `param.logout` メッセージ表示付き）
+2. `templates/fragments/layout.html` にログイン者氏名（`#authentication.principal.fullName`）と `POST /logout` フォームを追加する
+3. `exception/GlobalExceptionHandler.java`（`@ControllerAdvice`）を作成し、404（商品未存在・URL不正）と500（想定外例外）を `templates/error.html` へ誘導する
+4. `application.properties` に `server.error.whitelabel.enabled=false` を設定し、`templates/error.html` を作成する
+
+### 🧩 最初の一歩（GlobalExceptionHandler.java の書き出し）
+```java
+@ControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler({ProductNotFoundException.class, MethodArgumentTypeMismatchException.class})
+    public String handleNotFound(Exception ex, HttpServletResponse res, Model model) {
+        res.setStatus(HttpStatus.NOT_FOUND.value());
+        model.addAttribute("status", 404);
+        model.addAttribute("message", "お探しのページ（商品）は見つかりません");
+        return "error";
+    }
+}
+```
+
+### ✅ 動作確認のしかた（成功のサイン）
+- `/login` で誤パスワードを入れると赤エラー、正しい情報で `/products` へ遷移しヘッダーに氏名が表示される
+- ログアウトボタンで `/login?logout` へ移動し、ブラウザバックしても保護画面を操作できない
+- `/products/999999` や `/products/abc` にアクセスすると自作の404エラー画面が表示される
+
+### ⚠️ よくあるエラーと対処法
+- ログアウトを `<a href="/logout">`（GET）にすると404やCSRFエラーになります → 必ず `<form th:action="@{/logout}" method="post">` を使いましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step14-login-error-ui
+git add . && git commit -m "feat: Step 14 完了"
+git push -u origin feature/step14-login-error-ui
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['Thymeleaf', 'ログアウト', '例外処理', 'エラー画面'],
+  '{"stepNumber":14,"recommendedBranch":"feature/step14-login-error-ui","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（03_画面設計 SCR-01/06・08_検証・エラー）","checklist":["`login.html` でログイン・失敗エラー・ログアウトメッセージが正しく動く","ヘッダーにログイン者氏名とPOSTログアウトボタンが表示される","存在しないID・削除済みID・数値以外IDで自作の404画面が表示される","`feature/step14-login-error-ui` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/14","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step14-login-error-ui）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'これで商品管理システムの全6画面と全機能（FN-001〜FN-010）が実装完了です！',
+  2, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441415', '33333333-3333-4333-8333-333333331404', 'Step 15：テスト仕様書（TC-001〜TC-022）全件実施 ＆ JUnit 5 単体テスト作成', '### 🎯 この単元でやること（ゴール）
+詳細設計書 `10_テスト仕様` の全22ケース（基本12＋推奨境界/セキュリティ10）を実機確認し、さらに `ProductServiceTest`（JUnit 5）で重要業務ロジックを自動テスト化します。
+
+### 💡 なぜこの単元が必要か
+「動く気がする」ではなく、仕様書の全テストケースを1件ずつ潰してエビデンスを残すのがプロの開発工程です。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `10_テスト仕様`（`TC-001`〜`TC-022`：判定プルダウンで合格率が自動集計されます）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `src/test/java/com/example/product/service/ProductServiceTest.java` を作成し、①SKU重複例外 ②論理削除（`deleted=true`） ③LIKEエスケープのJUnit 5テストを書く
+2. `./mvnw test`（またはEclipseでJUnit実行）を走らせて全テストGreenを確認する
+3. ブラウザとpgAdmin 4で `TC-001〜TC-022` を1件ずつ実行し、不具合があれば修正して全件「合格」にする
+
+### ✅ 動作確認のしかた（成功のサイン）
+- `./mvnw test` が `Failures: 0, Errors: 0` で完走する
+- 詳細設計書 `10_テスト仕様` の合格率が **100%** になっている
+
+### ⚠️ よくあるエラーと対処法
+- `TC-010`（論理削除）は画面から消えただけでなく、必ずPostgreSQLで `SELECT is_deleted FROM products` を実行して行が残っていることを確認してください。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step15-testing
+git add . && git commit -m "feat: Step 15 完了"
+git push -u origin feature/step15-testing
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'hard', 120, ARRAY['テスト仕様書', 'JUnit 5', '品質検証'],
+  '{"stepNumber":15,"recommendedBranch":"feature/step15-testing","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（10_テスト仕様：TC-001〜TC-022）","checklist":["`ProductServiceTest`（JUnit 5）を作成し `./mvnw test` が全件合格した","詳細設計書 `10_テスト仕様`（`TC-001〜TC-022`）を全件実施し合格を確認した","発見した不具合をすべて修正して再テストした","`feature/step15-testing` ブランチからPRを作成した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/15","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step15-testing）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '自動テスト＋仕様書ベースの手動検証の両輪が回せれば、品質保証の基礎はバッチリです！',
+  3, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441416', '33333333-3333-4333-8333-333333331404', 'Step 16：README.md整備・新規クローン起動確認 ＆ 最終PR URL提出', '### 🎯 この単元でやること（ゴール）
+第三者（講師・採用担当者）が `git clone` して迷わず動かせる `README.md` を整備し、別フォルダでの再現起動を確認して最終PR URLを提出します。
+
+### 💡 なぜこの単元が必要か
+どれだけ良いアプリを作っても、動かし方が書いていなければ評価されません。自分の環境以外でも動く再現性チェック（TC-012）が仕上げです。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `01_システム概要・環境 §7`・`11_開発手順`
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `README.md` に ①システム概要・技術スタック ②PostgreSQL DB作成＆DDL実行手順 ③起動コマンド ④テスト用ログインID/PW ⑤工夫した点 を記載する
+2. PCの別フォルダに自分のリポジトリを新規 `git clone` し、READMEの手順通りに起動できるか確認する
+3. 最終ブランチ `feature/step16-final-release` から最終Pull Requestを作成し、PR URLを提出する
+
+### ✅ 動作確認のしかた（成功のサイン）
+- 別フォルダへの `git clone` → `./mvnw spring-boot:run` でエラーなく起動・ログイン・全操作ができる
+- GitHub上にパスワード等の秘密情報が誤ってPushされていない
+
+### ⚠️ よくあるエラーと対処法
+- ローカルの `application.properties` に自分のDBパスワードを直書きしたままPushしないよう、`git diff` で提出前に確認しましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/step16-final-release
+git add . && git commit -m "feat: Step 16 完了"
+git push -u origin feature/step16-final-release
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 60, ARRAY['README', 'GitHub提出', 'ポートフォリオ'],
+  '{"stepNumber":16,"recommendedBranch":"feature/step16-final-release","designDocPath":"/docs/product-management-design-spec.xlsx","designDocLabel":"商品管理システム 詳細設計書 v1.1.0（11_開発手順・TC-012）","checklist":["`README.md` にDB作成手順・起動方法・テストアカウントを分かりやすく記載した","別フォルダへ新規 `git clone` してエラーなく起動・動作確認できた（TC-012）","秘密情報・不要ファイルがGitHubに含まれていないことを確認した","`feature/step16-final-release` から最終PRを作成しPR URLを提出した"],"mockupDocPath":"/docs/product-management-mockup.xlsx","mockupDocLabel":"商品管理システム 画面設計モックアップ（Excel・全8シート）"}', '{"githubUrl":"https://github.com/sample-student/product-manager/pull/16","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/step16-final-release）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '個人開発「商品管理システム」全16ステップ完遂おめでとうございます！この開発力を武器に、いよいよ最終段階の3人1組チーム開発へ進みましょう！',
+  4, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441501', '33333333-3333-4333-8333-333333331501', 'Team Step 1：3名役割分担（A/B/C各3画面）・ファイル所有権＆Git Flow整備', '### 🎯 この単元でやること（ゴール）
+3名の担当（A:社員＆ダッシュボード / B:案件＆タスク / C:備品＆貸出）と触ってよいファイル境界を合意し、`develop` ブランチとPRテンプレートを整えます。
+
+### 💡 なぜこの単元が必要か
+チーム開発のトラブルの8割は「誰がどのファイルを触るか決めていなかった」ことで起きます。最初に境界を設計書で揃えるのが成功の秘訣です。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `00_表紙`〜`03_Git・PR運用` ＋ 画面モックアップ（全11シート）
 
 ```mermaid
 graph TD
-    Login["共通：SCR-00 ログイン画面<br/>Spring Security + BCrypt"]
-    Login --> A["メンバーA（3画面）<br/>①ダッシュボード<br/>②社員一覧・検索<br/>③社員登録・編集"]
-    Login --> B["メンバーB（3画面）<br/>①案件一覧（進捗率）<br/>②案件詳細・タスクボード<br/>③タスク登録・編集"]
-    Login --> C["メンバーC（3画面）<br/>①備品一覧・在庫検索<br/>②貸出申請・返却一覧<br/>③申請詳細・承認/返却"]
+  Login["共通：SCR-00 ログイン"]
+  Login --> A["メンバーA（3画面）\nダッシュボード / 社員一覧 / 社員登録編集"]
+  Login --> B["メンバーB（3画面）\n案件一覧 / 案件詳細・タスク / タスク登録編集"]
+  Login --> C["メンバーC（3画面）\n備品一覧 / 貸出申請一覧 / 承認・返却詳細"]
 ```
 
-### チーム開発の標準ブランチ運用（Git Flow簡易版）
-```mermaid
-gitGraph
-    commit id: "初期構築"
-    branch develop
-    checkout develop
-    commit id: "共通ログイン＆DB基盤"
-    branch feature/a-members
-    checkout feature/a-members
-    commit id: "社員一覧・登録実装"
-    checkout develop
-    branch feature/b-projects
-    checkout feature/b-projects
-    commit id: "案件・タスク実装"
-    checkout develop
-    merge feature/a-members id: "PR#1 レビュー後マージ"
-    merge feature/b-projects id: "PR#2 レビュー後マージ"
-    checkout main
-    merge develop id: "最終リリース"
-```
+### 🛠️ 最初に作るファイルと書く順番
+1. チーム共有リポジトリ `teamops-hub` を作成し、3名全員をCollaboratorに登録する
+2. `main` から `develop` ブランチを作成し、直接Push禁止・PRレビュー必須のルールを合意する
+3. `.github/pull_request_template.md`（設計書 `03_Git・PR運用 §4`）と役割分担表を作成し、`develop` 宛の初回PRを出す
 
-まずは右側から **TeamOps Hub 詳細設計書 v1.1.0（Excel・全13シート）** をダウンロードし、3人で担当（A/B/C）・ファイル所有権・IF契約・Gitルールを決めましょう！',
-  'medium', 120, ARRAY['チーム開発', 'Gitブランチ', '役割分担'],
-  '{"stepNumber":1,"recommendedBranch":"feature/team-step1-rules","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 開発者向け詳細設計書 v1.1.0（Excel・全16シート）","isTeamProject":true,"checklist":["チーム3名の役割分担（メンバーA：社員・ダッシュボード3画面 / メンバーB：案件・タスク3画面 / メンバーC：備品貸出3画面）を決定した","チーム共有GitHubリポジトリを作成し、3名全員をCollaboratorに登録した","`main` ブランチから `develop` ブランチを作成し、03_Git・PR運用 のルール（直接Push禁止・PRレビュー必須）を合意し、役割分担表のPRを作成した","Excel詳細設計書 v1.1.0（全13シート）を3名全員で読み込み、02_チーム分担・所有権・IF で担当画面とファイル所有権・IF契約を確認した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/1","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '最初に「誰がどのファイル・テーブルを触るか」の境界を設計書で合意しておくと、チーム開発のトラブルの8割を未然に防げます。',
+### ✅ 動作確認のしかた（成功のサイン）
+- 3名全員がリポジトリを `git clone` し、`develop` ブランチへ切り替えられる
+- GitHubでPR作成時にテンプレートが自動入力される
+
+### ⚠️ よくあるエラーと対処法
+- いきなり `main` へ直接Pushしてしまう → Step 1で全員 `git switch develop` してから作業開始する習慣をつけましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/team-step01-rules
+git add . && git commit -m "feat: Step 1 完了"
+git push -u origin feature/team-step01-rules
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['チーム開発', '役割分担', 'Git Flow', 'PRテンプレート'],
+  '{"stepNumber":1,"recommendedBranch":"feature/team-step01-rules","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 開発者向け詳細設計書 v1.1.0（全16シート）","isTeamProject":true,"checklist":["メンバーA/B/Cの担当3画面とファイル所有権を3名全員で合意した","共有リポジトリを作成し、3名全員をCollaborator登録・`develop` を作成した","`.github/pull_request_template.md` を追加し初回PRを作成した","詳細設計書（全16シート）とモックアップ（全11シート）を全員で確認した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/1","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/team-step01-rules）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '役割分担とGitルールが整いました。次は全員で共通の6テーブルDBを構築します！',
   1, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4874,25 +5621,47 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
-  '44444444-4444-4444-8444-444444441502', '33333333-3333-4333-8333-333333331501', 'Team Step 2：共通基盤（6テーブルDB・ログイン認証・共通レイアウト）の構築', '## 全員が同じ土台の上で開発を始める
+  '44444444-4444-4444-8444-444444441502', '33333333-3333-4333-8333-333333331501', 'Team Step 2：共通6テーブルDDL（teamops_db）＆初期データ構築', '### 🎯 この単元でやること（ゴール）
+全員のローカルPostgreSQLに `teamops_db` と全6テーブル（`departments`, `users`, `projects`, `tasks`, `equipments`, `equipment_loans`）を構築します。
 
-並行開発に入る前に、3人で共有する **データベース（6テーブル）・ログイン認証・共通ヘッダー** を最初に `develop` ブランチへ完成させます。
+### 💡 なぜこの単元が必要か
+3人の機能が外部キーで繋がるため、DB構造をStep 2で全員同じ状態に確定しておくことで、以降の並行開発でテーブル不整合を防ぎます。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `08_DB設計`（ER図・全6テーブル定義・制約・初期データ）
 
 ```mermaid
 erDiagram
-    departments ||--o{ users : "所属"
-    users ||--o{ projects : "責任者"
-    projects ||--o{ tasks : "紐づく"
-    users ||--o{ tasks : "担当"
-    equipments ||--o{ equipment_loans : "貸出対象"
-    users ||--o{ equipment_loans : "申請者"
+  departments ||--o{ users : "所属"
+  users ||--o{ projects : "責任者"
+  projects ||--o{ tasks : "紐づく"
+  users ||--o{ tasks : "担当"
+  equipments ||--o{ equipment_loans : "貸出対象"
+  users ||--o{ equipment_loans : "申請者"
 ```
 
-### 確認するExcelシート
-- **05_画面設計 / 11_検証・セキュリティ**：全10画面のURLと ADMIN / USER 権限マトリクス
-- **08_DB設計**：全6テーブル定義・制約・初期データ',
-  'medium', 180, ARRAY['チーム開発', 'Spring Security', 'DB設計'],
-  '{"stepNumber":2,"recommendedBranch":"feature/team-step2-common-base","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（05_画面設計・08_DB設計）","isTeamProject":true,"checklist":["08_DB設計 のテーブル定義から共通6テーブルを全員のローカルPostgreSQL（`teamops_db`）へ構築し、`ddl-auto=validate` を通して `develop` へPRマージした","共通ログイン機能（SCR-00 `/login`・Spring Security・ADMIN/USERロール制御）が動作する","共通ヘッダー／ナビゲーションレイアウト（`layout.html`）を作成し、全10画面へのリンク枠を配置した","3名全員が最新の `develop` を `git pull` してローカルで起動確認できた"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/2","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '共通基盤を先に `develop` へ確定させたことで、次ステップから3人が同時並行で高速開発できるようになります。',
+### 🛠️ 最初に作るファイルと書く順番
+1. Spring Initializr（Maven / Java 21）で `teamops-hub` の雛形を `develop` に用意する
+2. `sql/schema.sql` に外部キー依存順（`departments` → `users` → `projects` → `tasks` → `equipments` → `equipment_loans`）でDDLを書く
+3. `sql/data.sql` に初期部署（開発部・営業部・総務部）、初期備品、サンプル案件・タスクを用意する
+4. 3名全員がローカルPostgreSQL（`teamops_db`）で実行して同じテーブル状態にする
+
+### ✅ 動作確認のしかた（成功のサイン）
+- 3名全員のpgAdmin 4で全6テーブルと外部キー・CHECK制約（`available_qty <= total_qty` 等）が作成されている
+- 全員のローカルで `application.properties`（`ddl-auto=validate`）がエラーなく起動する
+
+### ⚠️ よくあるエラーと対処法
+- メンバーごとに列名が微妙に違うとマージ後に起動エラーになります → 必ず `sql/schema.sql` をPRマージし、全員同じSQLを実行してください。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/team-step02-db-ddl
+git add . && git commit -m "feat: Step 2 完了"
+git push -u origin feature/team-step02-db-ddl
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['PostgreSQL', '6テーブルDDL', 'チーム基盤'],
+  '{"stepNumber":2,"recommendedBranch":"feature/team-step02-db-ddl","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（08_DB設計）","isTeamProject":true,"checklist":["全6テーブルと制約・インデックスを `sql/schema.sql` に定義した","初期マスタ・サンプルデータを `sql/data.sql` に用意した","3名全員のローカルDB `teamops_db` に構築し整合を確認した","`feature/team-step02-db-ddl` から `develop` 宛PRを作成した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/2","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/team-step02-db-ddl）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '全員同じDBの土台ができました！次は共通のログイン認証とADMIN/USER権限の壁を作ります。',
   2, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4913,18 +5682,45 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
-  '44444444-4444-4444-8444-444444441503', '33333333-3333-4333-8333-333333331502', 'Team Step 3：担当3ページの実装とPull Request相互レビュー', '## 各自のブランチで3ページを実装し、PRでレビューし合う
+  '44444444-4444-4444-8444-444444441503', '33333333-3333-4333-8333-333333331501', 'Team Step 3：共通Entity（User / Department）＆ Spring Security URL認可マトリクス', '### 🎯 この単元でやること（ゴール）
+全員が参照する `Role`・`Department`・`User` EntityとRepository、および `SecurityConfig` のURL認可マトリクス（ADMIN専用URLの403遮断）を実装します。
 
-Excel詳細設計書の **05_画面設計・07_クラス設計・10_状態遷移・排他** を見ながら、自分の担当3ページを実装しましょう。
+### 💡 なぜこの単元が必要か
+URL認可ルールを最初に1か所（`SecurityConfig`）へ確定しておくと、メンバーA/B/Cが後から権限漏れを起こしにくくなります。
 
-### 毎日の開発サイクル
-1. `git switch develop && git pull origin develop`
-2. `git switch -c feature/自分の担当-画面名`
-3. 実装＆ローカル動作確認 → Commit & Push
-4. GitHubで `develop` 向け **Pull Request** を作成
-5. チームメンバー1名以上がレビュー＆Approveしてからマージ！',
-  'hard', 360, ARRAY['チーム開発', 'Pull Request', 'コードレビュー'],
-  '{"stepNumber":3,"recommendedBranch":"feature/your-role-pages","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（05_画面設計・07_クラス設計・10_状態遷移・排他）","isTeamProject":true,"checklist":["自分の担当3ページすべてについて、機能ごとに `feature/...` ブランチを切って実装した","担当分のController / Service / Repository / Thymeleafテンプレートを 05_画面設計・07_クラス設計・10_状態遷移・排他 の仕様通りに実装した","GitHub上で `develop` 宛のPull Requestを作成し、変更内容と動作確認スクショを記載した","他メンバーのPRを最低1件以上コードレビューし、コメント・Approveを行った"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/3","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '他人のコードを読んでレビューすることで、自分では気づかなかった書き方やバグの防止策が身につきます。',
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `12_セキュリティ §1`（URL認可マトリクス）・`07_クラス設計 §1`
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `user/Role.java`（`ROLE_ADMIN`, `ROLE_USER`）、`user/Department.java`、`user/User.java`（有効フラグは `active`）を作成する
+2. `user/DepartmentRepository.java`、`user/UserRepository.java`（`findWithDepartmentByEmail`・`findAllByActiveTrueOrderByEmpCodeAsc`）を作成する
+3. `config/SecurityConfig.java` に具体的なADMIN専用URL（`/members/new`, `/members/*/edit`, `POST /members/**`, `POST /loans/*/approve|reject|return`）を先に書き、最後に `anyRequest().authenticated()` を配置する
+
+### 🧩 最初の一歩（SecurityConfig の評価順序（具体的ルールを必ず先に書く！））
+```java
+.requestMatchers("/login", "/error", "/css/**").permitAll()
+.requestMatchers(HttpMethod.GET,  "/members/new", "/members/*/edit").hasRole("ADMIN")
+.requestMatchers(HttpMethod.POST, "/members", "/members/**").hasRole("ADMIN")
+.requestMatchers(HttpMethod.POST, "/loans/*/approve", "/loans/*/reject", "/loans/*/return").hasRole("ADMIN")
+.anyRequest().authenticated()
+```
+
+### ✅ 動作確認のしかた（成功のサイン）
+- `ddl-auto=validate` で `Department` / `User` の起動整合が通る
+- 未ログインで `/dashboard` にアクセスすると `/login` へリダイレクトされる
+
+### ⚠️ よくあるエラーと対処法
+- `anyRequest().authenticated()` を先頭に書いてしまうと、その下の `.hasRole("ADMIN")` が無視されて一般社員も管理操作できてしまいます！
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/team-step03-security-rules
+git add . && git commit -m "feat: Step 3 完了"
+git push -u origin feature/team-step03-security-rules
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['Spring Security', 'ロール認可', 'ADMIN/USER'],
+  '{"stepNumber":3,"recommendedBranch":"feature/team-step03-security-rules","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（12_セキュリティ・07_クラス設計）","isTeamProject":true,"checklist":["`Role`・`Department`・`User` EntityとRepositoryを作成した","`SecurityConfig` に設計書 `12_セキュリティ §1` 通りのURL認可マトリクスを実装した","`ddl-auto=validate` でエラーなく起動確認できた","`feature/team-step03-security-rules` から `develop` 宛PRを作成した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/3","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/team-step03-security-rules）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'URL単位の防御壁ができました。次はログイン画面・無効ユーザー拒否・403エラー保護を完成させます。',
   3, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4945,24 +5741,45 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
-  '44444444-4444-4444-8444-444444441504', '33333333-3333-4333-8333-333333331502', 'Team Step 4：コンフリクト解消と3名機能（全10画面）の横断結合', '## コンフリクトを恐れずに正しく解消する
+  '44444444-4444-4444-8444-444444441504', '33333333-3333-4333-8333-333333331501', 'Team Step 4：ログイン画面（SCR-00）・LoginUser（無効拒否）・GlobalExceptionHandler（403保護）', '### 🎯 この単元でやること（ゴール）
+開発用3ユーザー（ADMIN 1名・USER 2名）でログインでき、無効ユーザーは拒否され、権限違反が正しく403（500に化けない）になる共通認証＆エラー基盤を完成させます。
 
-チーム開発では、同じファイル（共通ナビや `application.properties` 等）を2人が編集して **コンフリクト（競合）** が起きるのが普通です。
+### 💡 なぜこの単元が必要か
+`GlobalExceptionHandler` で `AccessDeniedException` を再スローしないと、後半の `IT-001` や `UT-C15` で403のはずが500になる典型的な罠にはまります。
 
-```mermaid
-flowchart TD
-    C["PRでコンフリクト発生！"] --> Pull["1. ローカルで git fetch origin"]
-    Pull --> Merge["2. 自分のブランチ上で git merge origin/develop"]
-    Merge --> Edit["3. <<<<<<< / ======= / >>>>>>> を確認し<br/>両方の必要な変更を残して保存"]
-    Edit --> Test["4. Eclipseでビルド＆起動確認"]
-    Test --> Push["5. git add . → git commit → git push"]
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `11_検証・エラー §5`（設計判断 D-19）・`05_画面設計`（SCR-00）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `common/LoginUser.java`（`isEnabled()` が `user.isActive()` を返す）と `common/CustomUserDetailsService.java` を作成する
+2. `common/BusinessException.java`, `common/ResourceNotFoundException.java`, `common/GlobalExceptionHandler.java`（`AccessDeniedException` 再スロー必須！）を作成する
+3. `common/AuthController.java`, `templates/login.html`, `templates/error/{403,404,500}.html` を作成し、初期3ユーザーをBCrypt投入する
+
+### 🧩 最初の一歩（GlobalExceptionHandler.java（403→500化け防止の必須コード））
+```java
+@ExceptionHandler(AccessDeniedException.class)
+public void handleAccessDenied(AccessDeniedException ex) {
+    throw ex; // ★これを書かないと下の Exception.class に吸われて403が500になる！
+}
 ```
 
-### 確認ポイント
-- メンバーA・B・Cすべての画面が `develop` 上で1つのアプリとしてシームレスに遷移できること
-- 権限設定（ADMINのみ操作可能／USERは閲覧のみ）が仕様通り動くこと',
-  'hard', 240, ARRAY['チーム開発', 'コンフリクト解消', '統合'],
-  '{"stepNumber":4,"recommendedBranch":"feature/team-step4-integration","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（02_チーム分担・所有権・IF・03_Git・PR運用）","isTeamProject":true,"checklist":["全員の担当3ページ（計9ページ＋ログイン＝全10画面）が `develop` ブランチへマージされた","マージ時に発生したコンフリクト（共通ナビ・設定ファイル等）を `git merge origin/develop` で適切に解消した","メンバーAで登録した社員がメンバーBのタスク担当者やメンバーCの貸出申請者として正しく連携表示される","権限マトリクス（05_画面設計・11_検証・セキュリティ：USERがADMIN専用URLや他人の貸出詳細へアクセスすると403になる等）を確認した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/4","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', 'コンフリクトを自力で解消してビルドを通せた経験は、実務現場で即戦力として評価される大きな武器になります。',
+### ✅ 動作確認のしかた（成功のサイン）
+- ADMIN / USER の3ユーザーでログインでき、ログイン失敗時は共通エラーメッセージが出る
+- DBで `is_active = false` にしたユーザーはログインできない（`UT-X02`）
+- USERで `/members/new` に直アクセスすると `templates/error/403.html` が表示される
+
+### ⚠️ よくあるエラーと対処法
+- USERで `/members/new` にアクセスしたとき 500 が出る場合は、`GlobalExceptionHandler` に `AccessDeniedException` 再スローがあるか確認してください。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/team-step04-login-errors
+git add . && git commit -m "feat: Step 4 完了"
+git push -u origin feature/team-step04-login-errors
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['ログイン認証', 'GlobalExceptionHandler', '403保護'],
+  '{"stepNumber":4,"recommendedBranch":"feature/team-step04-login-errors","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（11_検証・エラー §5・12_セキュリティ）","isTeamProject":true,"checklist":["`LoginUser` で無効ユーザー（`is_active=false`）のログインを拒否できる","`GlobalExceptionHandler` で 404 / 500 を処理しつつ `AccessDeniedException` を再スローしている","3ユーザーでのログイン・ログアウトとUSERの403画面を確認した","`feature/team-step04-login-errors` から `develop` 宛PRを作成した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/4","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/team-step04-login-errors）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'これで認証・認可・例外ハンドリングの共通土台が盤石になりました！',
   4, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -4983,17 +5800,37 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
-  '44444444-4444-4444-8444-444444441505', '33333333-3333-4333-8333-333333331503', 'Team Step 5：横断結合テスト（13_テスト仕様：IT-001〜IT-012）実施＆バグ改修', '## 3人分の機能を横断する結合テスト
+  '44444444-4444-4444-8444-444444441505', '33333333-3333-4333-8333-333333331501', 'Team Step 5：共通ナビ（layout.html）＆ モジュール間IF契約スタブ確定 → 全員develop同期', '### 🎯 この単元でやること（ゴール）
+全10画面のリンク枠が入った `layout.html` と、AのダッシュボードがB・Cの完成を待たずに開発できる「IF契約スタブ」を `develop` に確定し、全員同期します。
 
-Excel詳細設計書の **13_テスト仕様・計画・判断ログ（IT-001〜IT-012）** を使って、担当者同士でクロスチェック（他人が作った画面をテスト）しましょう。
+### 💡 なぜこの単元が必要か
+IF契約（メソッド名・引数・戻り値）とスタブを先にマージしておくことで、Step 6から3人が相手待ちゼロで同時並行開発できます！
 
-### バグが見つかったときの流れ
-1. GitHub の **Issues** タブに再現手順とスクリーンショットを起票する
-2. 担当者が `fix/issue番号-内容` ブランチを作成して修正する
-3. PRレビュー後に `develop` へマージし、Issueをクローズする
-4. 全テスト合格後、`develop` → `main` へリリースPRをマージする',
-  'hard', 180, ARRAY['チーム開発', '結合テスト', 'GitHub Issues'],
-  '{"stepNumber":5,"recommendedBranch":"fix/team-step5-test-fixes","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（13_テスト仕様・計画・判断ログ）","isTeamProject":true,"checklist":["13_テスト仕様 の横断結合テスト（IT-001〜IT-012）をチーム全員で実施した","見つかったバグをGitHub Issuesに登録し、`fix/...` ブランチ→PRで修正・クローズした","備品貸出の承認/返却トランザクションや案件進捗率の自動計算など異常系も含めて動作確認した","テスト完了済みの `develop` から `main` ブランチへリリースPRを作成した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/5","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '自分で作った画面は思い込みで見落としやすいため、他メンバーがテストするクロスチェックが品質向上の鍵です。',
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `02_チーム分担・所有権・IF`（§3 IF契約 / §4 Step 2完了条件）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `templates/layout.html`（全5メニューリンク・氏名＋部署名・POSTログアウト・フラッシュ）と `static/css/common.css` を作成する
+2. メンバーB：`task/TaskService.java` に `countOpenByAssignee`（仮で `0L`）と `findUpcomingByAssignee`（仮で `List.of()`）のスタブを作成する
+3. メンバーC：`loan/LoanService.java` に `countByUserAndStatus`（仮で `0L`）のスタブを作成する
+4. `develop` へマージ後、3名全員が `git pull origin develop` してローカル起動確認する
+
+### ✅ 動作確認のしかた（成功のサイン）
+- 3名全員のPCで最新の `develop` がエラーなく起動する
+- ログイン後に共通ヘッダー（氏名・部署名・5つのナビリンク・ログアウト）が表示される
+
+### ⚠️ よくあるエラーと対処法
+- 後から `layout.html` を各自バラバラに編集するとコンフリクトの温床になります → このStepで全リンク枠を確定しておきましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/team-step05-layout-stubs
+git add . && git commit -m "feat: Step 5 完了"
+git push -u origin feature/team-step05-layout-stubs
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['IF契約', 'スタブ', '共通レイアウト', '並行開発準備'],
+  '{"stepNumber":5,"recommendedBranch":"feature/team-step05-layout-stubs","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（02_チーム分担・所有権・IF §3・§4）","isTeamProject":true,"checklist":["`templates/layout.html` と `common.css` を作成し全ナビリンク枠を配置した","`TaskService` / `LoanService` のIF契約スタブを確定して `develop` へマージした","3名全員が最新の `develop` を `git pull` してローカル起動確認できた","`feature/team-step05-layout-stubs` からPRを作成した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/5","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/team-step05-layout-stubs）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '共通基盤が完了しました！ここから第2章：3名それぞれの専有パッケージで並行開発スタートです！',
   5, true
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -5014,20 +5851,554 @@ INSERT INTO public.problems (
   tags, starter_code, solution_code, explanation_md, order_index, is_published
 )
 VALUES (
-  '44444444-4444-4444-8444-444444441506', '33333333-3333-4333-8333-333333331503', 'Team Step 6：成果発表・README整備＆チームGitHubリポジトリ最終提出', '## 1年間カリキュラムの集大成：最終提出
+  '44444444-4444-4444-8444-444444441506', '33333333-3333-4333-8333-333333331502', 'Team Step 6：【担当画面①・土台】担当パッケージのEntity・Repository・Enum作成', '### 🎯 この単元でやること（ゴール）
+自分の担当パッケージ（A:`member`/`dashboard`、B:`project`/`task`、C:`equipment`/`loan`）に必要なEntity・Enum・Repositoryを作成し、`ddl-auto=validate` を通します。
 
-チーム全員で以下の最終確認を行い、最終リリースPRの **GitHub Pull Request URL（`/pull/番号`）** を提出してください。
+### 💡 なぜこの単元が必要か
+いきなりControllerやHTMLまで一気に書かず、まずは自分の担当テーブルとJavaのEntity/Repositoryを噛み合わせることでバグを最小化します。
 
-### 最終チェック
-- `README.md` に以下が分かりやすくまとまっていること
-  1. システム概要と3名の担当画面一覧
-  2. ローカル起動手順（PostgreSQL DB作成・DDL投入・Spring Boot起動）
-  3. テスト用アカウント（ADMIN / USER のメールアドレス・パスワード）
-  4. 工夫した点・苦労した点（コンフリクト解消や設計工夫など）
-- `main` ブランチを新規フォルダへ `git clone` してエラーなく起動できること',
-  'hard', 120, ARRAY['チーム開発', '最終提出', 'GitHub提出'],
-  '{"stepNumber":6,"recommendedBranch":"release/v1.0-final","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 開発者向け詳細設計書 v1.1.0（Excel・全16シート）","isTeamProject":true,"checklist":["チーム共有リポジトリの `README.md` にシステム概要・3名の担当画面・環境構築＆起動手順・テストアカウントを記載した","GitHubのPull Requests履歴・Insights/Contributorsで3名全員の開発貢献が確認できる","デモ発表用の画面遷移シナリオを確認し、全10画面がエラーなく動作することを確認した","最終リリース用の **GitHub Pull Request URL（`/pull/番号`）** を下のフォームから提出した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/6","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチで実装・動作確認を完了し、Pull Requestを作成しました。"}', '1年間カリキュラムの全工程完遂、本当におめでとうございます！設計書読解・実装・テスト・Gitチーム開発までやり切った実績は、現場配属後も確かな自信になります。',
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `07_クラス設計`（§2〜§6）・`08_DB設計`
+
+### 🛠️ 最初に作るファイルと書く順番
+1. **メンバーA**：`member/MemberForm.java` と `UserRepository#search` / 重複確認メソッドを実装する
+2. **メンバーB**：`project/Project`, `ProjectStatus`, `ProjectRepository` と `task/Task`, `TaskStatus`, `TaskPriority`, `TaskRepository` を作成する
+3. **メンバーC**：`equipment/Equipment`, `EquipmentRepository`（`findByIdForUpdate`含む）と `loan/EquipmentLoan`, `LoanStatus`, `EquipmentLoanRepository`（`findByIdForUpdate`含む）を作成する
+4. ローカルで起動して `ddl-auto=validate` がエラーなく通ることを確認する
+
+### ✅ 動作確認のしかた（成功のサイン）
+- 他担当のパッケージを一切変更せず、自分の担当領域だけで `ddl-auto=validate` が通る
+
+### ⚠️ よくあるエラーと対処法
+- 列挙型（`ProjectStatus`, `TaskStatus`, `LoanStatus` 等）に `@Enumerated(EnumType.STRING)` を付け忘れると型不一致エラーになります。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/team-step06-domain-base
+git add . && git commit -m "feat: Step 6 完了"
+git push -u origin feature/team-step06-domain-base
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['並行開発', 'Entity', 'Repository', 'Enum'],
+  '{"stepNumber":6,"recommendedBranch":"feature/team-step06-domain-base","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（07_クラス設計・08_DB設計）","isTeamProject":true,"checklist":["自分の担当パッケージのEntity・Enum・Repositoryを作成した","担当外ファイル（共通ファイルや他担当領域）を変更していない","`ddl-auto=validate` でエラーなく起動確認できた","`feature/team-step06-domain-base` から `develop` 宛PRを作成した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/6","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/team-step06-domain-base）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '担当データの土台ができました！次は1画面目を完成させて最初の相互PRレビューを体験します。',
+  1, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441507', '33333333-3333-4333-8333-333333331502', 'Team Step 7：【担当画面①・完成】1画面目の実装 ＆ 初回PR相互レビュー', '### 🎯 この単元でやること（ゴール）
+各担当の1画面目（A:社員一覧検索 `SCR-A2` / B:案件一覧・1クエリ進捗率 `SCR-B1` / C:備品一覧・在庫検索 `SCR-C1`）を実装し、チーム初のPR相互レビューを行います。
+
+### 💡 なぜこの単元が必要か
+まず1画面だけ小さくPRを出してレビューし合うことで、チーム全体のコード品質とレビューの流れが早めに安定します。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `05_画面設計`（A2/B1/C1）・`09_処理詳細` ＋ モックアップ該当シート
+
+### 🛠️ 最初に作るファイルと書く順番
+1. **メンバーA（SCR-A2 `/members`）**：部署×氏名のAND検索と、`sec:authorize="hasRole(''ADMIN'')"` による操作ボタン出し分けを実装する
+2. **メンバーB（SCR-B1 `/projects`）**：`TaskRepository#countGroupByProject`（`GROUP BY` 1クエリ・N+1回避）で進捗率バーを実装する
+3. **メンバーC（SCR-C1 `/equipments`）**：カテゴリ×備品名検索と、`available_qty == 0` の「在庫切れ」表示＆申請ボタン無効化を実装する
+4. `develop` 宛にPRを作成し、他メンバー1名以上のレビュー＆Approveを受けてマージする
+
+### ✅ 動作確認のしかた（成功のサイン）
+- 自分の1画面目がブラウザで正しく表示・検索できる
+- 他メンバーのPRを最低1件レビューし、コメント・Approveした
+
+### ⚠️ よくあるエラーと対処法
+- メンバーB：タスク0件の案件で `done * 100 / total` をそのまま計算するとゼロ除算エラーになります → `total == 0 ? 0 : ...` を必ず入れましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/team-step07-screen1
+git add . && git commit -m "feat: Step 7 完了"
+git push -u origin feature/team-step07-screen1
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 120, ARRAY['担当画面①', 'N+1回避', 'PR相互レビュー'],
+  '{"stepNumber":7,"recommendedBranch":"feature/team-step07-screen1","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（05_画面設計・09_処理詳細）","isTeamProject":true,"checklist":["自分の担当1画面目（A2 / B1 / C1）を仕様通り実装しローカル動作確認した","PR本文に動作確認手順・スクショを記載して `develop` 宛PRを作成した","他メンバーのPRを1件以上コードレビュー＆Approveした","Approve後に `develop` へマージし、PR URLを提出した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/7","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/team-step07-screen1）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '初回PRレビューお疲れさまでした！このリズム（小さく実装→PR→相互レビュー）で残りの画面も進めます。',
+  2, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441508', '33333333-3333-4333-8333-333333331502', 'Team Step 8：【担当画面②】2画面目（社員登録編集 / 案件詳細 / 貸出申請＆一覧）実装＆PR', '### 🎯 この単元でやること（ゴール）
+各担当の2画面目（A:社員登録・編集 `SCR-A3` / B:案件詳細・タスク一覧 `SCR-B2` / C:貸出申請フォーム＆一覧 `SCR-C2`）を実装しPRレビューを受けます。
+
+### 💡 なぜこの単元が必要か
+入力検証やデータ可視性（C2：USERは自分のみ・ADMINは全件）など、業務アプリらしい実用ロジックが本格的に登場するステップです。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `05_画面設計`（A3/B2/C2）・`09_処理詳細`・`11_検証・エラー`
+
+### 🛠️ 最初に作るファイルと書く順番
+1. **メンバーA（SCR-A3 `/members/new`, `/{id}/edit`）**：社員番号・メール重複検証、新規パスワード必須／編集空欄なら変更なし（BCrypt）を実装する
+2. **メンバーB（SCR-B2 `/projects/{id}`）**：案件情報と期限昇順（NULL末尾）のタスク一覧を表示し、未存在IDで404を返す
+3. **メンバーC（SCR-C2 `GET/POST /loans`）**：申請フォーム（数量1以上・在庫以下・返却予定日今日以降）と可視性制御一覧（USER=自分のみ / ADMIN=全件）を実装する（申請時は在庫を減らさない！）
+
+### ✅ 動作確認のしかた（成功のサイン）
+- A：編集時にパスワード空欄で氏名だけ更新しても、元のパスワードでログインできる（`UT-A07`）
+- B：`/projects/999999` で自作の404画面が出る（`UT-B03`）
+- C：在庫超過数量で申請するとエラーになり登録されない（`IT-005`）。正常申請時は `PENDING` で在庫不変
+
+### ⚠️ よくあるエラーと対処法
+- メンバーC：貸出申請（`POST /loans`）の時点で在庫を減らしてしまうのは仕様違反です！在庫減算はStep 10の承認時のみ行います。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/team-step08-screen2
+git add . && git commit -m "feat: Step 8 完了"
+git push -u origin feature/team-step08-screen2
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'hard', 150, ARRAY['担当画面②', 'CRUD', '可視性制御'],
+  '{"stepNumber":8,"recommendedBranch":"feature/team-step08-screen2","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（05_画面設計・09_処理詳細・11_検証・エラー）","isTeamProject":true,"checklist":["自分の担当2画面目（A3 / B2 / C2）とバリデーションを仕様通り実装した","PRGパターンと担当別メッセージファイル（`messages-*.properties`）が正しく動く","他メンバーのPRをレビューし、自PRもApproveを受けてマージした","`feature/team-step08-screen2` のPR URLを提出した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/8","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/team-step08-screen2）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '各担当2画面目が完成しました！次はいよいよ3画面目とチーム開発の核心ロジックに挑みます。',
+  3, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441509', '33333333-3333-4333-8333-333333331502', 'Team Step 9：【担当画面③・前半】3画面目の画面＆基本処理（無効化＆ダッシュボード / タスク登録編集 / 申請詳細403）', '### 🎯 この単元でやること（ゴール）
+各担当の3画面目の画面と基本処理（A:社員無効化＋ダッシュボードスタブ表示 / B:タスク登録・編集 / C:貸出詳細＋他人閲覧403認可）を実装します。
+
+### 💡 なぜこの単元が必要か
+複雑な状態遷移や排他ロックを載せる前に、まず3画面目の表示・データ単位認可（他人の貸出詳細を403で弾く等）を確実に仕上げます。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `05_画面設計`（A1/B3/C3）・`12_セキュリティ §2`（データ単位認可）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. **メンバーA（A-04 & SCR-A1 `/dashboard`）**：社員無効化（自分自身は無効化不可）・有効化と、IF契約スタブ値を使った `DashboardController` / `DashboardService` / `dashboard.html` を実装する
+2. **メンバーB（SCR-B3 `/tasks/new`, `/{id}/edit`）**：有効ユーザーのみ出る担当者プルダウン（`findAllByActiveTrueOrderByEmpCodeAsc`）とタスク登録・編集を実装する
+3. **メンバーC（SCR-C3 `GET /loans/{id}`）**：`LoanService#findVisibleById` で「`!admin && !loan.user.id.equals(userId)` なら `AccessDeniedException`（403）」を実装し、`loans/detail.html` を作成する
+
+### ✅ 動作確認のしかた（成功のサイン）
+- A：管理者が自分自身を無効化するとエラーで拒否され、他社員は無効化できる（`UT-A08`）
+- B：無効化した社員がタスク担当者プルダウンに出ない（`UT-B05`）
+- C：USERが他人の `/loans/{id}` をURL直打ちすると **403画面**（500ではない）が表示される（`UT-C15`）
+
+### ⚠️ よくあるエラーと対処法
+- メンバーC：他人の貸出詳細で404を返すのではなく、設計書通り `AccessDeniedException`（403）を返すのがポイントです。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/team-step09-screen3-base
+git add . && git commit -m "feat: Step 9 完了"
+git push -u origin feature/team-step09-screen3-base
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'hard', 150, ARRAY['担当画面③', 'データ認可403', 'ダッシュボード'],
+  '{"stepNumber":9,"recommendedBranch":"feature/team-step09-screen3-base","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（05_画面設計・12_セキュリティ §2）","isTeamProject":true,"checklist":["自分の担当3画面目の基本処理とHTML（A1 / B3 / C3）を実装した","A:自己無効化拒否、B:有効ユーザー限定プルダウン、C:他人貸出詳細403 を確認した","`develop` 宛PRを作成し、相互レビュー・Approveを得た","`feature/team-step09-screen3-base` のPR URLを提出した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/9","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/team-step09-screen3-base）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '全10画面の画面枠がすべて揃いました！次のStep 10で本システムの最難関コアロジックを仕上げます。',
+  4, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441510', '33333333-3333-4333-8333-333333331502', 'Team Step 10：【担当画面③・コア】状態遷移ガード・悲観的ロック承認/返却・IF契約本実装', '### 🎯 この単元でやること（ゴール）
+設計書 `10_状態遷移・排他` の核心ロジック（B:タスク状態遷移ガード＆IF本実装 / C:悲観的ロックによる承認・却下・返却＆IF本実装 / A:ダッシュボードUI仕上げ）を実装します。
+
+### 💡 なぜこの単元が必要か
+同時承認での在庫マイナスや二重返却を防ぐ「悲観的ロック（`FOR UPDATE`）＋ロック順序固定」は、実務バックエンド開発で最も差がつく重要スキルです。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `10_状態遷移・排他`（全員で必ず読み合わせてから実装！）
+
+```mermaid
+sequenceDiagram
+  participant A1 as 管理者1
+  participant A2 as 管理者2(同時)
+  participant DB as PostgreSQL(FOR UPDATE)
+  A1->>DB: ①申請行ロック → ②備品行ロック → 在庫減算 → APPROVED → COMMIT
+  A2->>DB: ①申請行ロック(待機) → 解放後に最新取得(既にAPPROVED) → 状態エラーでロールバック
+```
+
+### 🛠️ 最初に作るファイルと書く順番
+1. **メンバーB**：`TaskStatus#canTransitionTo`（`TODO→IN_PROGRESS/DONE`, `IN_PROGRESS→DONE`, `DONE→不可`）と `POST /tasks/{id}/status`、さらに `countOpenByAssignee` / `findUpcomingByAssignee` の本実装を完了する
+2. **メンバーC**：`LoanService#approve` / `reject` / `returnLoan` を実装する（**全メソッドで「①申請行ロック → ②ステータス再確認 → ③備品行ロック → ④在庫再確認/更新」の順序を厳守**し、`BusinessException` はService内でcatchしない）＋ `countByUserAndStatus` 本実装
+3. **メンバーA**：ダッシュボードの期限間近タスク行クリック遷移や0件表示、社員一覧の細部仕上げを行う
+
+### ✅ 動作確認のしかた（成功のサイン）
+- B：`DONE` タスクへ `curl` で `status=TODO` をPOSTしても状態が変わらずエラーになる（`UT-B07`）
+- C：在庫1の備品へPENDING 2件を連続承認すると、1件目成功(在庫0)・2件目は在庫不足エラーでPENDINGのまま（`UT-C17`）
+- C：返却を2回送信しても在庫加算は1回のみ（`UT-C18`）
+
+### ⚠️ よくあるエラーと対処法
+- `BusinessException` を Service 内で `try-catch` してしまうとトランザクションがロールバックされなくなります → 必ず Controller で `catch` してください。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/team-step10-core-logic
+git add . && git commit -m "feat: Step 10 完了"
+git push -u origin feature/team-step10-core-logic
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'hard', 180, ARRAY['状態遷移', '悲観的ロック', '排他制御', 'IF契約本実装'],
+  '{"stepNumber":10,"recommendedBranch":"feature/team-step10-core-logic","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（10_状態遷移・排他）","isTeamProject":true,"checklist":["B：タスク状態遷移ガードとIF契約メソッドの本実装が完了した","C：悲観的ロック（申請行→備品行の順）による承認・却下・返却とIF本実装が完了した","A：ダッシュボードと社員管理の全UI・遷移が整った","`feature/team-step10-core-logic` のPRを全員で重点レビューしマージした"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/10","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/team-step10-core-logic）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '最難関のコアロジック実装おめでとうございます！次は担当別の単体テストで品質を固めます。',
+  5, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441511', '33333333-3333-4333-8333-333333331502', 'Team Step 11：担当別単体テスト（UT-A / UT-B / UT-C）全件実施＆レビュー改修', '### 🎯 この単元でやること（ゴール）
+詳細設計書 `13_テスト仕様` の自分の担当UTケース（A:`UT-A01〜08` / B:`UT-B01〜07` / C:`UT-C11〜19` ＋共通 `UT-X01〜03`）をすべて実施し、バグを潰します。
+
+### 💡 なぜこの単元が必要か
+統合前に各自の担当範囲を完璧にしておくことで、第3章の横断結合テストがスムーズに進みます。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `13_テスト仕様`（UT全ケース）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. 自分の担当UTケースをブラウザ・curl・PostgreSQLで1件ずつ実行する
+2. 重要ロジック（進捗率計算、状態遷移、他人貸出403、在庫不足承認拒否等）のJUnit 5テストを作成する
+3. 見つかった不具合を修正し、PR本文にUT結果一覧を貼って `develop` へマージする
+
+### ✅ 動作確認のしかた（成功のサイン）
+- `./mvnw test` が全件PASSする
+- 自分の担当UTケースがすべて「合格」になっている
+
+### ⚠️ よくあるエラーと対処法
+- 画面からボタンを隠しただけで満足せず、`UT-B07` や `UT-C19` のように `curl` で直接POSTしたときもサーバー側が拒否することを必ず確認しましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/team-step11-unit-tests
+git add . && git commit -m "feat: Step 11 完了"
+git push -u origin feature/team-step11-unit-tests
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 120, ARRAY['単体テスト', 'UT', '品質保証'],
+  '{"stepNumber":11,"recommendedBranch":"feature/team-step11-unit-tests","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（13_テスト仕様：UT-X/A/B/C）","isTeamProject":true,"checklist":["担当分のUTケース（UT-A / UT-B / UT-C）を全件実施し合格を確認した","主要ロジックのJUnit 5単体テストを作成し `./mvnw test` がPASSした","PR本文にテスト結果を記載し、レビュー後にマージした","`feature/team-step11-unit-tests` のPR URLを提出した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/11","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/team-step11-unit-tests）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'これで第2章（担当3画面の並行開発＋単体テスト）が完了です！いよいよ全10画面の横断結合へ進みます。',
   6, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441512', '33333333-3333-4333-8333-333333331503', 'Team Step 12：IF契約の本接続（全10画面結合）＆ コンフリクト解消実践', '### 🎯 この単元でやること（ゴール）
+3名全員の担当機能（全10画面）を `develop` 上で1つのアプリとして統合し、ダッシュボードの実データ連携とマージ時のコンフリクト解消を実践します。
+
+### 💡 なぜこの単元が必要か
+コンフリクトを自力で安全に解消してビルドを通せる経験は、現場配属後に即戦力として高く評価される必須スキルです。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `03_Git・PR運用 §7`（コンフリクト解消手順）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. 全員が `git fetch origin` → 自ブランチで `git merge origin/develop` を実行する
+2. コンフリクトが発生したファイルは `<<<<<<<` / `=======` / `>>>>>>>` を確認し、変更した相手と会話しながら両方の意図を残して解消する
+3. AのダッシュボードがBの未完了タスク数＆上位5件・Cの貸出中/申請中件数を実データで表示することを確認する（`IT-010`）
+4. 全10画面のヘッダーリンクから相互遷移し、リンク切れ・404・崩れがないことを確認する（`IT-006`）
+
+### ✅ 動作確認のしかた（成功のサイン）
+- Cで新規申請→Aのダッシュボードの「申請中」が即時 +1、Bでタスク完了→「未完了」が即時 -1 になる
+- 全10画面のナビゲーションがエラーなく相互遷移できる
+
+### ⚠️ よくあるエラーと対処法
+- コンフリクト解消時に焦って「自分の変更だけ採用（Accept Current）」を押すと、相手の実装を消してしまいます → 必ず両方の変更内容を確認しましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c feature/team-step12-integration
+git add . && git commit -m "feat: Step 12 完了"
+git push -u origin feature/team-step12-integration
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'hard', 120, ARRAY['統合', 'コンフリクト解消', 'IF契約'],
+  '{"stepNumber":12,"recommendedBranch":"feature/team-step12-integration","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（03_Git・PR運用 §7・02_チーム分担）","isTeamProject":true,"checklist":["全10画面が `develop` に統合されエラーなく起動できる","マージ時のコンフリクトを適切に解消できた","ダッシュボードがB・Cの実データを正しく集計表示している（`IT-010`）","全10画面の共通ナビ相互遷移（`IT-006`）を確認しPR URLを提出した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/12","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（feature/team-step12-integration）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '3人のアプリが1つのシステムとして動き出しました！次はセキュリティと排他制御の徹底検証です。',
+  1, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441513', '33333333-3333-4333-8333-333333331503', 'Team Step 13：ロール権限総当たり検証（IT-001/012）＆ 同時承認・在庫整合検証（IT-004/008/011）', '### 🎯 この単元でやること（ゴール）
+最も事故が起きやすい「ロール別権限（未ログイン/USER/ADMIN）」と「同時承認・返却の在庫整合性」を設計書の総当たり表と検証SQLで徹底検証します。
+
+### 💡 なぜこの単元が必要か
+権限漏れや在庫不整合は本番で最も重大な障害になります。ここで網羅チェックをやり切ることで実務品質を担保します。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `12_セキュリティ §4`（権限総当たり表）・`08_DB設計 §5`（在庫整合検証SQL）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. 未ログイン・USER・ADMINの3状態で `12_セキュリティ §4` の全行にアクセスし、期待ステータス（200/302/403）を検証する（`IT-012`）
+2. ADMINで2つのブラウザタブを開き、同じPENDING申請を続けて承認して片方成功・片方状態エラー・在庫減算1回のみを確認する（`IT-008`）
+3. pgAdmin 4 で在庫整合性検証SQL（`available_qty <> total_qty - SUM(APPROVED)`）を実行し **0行** であることを確認する（`IT-011`）
+4. 見つかった不具合があれば `fix/` ブランチで修正してPRマージする
+
+### ✅ 動作確認のしかた（成功のサイン）
+- `IT-001`・`IT-012` の全行が仕様通り（特に他人の `/loans/{id}` が 403 で 500 にならない）
+- `IT-004`・`IT-008` 実施後に在庫整合性検証SQLが **0行** である（`IT-011`）
+
+### ⚠️ よくあるエラーと対処法
+- 検証時にブラウザのキャッシュや同一セッションが残っていると別ロールのテストが混ざります → シークレットウィンドウを活用しましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c fix/team-step13-sec-concurrency
+git add . && git commit -m "feat: Step 13 完了"
+git push -u origin fix/team-step13-sec-concurrency
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'hard', 120, ARRAY['セキュリティテスト', '排他制御検証', '在庫整合性'],
+  '{"stepNumber":13,"recommendedBranch":"fix/team-step13-sec-concurrency","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（12_セキュリティ §4・10_状態遷移・排他 §4）","isTeamProject":true,"checklist":["権限総当たり表（`IT-001`, `IT-012`）を全行確認し合格した","同時承認（`IT-008`）および承認→返却トランザクション（`IT-004`）を確認した","在庫整合性検証SQL（`IT-011`）が 0 行であることを確認した","検証・改修のPRを作成しPR URLを提出した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/13","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（fix/team-step13-sec-concurrency）で実装・動作確認を完了し、Pull Requestを作成しました。"}', 'セキュリティと在庫整合性の最難関関門を突破しました！',
+  2, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441514', '33333333-3333-4333-8333-333333331503', 'Team Step 14：横断結合テスト（IT-001〜IT-012）クロスチェック＆GitHub Issuesバグ改修', '### 🎯 この単元でやること（ゴール）
+他メンバーが作った画面をクロスチェック（AがBを、BがCを、CがAをテスト）して `IT-001〜IT-012` を全件完了させ、不具合はGitHub Issues→`fix/`ブランチで改修します。
+
+### 💡 なぜこの単元が必要か
+自分で作った画面は思い込みで見落としがちです。他メンバーによるクロスチェックとIssue起票→PRクローズは現場の品質管理そのものです。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `13_テスト仕様`（`IT-001`〜`IT-012`）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. クロスチェック担当を決め、`IT-002`（A→B連携）・`IT-003`（B進捗率）・`IT-005`（在庫超過）・`IT-009`（無効化影響）を含む全12件を実施する
+2. 不具合を見つけたらGitHubの **Issues** タブに再現手順とスクショを起票する
+3. 担当者が `fix/issue番号-内容` ブランチで修正→PRレビュー→マージしてIssueをクローズする
+4. `13_テスト仕様` の判定欄をすべて「合格」（合格率100%）にする
+
+### ✅ 動作確認のしかた（成功のサイン）
+- `IT-001〜IT-012` がすべて「合格」になり、未解決のバグIssueが 0 件である
+
+### ⚠️ よくあるエラーと対処法
+- `IT-009`（社員無効化）：担当者プルダウンからは消えますが、過去のタスク・貸出履歴の表示は消さずに残るのが正しい仕様です。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c fix/team-step14-it-fixes
+git add . && git commit -m "feat: Step 14 完了"
+git push -u origin fix/team-step14-it-fixes
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'hard', 120, ARRAY['結合テスト', 'クロスチェック', 'GitHub Issues'],
+  '{"stepNumber":14,"recommendedBranch":"fix/team-step14-it-fixes","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（13_テスト仕様：IT-001〜IT-012）","isTeamProject":true,"checklist":["メンバー同士のクロスチェックで `IT-001〜IT-012` を全件実施した","発見したバグをGitHub Issues起票→`fix/`ブランチPRで修正・クローズした","詳細設計書 `13_テスト仕様` の合格率が 100% になった","改修・確認完了のPR URLを提出した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/14","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（fix/team-step14-it-fixes）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '横断結合テスト全件合格おめでとうございます！いよいよ最終リリースと発表準備に入ります。',
+  3, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441515', '33333333-3333-4333-8333-333333331504', 'Team Step 15：develop → main リリースPR作成 ＆ GitHub運用監査（IT-007）', '### 🎯 この単元でやること（ゴール）
+テスト完了済みの `develop` から本番安定ブランチ `main` へリリースPRを作成し、3名全員のPR・レビュー・コミット履歴（`IT-007`）を確認します。
+
+### 💡 なぜこの単元が必要か
+実務では `develop` で統合テストを終えたあと、リリースPRを通じて `main` へ昇格させます。全員の開発貢献が履歴に残っているかも重要な評価基準です。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `03_Git・PR運用 §4・§6`（`IT-007` 対策）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `develop` の最新状態で `./mvnw test` と全10画面の最終スモークテストを実施する
+2. GitHub上で `base: main` ← `compare: develop` のリリースPRを作成する
+3. GitHubの `Pull Requests` タブおよび `Insights → Contributors` を開き、3名全員のPR・相互レビューコメント・コミット履歴が残っていることを確認する（`IT-007`）
+4. 全員の最終確認後、**Merge commit**（全員のコミット履歴を残す方式）で `main` へマージする
+
+### ✅ 動作確認のしかた（成功のサイン）
+- `Insights → Contributors` にチーム3名全員の名前とコミットが表示されている
+- `main` ブランチに全10画面の最新コードが反映されている
+
+### ⚠️ よくあるエラーと対処法
+- `develop → main` を Squash merge すると全員分のコミットが1つに潰れてしまいます → ここは必ず **Create a merge commit** を使いましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c release/v1.0-teamops
+git add . && git commit -m "feat: Step 15 完了"
+git push -u origin release/v1.0-teamops
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 60, ARRAY['リリースPR', 'GitHub運用監査', 'Merge commit'],
+  '{"stepNumber":15,"recommendedBranch":"release/v1.0-teamops","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 詳細設計書 v1.1.0（03_Git・PR運用・IT-007）","isTeamProject":true,"checklist":["`develop` 上で全自動テストと全10画面の動作を確認した","`develop` → `main` のリリースPRを作成し全員で確認した","`IT-007`（3名全員のPR・相互レビュー・コミット履歴）を確認した","リリースPRのURLを提出した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/15","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（release/v1.0-teamops）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '安定した `main` ブランチへのリリースが完了しました！残すは最終Step 16のREADME整備とデモ発表提出のみです。',
+  1, true
+)
+ON CONFLICT (id) DO UPDATE SET
+  lesson_id = EXCLUDED.lesson_id,
+  title = EXCLUDED.title,
+  description_md = EXCLUDED.description_md,
+  difficulty = EXCLUDED.difficulty,
+  estimated_minutes = EXCLUDED.estimated_minutes,
+  tags = EXCLUDED.tags,
+  starter_code = EXCLUDED.starter_code,
+  solution_code = EXCLUDED.solution_code,
+  explanation_md = EXCLUDED.explanation_md,
+  order_index = EXCLUDED.order_index,
+  is_published = EXCLUDED.is_published;
+
+INSERT INTO public.problems (
+  id, lesson_id, title, description_md, difficulty, estimated_minutes,
+  tags, starter_code, solution_code, explanation_md, order_index, is_published
+)
+VALUES (
+  '44444444-4444-4444-8444-444444441516', '33333333-3333-4333-8333-333333331504', 'Team Step 16：README.md整備・新規クローン起動確認・デモ発表 ＆ 最終PR URL提出', '### 🎯 この単元でやること（ゴール）
+3名の担当一覧・環境構築手順・テストアカウント・工夫した点をまとめた `README.md` を仕上げ、新規クローン起動とデモシナリオを確認して最終PR URLを提出します。
+
+### 💡 なぜこの単元が必要か
+1年間カリキュラムの集大成として、「他人が動かせて、3人のチーム開発ストーリーが伝わるリポジトリ」を完成させます。
+
+### 📖 見るべき設計書・モックアップ
+詳細設計書 `00_表紙`〜`15_設計判断ログ`（全体振り返り）
+
+### 🛠️ 最初に作るファイルと書く順番
+1. `README.md` に ①システム概要と3名の担当画面一覧 ②PostgreSQL `teamops_db` 構築＆起動手順 ③ADMIN/USERテストアカウント ④工夫した点・コンフリクト解消や排他制御の学び を記載する
+2. `main` ブランチをPCの別フォルダへ新規 `git clone` し、README手順だけで起動・全10画面操作ができるか確認する
+3. デモ発表用の画面遷移シナリオ（ログイン→ダッシュボード→社員登録→タスク割当→進捗反映→備品申請→承認→返却）を3名でリハーサルする
+4. 最終リリースPRの **GitHub Pull Request URL（`/pull/番号`）** を提出する
+
+### ✅ 動作確認のしかた（成功のサイン）
+- 新規 `git clone` 環境でエラーなく起動し、全10画面がスムーズに動く
+- デモ発表シナリオを5〜10分で澱みなく実演できる
+
+### ⚠️ よくあるエラーと対処法
+- デモ直前にDBデータが中途半端な状態になっていないか、`sql/data.sql` で初期状態へ戻せることを確認しておきましょう。
+
+### 🔀 提出ブランチ＆Pull Request手順
+```bash
+git switch -c release/v1.0-final
+git add . && git commit -m "feat: Step 16 完了"
+git push -u origin release/v1.0-final
+```
+GitHub上で Pull Request を作成し、**PR URL（`/pull/番号`）** を右側のフォームから提出してください。',
+  'medium', 90, ARRAY['README', 'デモ発表', '最終提出', '1年集大成'],
+  '{"stepNumber":16,"recommendedBranch":"release/v1.0-final","designDocPath":"/docs/team-project-design-spec.xlsx","designDocLabel":"TeamOps Hub 開発者向け詳細設計書 v1.1.0（全16シート）","isTeamProject":true,"checklist":["`README.md` に3名担当一覧・起動手順・テストアカウント・工夫点を記載した","`main` を別フォルダへ新規 `git clone` してエラーなく起動・全10画面確認できた","デモ発表シナリオを3名で確認した","最終リリース用のGitHub Pull Request URLを提出した"],"mockupDocPath":"/docs/team-project-mockup.xlsx","mockupDocLabel":"TeamOps Hub 画面設計モックアップ（Excel・全11シート）"}', '{"githubUrl":"https://github.com/sample-student/teamops-hub/pull/16","checkedItems":[0,1,2,3],"summaryNote":"推奨ブランチ（release/v1.0-final）で実装・動作確認を完了し、Pull Requestを作成しました。"}', '1年間カリキュラム全工程（全11コース）完遂、本当におめでとうございます！設計書読解・実装・テスト・排他制御・Gitチーム開発までやり切った実績は、現場配属後も確かな武器になります。',
+  2, true
 )
 ON CONFLICT (id) DO UPDATE SET
   lesson_id = EXCLUDED.lesson_id,
@@ -5043,7 +6414,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 -- 5. 新規演習問題のテストケース登録（冪等洗い替え）
-DELETE FROM public.test_cases WHERE problem_id IN ('44444444-4444-4444-8444-444444441101', '44444444-4444-4444-8444-444444441102', '44444444-4444-4444-8444-444444441103', '44444444-4444-4444-8444-444444441104', '44444444-4444-4444-8444-444444441105', '44444444-4444-4444-8444-444444441106', '44444444-4444-4444-8444-444444441201', '44444444-4444-4444-8444-444444441202', '44444444-4444-4444-8444-444444441203', '44444444-4444-4444-8444-444444441204', '44444444-4444-4444-8444-444444441205', '44444444-4444-4444-8444-444444441206', '44444444-4444-4444-8444-444444441207', '44444444-4444-4444-8444-444444441208', '44444444-4444-4444-8444-444444441209', '44444444-4444-4444-8444-444444441210', '44444444-4444-4444-8444-444444441211', '44444444-4444-4444-8444-444444441212', '44444444-4444-4444-8444-444444441301', '44444444-4444-4444-8444-444444441302', '44444444-4444-4444-8444-444444441303', '44444444-4444-4444-8444-444444441304', '44444444-4444-4444-8444-444444441305', '44444444-4444-4444-8444-444444441306', '44444444-4444-4444-8444-444444441307', '44444444-4444-4444-8444-444444441308', '44444444-4444-4444-8444-444444441309', '44444444-4444-4444-8444-444444441310', '44444444-4444-4444-8444-444444441311', '44444444-4444-4444-8444-444444441312', '44444444-4444-4444-8444-444444442101', '44444444-4444-4444-8444-444444442102', '44444444-4444-4444-8444-444444442103', '44444444-4444-4444-8444-444444442104', '44444444-4444-4444-8444-444444442105', '44444444-4444-4444-8444-444444442106', '44444444-4444-4444-8444-444444442107', '44444444-4444-4444-8444-444444442108', '44444444-4444-4444-8444-444444442109', '44444444-4444-4444-8444-444444442110', '44444444-4444-4444-8444-444444442111', '44444444-4444-4444-8444-444444442112', '44444444-4444-4444-8444-444444442113', '44444444-4444-4444-8444-444444442114', '44444444-4444-4444-8444-444444442201', '44444444-4444-4444-8444-444444442202', '44444444-4444-4444-8444-444444442203', '44444444-4444-4444-8444-444444442204', '44444444-4444-4444-8444-444444442205', '44444444-4444-4444-8444-444444442206', '44444444-4444-4444-8444-444444442207', '44444444-4444-4444-8444-444444442208', '44444444-4444-4444-8444-444444442209', '44444444-4444-4444-8444-444444442210', '44444444-4444-4444-8444-444444442211', '44444444-4444-4444-8444-444444442212', '44444444-4444-4444-8444-444444442301', '44444444-4444-4444-8444-444444442302', '44444444-4444-4444-8444-444444442303', '44444444-4444-4444-8444-444444442304', '44444444-4444-4444-8444-444444442305', '44444444-4444-4444-8444-444444442306', '44444444-4444-4444-8444-444444442307', '44444444-4444-4444-8444-444444442308', '44444444-4444-4444-8444-444444442309', '44444444-4444-4444-8444-444444442310', '44444444-4444-4444-8444-444444442401', '44444444-4444-4444-8444-444444442402', '44444444-4444-4444-8444-444444442403', '44444444-4444-4444-8444-444444442404', '44444444-4444-4444-8444-444444442405', '44444444-4444-4444-8444-444444442406', '44444444-4444-4444-8444-444444442407', '44444444-4444-4444-8444-444444442408', '44444444-4444-4444-8444-444444442409', '44444444-4444-4444-8444-444444442410', '44444444-4444-4444-8444-444444441401', '44444444-4444-4444-8444-444444441402', '44444444-4444-4444-8444-444444441403', '44444444-4444-4444-8444-444444441404', '44444444-4444-4444-8444-444444441405', '44444444-4444-4444-8444-444444441406', '44444444-4444-4444-8444-444444441501', '44444444-4444-4444-8444-444444441502', '44444444-4444-4444-8444-444444441503', '44444444-4444-4444-8444-444444441504', '44444444-4444-4444-8444-444444441505', '44444444-4444-4444-8444-444444441506');
+DELETE FROM public.test_cases WHERE problem_id IN ('44444444-4444-4444-8444-444444441101', '44444444-4444-4444-8444-444444441102', '44444444-4444-4444-8444-444444441103', '44444444-4444-4444-8444-444444441104', '44444444-4444-4444-8444-444444441105', '44444444-4444-4444-8444-444444441106', '44444444-4444-4444-8444-444444441201', '44444444-4444-4444-8444-444444441202', '44444444-4444-4444-8444-444444441203', '44444444-4444-4444-8444-444444441204', '44444444-4444-4444-8444-444444441205', '44444444-4444-4444-8444-444444441206', '44444444-4444-4444-8444-444444441207', '44444444-4444-4444-8444-444444441208', '44444444-4444-4444-8444-444444441209', '44444444-4444-4444-8444-444444441210', '44444444-4444-4444-8444-444444441211', '44444444-4444-4444-8444-444444441212', '44444444-4444-4444-8444-444444441301', '44444444-4444-4444-8444-444444441302', '44444444-4444-4444-8444-444444441303', '44444444-4444-4444-8444-444444441304', '44444444-4444-4444-8444-444444441305', '44444444-4444-4444-8444-444444441306', '44444444-4444-4444-8444-444444441307', '44444444-4444-4444-8444-444444441308', '44444444-4444-4444-8444-444444441309', '44444444-4444-4444-8444-444444441310', '44444444-4444-4444-8444-444444441311', '44444444-4444-4444-8444-444444441312', '44444444-4444-4444-8444-444444442101', '44444444-4444-4444-8444-444444442102', '44444444-4444-4444-8444-444444442103', '44444444-4444-4444-8444-444444442104', '44444444-4444-4444-8444-444444442105', '44444444-4444-4444-8444-444444442106', '44444444-4444-4444-8444-444444442107', '44444444-4444-4444-8444-444444442108', '44444444-4444-4444-8444-444444442109', '44444444-4444-4444-8444-444444442110', '44444444-4444-4444-8444-444444442111', '44444444-4444-4444-8444-444444442112', '44444444-4444-4444-8444-444444442113', '44444444-4444-4444-8444-444444442114', '44444444-4444-4444-8444-444444442201', '44444444-4444-4444-8444-444444442202', '44444444-4444-4444-8444-444444442203', '44444444-4444-4444-8444-444444442204', '44444444-4444-4444-8444-444444442205', '44444444-4444-4444-8444-444444442206', '44444444-4444-4444-8444-444444442207', '44444444-4444-4444-8444-444444442208', '44444444-4444-4444-8444-444444442209', '44444444-4444-4444-8444-444444442210', '44444444-4444-4444-8444-444444442211', '44444444-4444-4444-8444-444444442212', '44444444-4444-4444-8444-444444442301', '44444444-4444-4444-8444-444444442302', '44444444-4444-4444-8444-444444442303', '44444444-4444-4444-8444-444444442304', '44444444-4444-4444-8444-444444442305', '44444444-4444-4444-8444-444444442306', '44444444-4444-4444-8444-444444442307', '44444444-4444-4444-8444-444444442308', '44444444-4444-4444-8444-444444442309', '44444444-4444-4444-8444-444444442310', '44444444-4444-4444-8444-444444442401', '44444444-4444-4444-8444-444444442402', '44444444-4444-4444-8444-444444442403', '44444444-4444-4444-8444-444444442404', '44444444-4444-4444-8444-444444442405', '44444444-4444-4444-8444-444444442406', '44444444-4444-4444-8444-444444442407', '44444444-4444-4444-8444-444444442408', '44444444-4444-4444-8444-444444442409', '44444444-4444-4444-8444-444444442410', '44444444-4444-4444-8444-444444441401', '44444444-4444-4444-8444-444444441402', '44444444-4444-4444-8444-444444441403', '44444444-4444-4444-8444-444444441404', '44444444-4444-4444-8444-444444441405', '44444444-4444-4444-8444-444444441406', '44444444-4444-4444-8444-444444441407', '44444444-4444-4444-8444-444444441408', '44444444-4444-4444-8444-444444441409', '44444444-4444-4444-8444-444444441410', '44444444-4444-4444-8444-444444441411', '44444444-4444-4444-8444-444444441412', '44444444-4444-4444-8444-444444441413', '44444444-4444-4444-8444-444444441414', '44444444-4444-4444-8444-444444441415', '44444444-4444-4444-8444-444444441416', '44444444-4444-4444-8444-444444441501', '44444444-4444-4444-8444-444444441502', '44444444-4444-4444-8444-444444441503', '44444444-4444-4444-8444-444444441504', '44444444-4444-4444-8444-444444441505', '44444444-4444-4444-8444-444444441506', '44444444-4444-4444-8444-444444441507', '44444444-4444-4444-8444-444444441508', '44444444-4444-4444-8444-444444441509', '44444444-4444-4444-8444-444444441510', '44444444-4444-4444-8444-444444441511', '44444444-4444-4444-8444-444444441512', '44444444-4444-4444-8444-444444441513', '44444444-4444-4444-8444-444444441514', '44444444-4444-4444-8444-444444441515', '44444444-4444-4444-8444-444444441516');
 
 INSERT INTO public.test_cases (problem_id, name, input, expected_output, is_hidden, order_index)
 VALUES ('44444444-4444-4444-8444-444444442101', '公開テスト1：10000円を3人で割り勘', '10000
@@ -5695,7 +7066,7 @@ SEARCH Mon
 P09 Monitor 30000 10', true, 2);
 
 -- 6. 新規演習問題のヒント登録（冪等洗い替え）
-DELETE FROM public.hints WHERE problem_id IN ('44444444-4444-4444-8444-444444441101', '44444444-4444-4444-8444-444444441102', '44444444-4444-4444-8444-444444441103', '44444444-4444-4444-8444-444444441104', '44444444-4444-4444-8444-444444441105', '44444444-4444-4444-8444-444444441106', '44444444-4444-4444-8444-444444441201', '44444444-4444-4444-8444-444444441202', '44444444-4444-4444-8444-444444441203', '44444444-4444-4444-8444-444444441204', '44444444-4444-4444-8444-444444441205', '44444444-4444-4444-8444-444444441206', '44444444-4444-4444-8444-444444441207', '44444444-4444-4444-8444-444444441208', '44444444-4444-4444-8444-444444441209', '44444444-4444-4444-8444-444444441210', '44444444-4444-4444-8444-444444441211', '44444444-4444-4444-8444-444444441212', '44444444-4444-4444-8444-444444441301', '44444444-4444-4444-8444-444444441302', '44444444-4444-4444-8444-444444441303', '44444444-4444-4444-8444-444444441304', '44444444-4444-4444-8444-444444441305', '44444444-4444-4444-8444-444444441306', '44444444-4444-4444-8444-444444441307', '44444444-4444-4444-8444-444444441308', '44444444-4444-4444-8444-444444441309', '44444444-4444-4444-8444-444444441310', '44444444-4444-4444-8444-444444441311', '44444444-4444-4444-8444-444444441312', '44444444-4444-4444-8444-444444442101', '44444444-4444-4444-8444-444444442102', '44444444-4444-4444-8444-444444442103', '44444444-4444-4444-8444-444444442104', '44444444-4444-4444-8444-444444442105', '44444444-4444-4444-8444-444444442106', '44444444-4444-4444-8444-444444442107', '44444444-4444-4444-8444-444444442108', '44444444-4444-4444-8444-444444442109', '44444444-4444-4444-8444-444444442110', '44444444-4444-4444-8444-444444442111', '44444444-4444-4444-8444-444444442112', '44444444-4444-4444-8444-444444442113', '44444444-4444-4444-8444-444444442114', '44444444-4444-4444-8444-444444442201', '44444444-4444-4444-8444-444444442202', '44444444-4444-4444-8444-444444442203', '44444444-4444-4444-8444-444444442204', '44444444-4444-4444-8444-444444442205', '44444444-4444-4444-8444-444444442206', '44444444-4444-4444-8444-444444442207', '44444444-4444-4444-8444-444444442208', '44444444-4444-4444-8444-444444442209', '44444444-4444-4444-8444-444444442210', '44444444-4444-4444-8444-444444442211', '44444444-4444-4444-8444-444444442212', '44444444-4444-4444-8444-444444442301', '44444444-4444-4444-8444-444444442302', '44444444-4444-4444-8444-444444442303', '44444444-4444-4444-8444-444444442304', '44444444-4444-4444-8444-444444442305', '44444444-4444-4444-8444-444444442306', '44444444-4444-4444-8444-444444442307', '44444444-4444-4444-8444-444444442308', '44444444-4444-4444-8444-444444442309', '44444444-4444-4444-8444-444444442310', '44444444-4444-4444-8444-444444442401', '44444444-4444-4444-8444-444444442402', '44444444-4444-4444-8444-444444442403', '44444444-4444-4444-8444-444444442404', '44444444-4444-4444-8444-444444442405', '44444444-4444-4444-8444-444444442406', '44444444-4444-4444-8444-444444442407', '44444444-4444-4444-8444-444444442408', '44444444-4444-4444-8444-444444442409', '44444444-4444-4444-8444-444444442410', '44444444-4444-4444-8444-444444441401', '44444444-4444-4444-8444-444444441402', '44444444-4444-4444-8444-444444441403', '44444444-4444-4444-8444-444444441404', '44444444-4444-4444-8444-444444441405', '44444444-4444-4444-8444-444444441406', '44444444-4444-4444-8444-444444441501', '44444444-4444-4444-8444-444444441502', '44444444-4444-4444-8444-444444441503', '44444444-4444-4444-8444-444444441504', '44444444-4444-4444-8444-444444441505', '44444444-4444-4444-8444-444444441506');
+DELETE FROM public.hints WHERE problem_id IN ('44444444-4444-4444-8444-444444441101', '44444444-4444-4444-8444-444444441102', '44444444-4444-4444-8444-444444441103', '44444444-4444-4444-8444-444444441104', '44444444-4444-4444-8444-444444441105', '44444444-4444-4444-8444-444444441106', '44444444-4444-4444-8444-444444441201', '44444444-4444-4444-8444-444444441202', '44444444-4444-4444-8444-444444441203', '44444444-4444-4444-8444-444444441204', '44444444-4444-4444-8444-444444441205', '44444444-4444-4444-8444-444444441206', '44444444-4444-4444-8444-444444441207', '44444444-4444-4444-8444-444444441208', '44444444-4444-4444-8444-444444441209', '44444444-4444-4444-8444-444444441210', '44444444-4444-4444-8444-444444441211', '44444444-4444-4444-8444-444444441212', '44444444-4444-4444-8444-444444441301', '44444444-4444-4444-8444-444444441302', '44444444-4444-4444-8444-444444441303', '44444444-4444-4444-8444-444444441304', '44444444-4444-4444-8444-444444441305', '44444444-4444-4444-8444-444444441306', '44444444-4444-4444-8444-444444441307', '44444444-4444-4444-8444-444444441308', '44444444-4444-4444-8444-444444441309', '44444444-4444-4444-8444-444444441310', '44444444-4444-4444-8444-444444441311', '44444444-4444-4444-8444-444444441312', '44444444-4444-4444-8444-444444442101', '44444444-4444-4444-8444-444444442102', '44444444-4444-4444-8444-444444442103', '44444444-4444-4444-8444-444444442104', '44444444-4444-4444-8444-444444442105', '44444444-4444-4444-8444-444444442106', '44444444-4444-4444-8444-444444442107', '44444444-4444-4444-8444-444444442108', '44444444-4444-4444-8444-444444442109', '44444444-4444-4444-8444-444444442110', '44444444-4444-4444-8444-444444442111', '44444444-4444-4444-8444-444444442112', '44444444-4444-4444-8444-444444442113', '44444444-4444-4444-8444-444444442114', '44444444-4444-4444-8444-444444442201', '44444444-4444-4444-8444-444444442202', '44444444-4444-4444-8444-444444442203', '44444444-4444-4444-8444-444444442204', '44444444-4444-4444-8444-444444442205', '44444444-4444-4444-8444-444444442206', '44444444-4444-4444-8444-444444442207', '44444444-4444-4444-8444-444444442208', '44444444-4444-4444-8444-444444442209', '44444444-4444-4444-8444-444444442210', '44444444-4444-4444-8444-444444442211', '44444444-4444-4444-8444-444444442212', '44444444-4444-4444-8444-444444442301', '44444444-4444-4444-8444-444444442302', '44444444-4444-4444-8444-444444442303', '44444444-4444-4444-8444-444444442304', '44444444-4444-4444-8444-444444442305', '44444444-4444-4444-8444-444444442306', '44444444-4444-4444-8444-444444442307', '44444444-4444-4444-8444-444444442308', '44444444-4444-4444-8444-444444442309', '44444444-4444-4444-8444-444444442310', '44444444-4444-4444-8444-444444442401', '44444444-4444-4444-8444-444444442402', '44444444-4444-4444-8444-444444442403', '44444444-4444-4444-8444-444444442404', '44444444-4444-4444-8444-444444442405', '44444444-4444-4444-8444-444444442406', '44444444-4444-4444-8444-444444442407', '44444444-4444-4444-8444-444444442408', '44444444-4444-4444-8444-444444442409', '44444444-4444-4444-8444-444444442410', '44444444-4444-4444-8444-444444441401', '44444444-4444-4444-8444-444444441402', '44444444-4444-4444-8444-444444441403', '44444444-4444-4444-8444-444444441404', '44444444-4444-4444-8444-444444441405', '44444444-4444-4444-8444-444444441406', '44444444-4444-4444-8444-444444441407', '44444444-4444-4444-8444-444444441408', '44444444-4444-4444-8444-444444441409', '44444444-4444-4444-8444-444444441410', '44444444-4444-4444-8444-444444441411', '44444444-4444-4444-8444-444444441412', '44444444-4444-4444-8444-444444441413', '44444444-4444-4444-8444-444444441414', '44444444-4444-4444-8444-444444441415', '44444444-4444-4444-8444-444444441416', '44444444-4444-4444-8444-444444441501', '44444444-4444-4444-8444-444444441502', '44444444-4444-4444-8444-444444441503', '44444444-4444-4444-8444-444444441504', '44444444-4444-4444-8444-444444441505', '44444444-4444-4444-8444-444444441506', '44444444-4444-4444-8444-444444441507', '44444444-4444-4444-8444-444444441508', '44444444-4444-4444-8444-444444441509', '44444444-4444-4444-8444-444444441510', '44444444-4444-4444-8444-444444441511', '44444444-4444-4444-8444-444444441512', '44444444-4444-4444-8444-444444441513', '44444444-4444-4444-8444-444444441514', '44444444-4444-4444-8444-444444441515', '44444444-4444-4444-8444-444444441516');
 
 INSERT INTO public.hints (problem_id, step_number, content_md)
 VALUES ('44444444-4444-4444-8444-444444441101', 1, '上のMermaidシーケンス図の登場人物（ブラウザ・Webサーバー・アプリサーバー・データベース）の役割を見直してみましょう。');
@@ -5962,31 +7333,69 @@ VALUES ('44444444-4444-4444-8444-444444442410', 1, '部分一致検索は `it.na
 INSERT INTO public.hints (problem_id, step_number, content_md)
 VALUES ('44444444-4444-4444-8444-444444442410', 2, '在庫警告は「10未満（`stock < 10`）」のときだけ末尾に `" [LOW]"` を付与しましょう。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441401', 1, 'WindowsではEclipseの展開先を `C:\pleiades` のように短い英数字パスにすると、パス長エラーを防げます。');
+VALUES ('44444444-4444-4444-8444-444444441401', 1, 'GitHubリポジトリは講師がレビューできるようPublic（またはCollaborator招待）にしておきましょう。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441401', 2, 'GitHubリポジトリは講師がコードレビューできるよう **Public**（または講師をCollaborator招待）にしておきましょう。');
+VALUES ('44444444-4444-4444-8444-444444441402', 1, 'Step 2時点ではまだEntityが無いので `ddl-auto=validate` のままエラーなく起動します。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441402', 1, '`Connection refused` が出る場合はPostgreSQLサービスが起動しているか、ポート5432が合っているか確認しましょう。');
+VALUES ('44444444-4444-4444-8444-444444441403', 1, '`@RestController` ではなく `@Controller` を使う点に注意しましょう（HTMLを返すため）。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441403', 1, '`Product` から `Category` への外部キーは `@ManyToOne @JoinColumn(name = "category_id")` で関連付けます。');
+VALUES ('44444444-4444-4444-8444-444444441404', 1, 'ヘッダーのログイン者表示・ログアウトボタンはStep 13でSpring Security導入後に組み込みます。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441404', 1, '検索フォームの入力値保持は `model.addAttribute("keyword", keyword)` でHTMLの `th:value` へ渡します。');
+VALUES ('44444444-4444-4444-8444-444444441405', 1, '`users` の初期データ（BCryptパスワード）はStep 13で安全に投入するので、今はテーブル作成だけでOKです。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441405', 1, 'フラッシュメッセージは Controller 引数に `RedirectAttributes ra` を受け取り `ra.addFlashAttribute("message", "登録しました")` を使います。');
+VALUES ('44444444-4444-4444-8444-444444441406', 1, '`@PrePersist` と `@PreUpdate` を `Product` に書いておくと、`createdAt`・`updatedAt` が自動設定されて便利です。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441406', 1, 'テスト用ユーザーのBCryptハッシュは、Spring Boot起動時に `CommandLineRunner` で `passwordEncoder.encode(...)` して初期投入すると確実です。');
+VALUES ('44444444-4444-4444-8444-444444441407', 1, '0件時の「該当する商品がありません」表示（`th:if="${#lists.isEmpty(products)}"`）も一緒に入れておきましょう。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441501', 1, '毎日10分の「朝会（昨日やったこと・今日やること・困っていること）」を行うと進捗ズレにすぐ気づけます。');
+VALUES ('44444444-4444-4444-8444-444444441408', 1, '詳細画面の商品説明は `th:text`＋CSSの `white-space: pre-wrap;` にするとXSSを防ぎつつ改行を保持できます。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441502', 1, 'Thymeleafの共通ヘッダーは `th:fragment` を使うと全10画面で同じナビゲーションを使い回せます。');
+VALUES ('44444444-4444-4444-8444-444444441409', 1, 'フラッシュメッセージ表示枠（`th:if="${message}"`）は `list.html` の上部に配置しましょう。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441503', 1, '1つのPRが大きくなりすぎないよう、1画面（または一覧→登録→編集）単位でこまめにPRを出すとレビューしやすくなります。');
+VALUES ('44444444-4444-4444-8444-444444441410', 1, '`application.properties` に `spring.messages.basename=messages` があることを確認しましょう。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441504', 1, 'コンフリクト解消時は、相手の変更を誤って消さないよう変更した本人と会話しながら確認するのが確実です。');
+VALUES ('44444444-4444-4444-8444-444444441411', 1, '`messages.properties` に `product.sku.duplicate=このSKUはすでに登録されています` を追加しておきましょう。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441505', 1, '在庫数の増減（承認時 -quantity、返却時 +quantity）は `@Transactional` を付けて不整合を防ぎましょう。');
+VALUES ('44444444-4444-4444-8444-444444441412', 1, '削除済み商品の `/products/{id}` へ直接アクセスして404扱いになることも確認しましょう。');
 INSERT INTO public.hints (problem_id, step_number, content_md)
-VALUES ('44444444-4444-4444-8444-444444441506', 1, '提出するURLは最終リリース用Pull RequestのURL（例：`https://github.com/team-xxx/teamops-hub/pull/6`）を入力してください。');
+VALUES ('44444444-4444-4444-8444-444444441413', 1, '`SecurityConfig` でCSRFは無効化せず、デフォルト有効のまま維持してください。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441414', 1, '`th:action` を使えばThymeleafが自動でCSRFトークンの `<input type="hidden" name="_csrf">` を埋め込んでくれます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441415', 1, 'テスト中に見つかったバグは「原因→修正内容」をPR本文に書くと、講師からの評価がグッと上がります。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441416', 1, '完成した画面のスクリーンショットを `README.md` に貼ると、ポートフォリオとしての見栄えが格段に良くなります。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441501', 1, '毎日10分の朝会（昨日やったこと・今日やること・困っていること）を決めると進捗ズレを防げます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441502', 1, '担当別エラーメッセージの競合を防ぐため、`application.properties` に `spring.messages.basename=messages,messages-member,messages-project,messages-equipment` を設定しておきましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441503', 1, '`User.role` には必ず `@Enumerated(EnumType.STRING)` を付け、数値（ORDINAL）保存を禁止しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441504', 1, 'ログイン成功後は `/dashboard` へ遷移するよう `defaultSuccessUrl("/dashboard", true)` に設定します。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441505', 1, '担当別メッセージファイル（`messages-member/project/equipment.properties`）も空ファイルで先に作っておくと競合しません。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441506', 1, '毎朝必ず `git switch develop && git pull origin develop` してから新ブランチを切りましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441507', 1, 'PRは400行以内を目安に小さく保つと、レビュアーも5〜10分で確認できて開発が止まりません。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441508', 1, 'C2で申請バリデーションエラー時に `loans/list` を再表示するとき、一覧データ（`loans`・`requestableEquipments`）の再セットを忘れないようにしましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441509', 1, 'Aのダッシュボードはこの段階ではB/Cのスタブ値（0件）で崩れず表示されれば合格です（Step 12で実データ接続）。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441510', 1, 'Cの承認・返却PRは、メンバーA・Bも一緒に設計書 `10_状態遷移・排他` と突き合わせて全員レビューしましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441511', 1, '異常系（0件・上限+1文字・権限外の直URLアクセス）を重点的に試すと実務力が上がります。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441512', 1, '解消後は必ずEclipseでクリーンビルド＆起動して、他人の画面も開いて確認しましょう。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441513', 1, '不具合がゼロだった場合も、テスト証跡（実施ログ・SQL結果）をドキュメントへ記録してPRを出すと完璧です。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441514', 1, 'PR本文に `Closes #Issue番号` と書くと、マージと同時に自動でIssueがクローズされて実務っぽくなります！');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441515', 1, 'タグ `v1.0.0` を `main` に打っておくと、実務のリリース管理まで体験できます。');
+INSERT INTO public.hints (problem_id, step_number, content_md)
+VALUES ('44444444-4444-4444-8444-444444441516', 1, '提出URLは最終リリース用PRのURL（例：`https://github.com/team-xxx/teamops-hub/pull/16`）を入力してください。');
 
 -- 7. 権限確認
 GRANT SELECT ON public.courses, public.chapters, public.lessons, public.problems, public.test_cases, public.hints TO authenticated;

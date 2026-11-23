@@ -21,8 +21,8 @@ import { GET as cronSlackGet } from "@/app/api/cron/slack-digest/route";
 import { getAuditLogs } from "@/lib/audit-log";
 
 describe("全機能結合テスト（Features ITA：全問題採点・企業・受講生・管理者）", () => {
-  it("F-ITA-01: 全問題（1年間カリキュラム全156問）の模範解答が /api/problems/submit で全テスト合格する", async () => {
-    expect(SEED_PROBLEMS.length).toBe(156);
+  it("F-ITA-01: 全問題（1年間カリキュラム全176問）の模範解答が /api/problems/submit で全テスト合格する", async () => {
+    expect(SEED_PROBLEMS.length).toBe(176);
     const failedProblems: Array<{
       id: string;
       title: string;
