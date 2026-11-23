@@ -37,7 +37,19 @@ export function isSameCompanyTenant(
 export async function requireApiAuth(
   allowedRoles?: UserRole[]
 ): Promise<ApiAuthResult> {
+  const isProd = process.env.NODE_ENV === "production";
+
   if (!isSupabaseConfigured()) {
+    // 本番環境では環境変数欠落時のデモ認証バイパスを完全禁止（フェイルクローズ：DEBT-002対策）
+    if (isProd) {
+      return {
+        ok: false,
+        response: NextResponse.json(
+          { error: "認証基盤が正しく構成されていません。管理者へお問い合わせください。" },
+          { status: 503 }
+        ),
+      };
+    }
     const demoProfile = await getCurrentProfile();
     const role: UserRole = allowedRoles?.[0] ?? demoProfile.role;
     return { ok: true, profile: { ...demoProfile, role }, role };
@@ -67,12 +79,14 @@ export async function requireApiAuth(
       .maybeSingle();
 
     const metaRole = user.user_metadata?.role as UserRole | undefined;
-    const emailBasedRole: UserRole | undefined =
-      user.email === "admin@example.com"
-        ? "admin"
-        : user.email === "company@example.com"
-        ? "company"
-        : undefined;
+    // 本番環境ではメールアドレスによるロールフォールバックを行わず、DB/Authの正式ロールのみ採用（DEBT-002対策）
+    const emailBasedRole: UserRole | undefined = isProd
+      ? undefined
+      : user.email === "admin@example.com"
+      ? "admin"
+      : user.email === "company@example.com"
+      ? "company"
+      : undefined;
 
     const role: UserRole =
       (dbProfile?.role as UserRole) ?? metaRole ?? emailBasedRole ?? "student";

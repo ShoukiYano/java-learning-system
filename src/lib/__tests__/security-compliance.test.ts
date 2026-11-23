@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 import { NextRequest } from "next/server";
-import { isSameCompanyTenant } from "@/lib/api-auth";
+import { isSameCompanyTenant, requireApiAuth } from "@/lib/api-auth";
 import { DEMO_STUDENTS_ANALYTICS } from "@/lib/mock-analytics";
 import { POST as graduationPost } from "@/app/api/company/graduation/route";
 import { middleware } from "@/middleware";
@@ -94,5 +94,39 @@ describe("セキュリティ必須要件 UT / ITA（IDOR防止・ヘッダー・
     expect(sql).toContain("Admin read audit_logs");
     expect(sql).toContain("Admin or company manage graduation_evaluations");
     expect(sql).toContain("User manage own announcement_reads");
+  });
+
+  // === ITA: 本番ハードニング検証（DEBT-001 / DEBT-002 対策） ===
+  it("ITA-SEC-06: 本番環境でADMIN_GATE_KEY未設定時は既定フォールバックを許さず404でフェイルクローズする", async () => {
+    const prevEnv = process.env.NODE_ENV;
+    const prevKey = process.env.ADMIN_GATE_KEY;
+    try {
+      (process.env as Record<string, string | undefined>).NODE_ENV = "production";
+      delete process.env.ADMIN_GATE_KEY;
+      const res = await middleware(
+        new NextRequest("http://localhost:3000/admin/login?gate=dss-admin-gate-2025")
+      );
+      expect(res.status).toBe(404);
+    } finally {
+      (process.env as Record<string, string | undefined>).NODE_ENV = prevEnv;
+      if (prevKey !== undefined) process.env.ADMIN_GATE_KEY = prevKey;
+    }
+  });
+
+  it("ITA-SEC-07: 本番環境でSupabase未設定時はデモ認証フォールバックを許さず503でフェイルクローズする", async () => {
+    const prevEnv = process.env.NODE_ENV;
+    const prevUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    try {
+      (process.env as Record<string, string | undefined>).NODE_ENV = "production";
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const auth = await requireApiAuth(["admin"]);
+      expect(auth.ok).toBe(false);
+      if (!auth.ok) {
+        expect(auth.response.status).toBe(503);
+      }
+    } finally {
+      (process.env as Record<string, string | undefined>).NODE_ENV = prevEnv;
+      if (prevUrl !== undefined) process.env.NEXT_PUBLIC_SUPABASE_URL = prevUrl;
+    }
   });
 });

@@ -105,14 +105,27 @@ export async function middleware(request: NextRequest) {
   const isSensitivePortal = isAdminPath || isCompanyPath;
 
   // 2. ステルス・ゲートキー検証（/admin/login と /company/login）
-  const expectedAdminGate =
-    process.env.ADMIN_GATE_KEY || "dss-admin-gate-2025";
-  const expectedCompanyGate =
-    process.env.COMPANY_GATE_KEY || "dss-corp-gate-2025";
+  // 本番環境（NODE_ENV=production）では既定フォールバックを一切使用せず、環境変数未設定時はフェイルクローズ（404）とする（DEBT-001対策）
+  const isProd = process.env.NODE_ENV === "production";
+  const expectedAdminGate = isProd
+    ? process.env.ADMIN_GATE_KEY?.trim() || null
+    : process.env.ADMIN_GATE_KEY?.trim() || "dss-admin-gate-2025";
+  const expectedCompanyGate = isProd
+    ? process.env.COMPANY_GATE_KEY?.trim() || null
+    : process.env.COMPANY_GATE_KEY?.trim() || "dss-corp-gate-2025";
 
   if (pathname === "/admin/login") {
     const queryGate = request.nextUrl.searchParams.get("gate");
     const cookieGate = request.cookies.get("dss_admin_gate")?.value;
+
+    if (!expectedAdminGate) {
+      const notFoundUrl = request.nextUrl.clone();
+      notFoundUrl.pathname = "/_not-found";
+      return applySecurityHeaders(
+        NextResponse.rewrite(notFoundUrl, { status: 404 }),
+        true
+      );
+    }
 
     if (queryGate === expectedAdminGate) {
       // クエリパラメータに正しいキーがある場合は HttpOnly Cookie に保存してクエリ無しの綺麗で安全なURLへ遷移
@@ -121,7 +134,7 @@ export async function middleware(request: NextRequest) {
       const redirectRes = NextResponse.redirect(cleanUrl);
       redirectRes.cookies.set("dss_admin_gate", expectedAdminGate, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: isProd,
         sameSite: "lax",
         path: "/",
         maxAge: 60 * 60 * 24 * 30, // 30日間有効
@@ -144,13 +157,22 @@ export async function middleware(request: NextRequest) {
     const queryGate = request.nextUrl.searchParams.get("gate");
     const cookieGate = request.cookies.get("dss_company_gate")?.value;
 
+    if (!expectedCompanyGate) {
+      const notFoundUrl = request.nextUrl.clone();
+      notFoundUrl.pathname = "/_not-found";
+      return applySecurityHeaders(
+        NextResponse.rewrite(notFoundUrl, { status: 404 }),
+        true
+      );
+    }
+
     if (queryGate === expectedCompanyGate) {
       const cleanUrl = request.nextUrl.clone();
       cleanUrl.searchParams.delete("gate");
       const redirectRes = NextResponse.redirect(cleanUrl);
       redirectRes.cookies.set("dss_company_gate", expectedCompanyGate, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: isProd,
         sameSite: "lax",
         path: "/",
         maxAge: 60 * 60 * 24 * 30,
