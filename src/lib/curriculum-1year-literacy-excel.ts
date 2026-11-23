@@ -420,7 +420,7 @@ flowchart TD
 - **正常系**：正しい入力をしたときに期待通り登録・表示されること
 - **異常系**：空欄やマイナス値、存在しないIDを入れたときにクラッシュせず適切なエラーメッセージが出ること
 
-これで3日間のITリテラシー導入は完了です！次は **Excel実務マスター** へ進みましょう。`,
+これでITリテラシー導入は完了です！次は **Excel実務マスター** へ進みましょう。`,
     difficulty: "easy",
     estimated_minutes: 15,
     tags: ["ITリテラシー", "報連相", "テスト"],
@@ -442,7 +442,7 @@ export const EXCEL_CHAPTERS: SeedChapter[] = [
   {
     id: "22222222-2222-4222-8222-222222221201",
     course_id: SEED_EXCEL_COURSE_ID,
-    title: "第1章（1週目）：Excel基本数式・集計関数・絶対参照",
+    title: "第1章：Excel基本数式・集計関数・絶対参照",
     description: "四則演算、SUM/AVERAGE/MAX/MIN、そして実務でつまずきやすい絶対参照（$）を画面上のシートで習得します。",
     order_index: 1,
     lesson_id: "33333333-3333-4333-8333-333333331201",
@@ -451,7 +451,7 @@ export const EXCEL_CHAPTERS: SeedChapter[] = [
   {
     id: "22222222-2222-4222-8222-222222221202",
     course_id: SEED_EXCEL_COURSE_ID,
-    title: "第2章（2週目）：IF・COUNTIF・SUMIFによる条件判定と集計",
+    title: "第2章：IF・COUNTIF・SUMIFによる条件判定と集計",
     description: "目標達成の自動判定や、ステータス別件数調査・部署別金額集計を関数で自動化します。",
     order_index: 2,
     lesson_id: "33333333-3333-4333-8333-333333331202",
@@ -460,7 +460,7 @@ export const EXCEL_CHAPTERS: SeedChapter[] = [
   {
     id: "22222222-2222-4222-8222-222222221203",
     course_id: SEED_EXCEL_COURSE_ID,
-    title: "第3章（3週目）：VLOOKUP・XLOOKUP・IFERRORによるデータ参照",
+    title: "第3章：VLOOKUP・XLOOKUP・IFERRORによるデータ参照",
     description: "マスタ表からの情報自動取得と、実務で必須のエラーハンドリング（IFERROR）を習得します。",
     order_index: 3,
     lesson_id: "33333333-3333-4333-8333-333333331203",
@@ -469,7 +469,7 @@ export const EXCEL_CHAPTERS: SeedChapter[] = [
   {
     id: "22222222-2222-4222-8222-222222221204",
     course_id: SEED_EXCEL_COURSE_ID,
-    title: "第4章（4週目）：実務データ調査・突合チェック・報告レポート作成",
+    title: "第4章：実務データ調査・突合チェック・報告レポート作成",
     description: "文字列整形、発注vs納品データの差異突合、月次報告サマリー表の作成まで実務シナリオで仕上げます。",
     order_index: 4,
     lesson_id: "33333333-3333-4333-8333-333333331204",

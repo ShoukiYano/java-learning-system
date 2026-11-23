@@ -15,7 +15,7 @@ export const HTMLCSS_CHAPTERS: SeedChapter[] = [
   {
     id: "22222222-2222-4222-8222-222222221301",
     course_id: SEED_HTMLCSS_COURSE_ID,
-    title: "第1章（1週目）：HTML基礎（見出し・リスト・リンク・テーブル）",
+    title: "第1章：HTML基礎（見出し・リスト・リンク・テーブル）",
     description: "コードを書いた瞬間に右側のプレビュー画面が変わるライブ演習でHTMLの基本タグを習得します。",
     order_index: 1,
     lesson_id: "33333333-3333-4333-8333-333333331301",
@@ -24,7 +24,7 @@ export const HTMLCSS_CHAPTERS: SeedChapter[] = [
   {
     id: "22222222-2222-4222-8222-222222221302",
     course_id: SEED_HTMLCSS_COURSE_ID,
-    title: "第2章（2週目）：HTMLフォームとCSS装飾・ボックスモデル",
+    title: "第2章：HTMLフォームとCSS装飾・ボックスモデル",
     description: "業務システムに必須の入力フォームと、CSSのクラス・色・余白（padding/margin/border）を学びます。",
     order_index: 2,
     lesson_id: "33333333-3333-4333-8333-333333331302",
@@ -33,7 +33,7 @@ export const HTMLCSS_CHAPTERS: SeedChapter[] = [
   {
     id: "22222222-2222-4222-8222-222222221303",
     course_id: SEED_HTMLCSS_COURSE_ID,
-    title: "第3章（3週目）：Flexbox & CSS Gridによるモダンレイアウト",
+    title: "第3章：Flexbox & CSS Gridによるモダンレイアウト",
     description: "ヘッダーナビゲーション、横並び商品カード、グリッドダッシュボードを自在に配置します。",
     order_index: 3,
     lesson_id: "33333333-3333-4333-8333-333333331303",
@@ -42,7 +42,7 @@ export const HTMLCSS_CHAPTERS: SeedChapter[] = [
   {
     id: "22222222-2222-4222-8222-222222221304",
     course_id: SEED_HTMLCSS_COURSE_ID,
-    title: "第4章（4週目）：レスポンシブ対応＆業務Web画面総合仕上げ",
+    title: "第4章：レスポンシブ対応＆業務Web画面総合仕上げ",
     description: "ホバー効果・バッジ配置・メディアクエリによるスマホ対応・Spring Boot画面を意識した一覧ページを完成させます。",
     order_index: 4,
     lesson_id: "33333333-3333-4333-8333-333333331304",

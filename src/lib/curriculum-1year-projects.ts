@@ -157,7 +157,7 @@ export const SPRINGBOOT_PROJECT_CHAPTERS: SeedChapter[] = [
   {
     id: SB_CH1,
     course_id: SEED_SPRINGBOOT_PROJECT_COURSE_ID,
-    title: "第1章（1〜2週目）：環境構築と「はじめてのSpring Boot画面」（Step 1〜4）",
+    title: "第1章：環境構築と「はじめてのSpring Boot画面」（Step 1〜4）",
     description: "Eclipse・PostgreSQL・Spring Boot導入から、はじめてブラウザに1画面と共通ヘッダーを出すまでを1歩ずつ進めます。",
     order_index: 1,
     lesson_id: SB_LS1,
@@ -166,7 +166,7 @@ export const SPRINGBOOT_PROJECT_CHAPTERS: SeedChapter[] = [
   {
     id: SB_CH2,
     course_id: SEED_SPRINGBOOT_PROJECT_COURSE_ID,
-    title: "第2章（3〜4週目）：DB構築と「見る機能（Read）」（Step 5〜8）",
+    title: "第2章：DB構築と「見る機能（Read）」（Step 5〜8）",
     description: "3テーブルDDL作成、Entity/Repositoryのvalidate突破、商品一覧・在庫少バッジ・複合検索・詳細画面を順に作ります。",
     order_index: 2,
     lesson_id: SB_LS2,
@@ -175,7 +175,7 @@ export const SPRINGBOOT_PROJECT_CHAPTERS: SeedChapter[] = [
   {
     id: SB_CH3,
     course_id: SEED_SPRINGBOOT_PROJECT_COURSE_ID,
-    title: "第3章（5〜6週目）：「作る・直す・消す（CRUD）」と入力チェック（Step 9〜12）",
+    title: "第3章：「作る・直す・消す（CRUD）」と入力チェック（Step 9〜12）",
     description: "新規登録（PRG）、形式＆業務バリデーション（SKU重複）、編集、論理削除を1機能ずつ丁寧に実装します。",
     order_index: 3,
     lesson_id: SB_LS3,
@@ -184,7 +184,7 @@ export const SPRINGBOOT_PROJECT_CHAPTERS: SeedChapter[] = [
   {
     id: SB_CH4,
     course_id: SEED_SPRINGBOOT_PROJECT_COURSE_ID,
-    title: "第4章（7〜8週目）：ログイン認証・エラー画面・テスト＆最終提出（Step 13〜16）",
+    title: "第4章：ログイン認証・エラー画面・テスト＆最終提出（Step 13〜16）",
     description: "Spring Security認証、共通エラー画面、テスト仕様書TC-001〜022検証、README整備で実務品質へ仕上げます。",
     order_index: 4,
     lesson_id: SB_LS4,
@@ -965,7 +965,7 @@ export const TEAM_PROJECT_CHAPTERS: SeedChapter[] = [
   {
     id: TM_CH1,
     course_id: SEED_TEAM_PROJECT_COURSE_ID,
-    title: "第1章（1か月目）：チーム始動・Git運用・共通基盤の協働構築（Step 1〜5）",
+    title: "第1章：チーム始動・Git運用・共通基盤の協働構築（Step 1〜5）",
     description: "3名分担と所有権合意、共通6テーブルDB、ADMIN/USER認証、403保護、共通ナビ＆IF契約スタブまで全員で土台を固めます。",
     order_index: 1,
     lesson_id: TM_LS1,
@@ -974,7 +974,7 @@ export const TEAM_PROJECT_CHAPTERS: SeedChapter[] = [
   {
     id: TM_CH2,
     course_id: SEED_TEAM_PROJECT_COURSE_ID,
-    title: "第2章（2か月目）：担当3画面の並行開発とPR相互レビュー（Step 6〜11）",
+    title: "第2章：担当3画面の並行開発とPR相互レビュー（Step 6〜11）",
     description: "各自の専有パッケージで1画面ずつ小さくPRを出し合い、相互レビュー・状態遷移・排他ロック・単体テストを完遂します。",
     order_index: 2,
     lesson_id: TM_LS2,
@@ -983,7 +983,7 @@ export const TEAM_PROJECT_CHAPTERS: SeedChapter[] = [
   {
     id: TM_CH3,
     course_id: SEED_TEAM_PROJECT_COURSE_ID,
-    title: "第3章（3か月目前半）：横断統合・コンフリクト解消・結合テスト（Step 12〜14）",
+    title: "第3章：横断統合・コンフリクト解消・結合テスト（Step 12〜14）",
     description: "IF契約の本接続、コンフリクト解消実践、権限総当たり＆同時承認排他検証、横断結合テストIT-001〜012とIssue改修を行います。",
     order_index: 3,
     lesson_id: TM_LS3,
@@ -992,7 +992,7 @@ export const TEAM_PROJECT_CHAPTERS: SeedChapter[] = [
   {
     id: TM_CH4,
     course_id: SEED_TEAM_PROJECT_COURSE_ID,
-    title: "第4章（3か月目後半）：リリースPR・GitHub監査・デモ発表＆最終提出（Step 15〜16）",
+    title: "第4章：リリースPR・GitHub監査・デモ発表＆最終提出（Step 15〜16）",
     description: "develop→mainリリース、3名全員のGitHub貢献監査（IT-007）、README整備と最終デモ発表で集大成を迎えます。",
     order_index: 4,
     lesson_id: TM_LS4,

@@ -11,7 +11,7 @@
 
 -- 1. 全11コースの登録・並び順更新
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111111', 'ITリテラシー導入コース：IT・Web開発の仕組みと現場基礎（3日間）', 'Webアプリが動く仕組み・PC/パス/UTF-8・HTTP/HTTPS・情報セキュリティ・開発工程（要件定義〜テスト）・現場の質問力まで、Mermaid図解と確認テストでわかりやすく習得します。', 1, true, NULL)
+VALUES ('11111111-1111-4111-8111-111111111111', 'ITリテラシー導入コース：IT・Web開発の仕組みと現場基礎', 'Webアプリが動く仕組み・PC/パス/UTF-8・HTTP/HTTPS・情報セキュリティ・開発工程（要件定義〜テスト）・現場の質問力まで、Mermaid図解と確認テストでわかりやすく習得します。', 1, true, NULL)
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -20,7 +20,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111112', 'Excel実務マスターコース：調査・突合・報告レポート実践（1か月）', 'ブラウザ上のインタラクティブExcelシートで手を動かしながら、四則演算・SUM/AVERAGE・絶対参照・IF・COUNTIF/SUMIF・VLOOKUP/XLOOKUP・IFERROR・データ突合と月次報告集計を習得します。', 2, true, '11111111-1111-4111-8111-111111111111')
+VALUES ('11111111-1111-4111-8111-111111111112', 'Excel実務マスターコース：調査・突合・報告レポート実践', 'ブラウザ上のインタラクティブExcelシートで手を動かしながら、四則演算・SUM/AVERAGE・絶対参照・IF・COUNTIF/SUMIF・VLOOKUP/XLOOKUP・IFERROR・データ突合と月次報告集計を習得します。', 2, true, '11111111-1111-4111-8111-111111111111')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -29,7 +29,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111113', 'HTML＆CSS実践コース：リアルタイムプレビュー画面構築（1か月）', 'コードを書いた瞬間に右側のプレビュー画面へ反映される実践演習で、見出し・テーブル・入力フォーム・ボックスモデル・Flexbox・CSS Grid・レスポンシブ対応まで習得します。', 3, true, '11111111-1111-4111-8111-111111111112')
+VALUES ('11111111-1111-4111-8111-111111111113', 'HTML＆CSS実践コース：リアルタイムプレビュー画面構築', 'コードを書いた瞬間に右側のプレビュー画面へ反映される実践演習で、見出し・テーブル・入力フォーム・ボックスモデル・Flexbox・CSS Grid・レスポンシブ対応まで習得します。', 3, true, '11111111-1111-4111-8111-111111111112')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -38,7 +38,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111101', 'Java入門コース：ゼロから学ぶ基礎文法とオブジェクト指向入門（Java 4か月①）', '標準出力・変数・データ型・四則演算・文字列操作・Scanner入力・条件分岐（if/switch）・ループ・二重ループ・配列・線形探索・メソッド分割・クラス設計と在庫/カート演習まで全30問のコーディング演習で基礎を徹底定着させます。', 4, true, '11111111-1111-4111-8111-111111111113')
+VALUES ('11111111-1111-4111-8111-111111111101', 'Java入門コース：ゼロから学ぶ基礎文法とオブジェクト指向入門', '標準出力・変数・データ型・四則演算・文字列操作・Scanner入力・条件分岐（if/switch）・ループ・二重ループ・配列・線形探索・メソッド分割・クラス設計と在庫/カート演習まで全30問のコーディング演習で基礎を徹底定着させます。', 4, true, '11111111-1111-4111-8111-111111111113')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -47,7 +47,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('0b083361-6d07-47a9-a787-508913d9efa8', 'Java初級コース：二次元配列・メソッド設計・オブジェクト指向応用（Java 4か月②）', '店舗売上の二次元配列集計、オーバーロード設計、staticによる自動採番、決済インターフェースとポリモーフィズムなど実務基礎へ直結するオブジェクト指向応用を習得します。', 5, true, '11111111-1111-4111-8111-111111111101')
+VALUES ('0b083361-6d07-47a9-a787-508913d9efa8', 'Java初級コース：二次元配列・メソッド設計・オブジェクト指向応用', '店舗売上の二次元配列集計、オーバーロード設計、staticによる自動採番、決済インターフェースとポリモーフィズムなど実務基礎へ直結するオブジェクト指向応用を習得します。', 5, true, '11111111-1111-4111-8111-111111111101')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -56,7 +56,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('c4bd0c61-1a12-4d2a-af9d-ac2eb8a12165', 'Java中級コース：コレクション・標準API・CSV処理・例外ハンドリング（Java 4か月③）', '実務で毎日使う ArrayList / HashMap による顧客検索・売上集計、CSVデータのパース処理、try-catch / throw を使った安全な在庫引当・例外制御を習得します。', 6, true, '0b083361-6d07-47a9-a787-508913d9efa8')
+VALUES ('c4bd0c61-1a12-4d2a-af9d-ac2eb8a12165', 'Java中級コース：コレクション・標準API・CSV処理・例外ハンドリング', '実務で毎日使う ArrayList / HashMap による顧客検索・売上集計、CSVデータのパース処理、try-catch / throw を使った安全な在庫引当・例外制御を習得します。', 6, true, '0b083361-6d07-47a9-a787-508913d9efa8')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -65,7 +65,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('bb827c60-3d1d-40db-ac42-5da47866d141', 'Java上級コース：DAO設計・APIバリデーション・顧客案件管理実践（Java 4か月④）', 'DAOリポジトリ設計、REST API入力バリデーション＆ステータス判定、顧客・案件管理システムのService層集計、境界値単体テスト検証など案件参画レベルの実践力を養います。', 7, true, 'c4bd0c61-1a12-4d2a-af9d-ac2eb8a12165')
+VALUES ('bb827c60-3d1d-40db-ac42-5da47866d141', 'Java上級コース：DAO設計・APIバリデーション・顧客案件管理実践', 'DAOリポジトリ設計、REST API入力バリデーション＆ステータス判定、顧客・案件管理システムのService層集計、境界値単体テスト検証など案件参画レベルの実践力を養います。', 7, true, 'c4bd0c61-1a12-4d2a-af9d-ac2eb8a12165')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -74,7 +74,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111102', 'SQL実践コース：データ抽出・集計・テーブル結合マスター（2か月）', 'SELECT文の基本とWHERE条件指定からスタートし、GROUP BY / HAVING による集計分析、INNER JOIN / LEFT JOIN による複数テーブル結合まで全30問の実践クエリ演習で習得します。', 8, true, 'bb827c60-3d1d-40db-ac42-5da47866d141')
+VALUES ('11111111-1111-4111-8111-111111111102', 'SQL実践コース：データ抽出・集計・テーブル結合マスター', 'SELECT文の基本とWHERE条件指定からスタートし、GROUP BY / HAVING による集計分析、INNER JOIN / LEFT JOIN による複数テーブル結合まで全30問の実践クエリ演習で習得します。', 8, true, 'bb827c60-3d1d-40db-ac42-5da47866d141')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -83,7 +83,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('4107aaa5-10f0-41ca-8c22-a3a99eeebcbb', 'Git実践マスター：ビジュアル分岐・マージ演習（3日間）', '以降の開発・チーム開発に不可欠なGit操作を、ブラウザ上でコミットやブランチ分岐・マージ・リベースを視覚化しながら直感的に習得します。', 9, true, '11111111-1111-4111-8111-111111111102')
+VALUES ('4107aaa5-10f0-41ca-8c22-a3a99eeebcbb', 'Git実践マスター：ビジュアル分岐・マージ演習', '以降の開発・チーム開発に不可欠なGit操作を、ブラウザ上でコミットやブランチ分岐・マージ・リベースを視覚化しながら直感的に習得します。', 9, true, '11111111-1111-4111-8111-111111111102')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -92,7 +92,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111114', 'Spring Boot＋SQL 個人開発：商品管理システム構築（2か月・詳細設計書付）', 'Eclipse・Spring Boot・PostgreSQL・GitHubの導入から、配布Excel詳細設計書（全7シート）を読み解いて商品管理システム（検索・CRUD・バリデーション・ログイン）を構築しGitHub URLで提出します。', 10, true, '4107aaa5-10f0-41ca-8c22-a3a99eeebcbb')
+VALUES ('11111111-1111-4111-8111-111111111114', 'Spring Boot＋SQL 個人開発：商品管理システム構築（詳細設計書付）', 'Eclipse・Spring Boot・PostgreSQL・GitHubの導入から、配布Excel詳細設計書（全7シート）を読み解いて商品管理システム（検索・CRUD・バリデーション・ログイン）を構築しGitHub URLで提出します。', 10, true, '4107aaa5-10f0-41ca-8c22-a3a99eeebcbb')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -101,7 +101,7 @@ ON CONFLICT (id) DO UPDATE SET
   prerequisite_course_id = EXCLUDED.prerequisite_course_id;
 
 INSERT INTO public.courses (id, title, description, order_index, is_published, prerequisite_course_id)
-VALUES ('11111111-1111-4111-8111-111111111115', 'チーム開発実践（3人1組）：ログイン機能付き総合業務Webシステム（3か月・詳細設計書付）', 'Eclipse・Spring Boot・PostgreSQL・GitHub（ブランチ/PR/レビュー運用）を用い、3人1組・1人3ページ（計9画面）＋共通ログイン機能の業務システムをExcel詳細設計書から構築しGitHub URLで提出します。', 11, true, '11111111-1111-4111-8111-111111111114')
+VALUES ('11111111-1111-4111-8111-111111111115', 'チーム開発実践（3人1組）：ログイン機能付き総合業務Webシステム（詳細設計書付）', 'Eclipse・Spring Boot・PostgreSQL・GitHub（ブランチ/PR/レビュー運用）を用い、3人1組・1人3ページ（計9画面）＋共通ログイン機能の業務システムをExcel詳細設計書から構築しGitHub URLで提出します。', 11, true, '11111111-1111-4111-8111-111111111114')
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,
   description = EXCLUDED.description,
@@ -138,7 +138,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221201', '11111111-1111-4111-8111-111111111112', '第1章（1週目）：Excel基本数式・集計関数・絶対参照', '四則演算、SUM/AVERAGE/MAX/MIN、そして実務でつまずきやすい絶対参照（$）を画面上のシートで習得します。', 1, true)
+VALUES ('22222222-2222-4222-8222-222222221201', '11111111-1111-4111-8111-111111111112', '第1章：Excel基本数式・集計関数・絶対参照', '四則演算、SUM/AVERAGE/MAX/MIN、そして実務でつまずきやすい絶対参照（$）を画面上のシートで習得します。', 1, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -147,7 +147,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221202', '11111111-1111-4111-8111-111111111112', '第2章（2週目）：IF・COUNTIF・SUMIFによる条件判定と集計', '目標達成の自動判定や、ステータス別件数調査・部署別金額集計を関数で自動化します。', 2, true)
+VALUES ('22222222-2222-4222-8222-222222221202', '11111111-1111-4111-8111-111111111112', '第2章：IF・COUNTIF・SUMIFによる条件判定と集計', '目標達成の自動判定や、ステータス別件数調査・部署別金額集計を関数で自動化します。', 2, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -156,7 +156,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221203', '11111111-1111-4111-8111-111111111112', '第3章（3週目）：VLOOKUP・XLOOKUP・IFERRORによるデータ参照', 'マスタ表からの情報自動取得と、実務で必須のエラーハンドリング（IFERROR）を習得します。', 3, true)
+VALUES ('22222222-2222-4222-8222-222222221203', '11111111-1111-4111-8111-111111111112', '第3章：VLOOKUP・XLOOKUP・IFERRORによるデータ参照', 'マスタ表からの情報自動取得と、実務で必須のエラーハンドリング（IFERROR）を習得します。', 3, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -165,7 +165,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221204', '11111111-1111-4111-8111-111111111112', '第4章（4週目）：実務データ調査・突合チェック・報告レポート作成', '文字列整形、発注vs納品データの差異突合、月次報告サマリー表の作成まで実務シナリオで仕上げます。', 4, true)
+VALUES ('22222222-2222-4222-8222-222222221204', '11111111-1111-4111-8111-111111111112', '第4章：実務データ調査・突合チェック・報告レポート作成', '文字列整形、発注vs納品データの差異突合、月次報告サマリー表の作成まで実務シナリオで仕上げます。', 4, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -174,7 +174,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221301', '11111111-1111-4111-8111-111111111113', '第1章（1週目）：HTML基礎（見出し・リスト・リンク・テーブル）', 'コードを書いた瞬間に右側のプレビュー画面が変わるライブ演習でHTMLの基本タグを習得します。', 1, true)
+VALUES ('22222222-2222-4222-8222-222222221301', '11111111-1111-4111-8111-111111111113', '第1章：HTML基礎（見出し・リスト・リンク・テーブル）', 'コードを書いた瞬間に右側のプレビュー画面が変わるライブ演習でHTMLの基本タグを習得します。', 1, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -183,7 +183,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221302', '11111111-1111-4111-8111-111111111113', '第2章（2週目）：HTMLフォームとCSS装飾・ボックスモデル', '業務システムに必須の入力フォームと、CSSのクラス・色・余白（padding/margin/border）を学びます。', 2, true)
+VALUES ('22222222-2222-4222-8222-222222221302', '11111111-1111-4111-8111-111111111113', '第2章：HTMLフォームとCSS装飾・ボックスモデル', '業務システムに必須の入力フォームと、CSSのクラス・色・余白（padding/margin/border）を学びます。', 2, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -192,7 +192,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221303', '11111111-1111-4111-8111-111111111113', '第3章（3週目）：Flexbox & CSS Gridによるモダンレイアウト', 'ヘッダーナビゲーション、横並び商品カード、グリッドダッシュボードを自在に配置します。', 3, true)
+VALUES ('22222222-2222-4222-8222-222222221303', '11111111-1111-4111-8111-111111111113', '第3章：Flexbox & CSS Gridによるモダンレイアウト', 'ヘッダーナビゲーション、横並び商品カード、グリッドダッシュボードを自在に配置します。', 3, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -201,7 +201,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221304', '11111111-1111-4111-8111-111111111113', '第4章（4週目）：レスポンシブ対応＆業務Web画面総合仕上げ', 'ホバー効果・バッジ配置・メディアクエリによるスマホ対応・Spring Boot画面を意識した一覧ページを完成させます。', 4, true)
+VALUES ('22222222-2222-4222-8222-222222221304', '11111111-1111-4111-8111-111111111113', '第4章：レスポンシブ対応＆業務Web画面総合仕上げ', 'ホバー効果・バッジ配置・メディアクエリによるスマホ対応・Spring Boot画面を意識した一覧ページを完成させます。', 4, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -210,7 +210,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221401', '11111111-1111-4111-8111-111111111114', '第1章（1〜2週目）：環境構築と「はじめてのSpring Boot画面」（Step 1〜4）', 'Eclipse・PostgreSQL・Spring Boot導入から、はじめてブラウザに1画面と共通ヘッダーを出すまでを1歩ずつ進めます。', 1, true)
+VALUES ('22222222-2222-4222-8222-222222221401', '11111111-1111-4111-8111-111111111114', '第1章：環境構築と「はじめてのSpring Boot画面」（Step 1〜4）', 'Eclipse・PostgreSQL・Spring Boot導入から、はじめてブラウザに1画面と共通ヘッダーを出すまでを1歩ずつ進めます。', 1, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -219,7 +219,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221402', '11111111-1111-4111-8111-111111111114', '第2章（3〜4週目）：DB構築と「見る機能（Read）」（Step 5〜8）', '3テーブルDDL作成、Entity/Repositoryのvalidate突破、商品一覧・在庫少バッジ・複合検索・詳細画面を順に作ります。', 2, true)
+VALUES ('22222222-2222-4222-8222-222222221402', '11111111-1111-4111-8111-111111111114', '第2章：DB構築と「見る機能（Read）」（Step 5〜8）', '3テーブルDDL作成、Entity/Repositoryのvalidate突破、商品一覧・在庫少バッジ・複合検索・詳細画面を順に作ります。', 2, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -228,7 +228,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221403', '11111111-1111-4111-8111-111111111114', '第3章（5〜6週目）：「作る・直す・消す（CRUD）」と入力チェック（Step 9〜12）', '新規登録（PRG）、形式＆業務バリデーション（SKU重複）、編集、論理削除を1機能ずつ丁寧に実装します。', 3, true)
+VALUES ('22222222-2222-4222-8222-222222221403', '11111111-1111-4111-8111-111111111114', '第3章：「作る・直す・消す（CRUD）」と入力チェック（Step 9〜12）', '新規登録（PRG）、形式＆業務バリデーション（SKU重複）、編集、論理削除を1機能ずつ丁寧に実装します。', 3, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -237,7 +237,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221404', '11111111-1111-4111-8111-111111111114', '第4章（7〜8週目）：ログイン認証・エラー画面・テスト＆最終提出（Step 13〜16）', 'Spring Security認証、共通エラー画面、テスト仕様書TC-001〜022検証、README整備で実務品質へ仕上げます。', 4, true)
+VALUES ('22222222-2222-4222-8222-222222221404', '11111111-1111-4111-8111-111111111114', '第4章：ログイン認証・エラー画面・テスト＆最終提出（Step 13〜16）', 'Spring Security認証、共通エラー画面、テスト仕様書TC-001〜022検証、README整備で実務品質へ仕上げます。', 4, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -246,7 +246,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221501', '11111111-1111-4111-8111-111111111115', '第1章（1か月目）：チーム始動・Git運用・共通基盤の協働構築（Step 1〜5）', '3名分担と所有権合意、共通6テーブルDB、ADMIN/USER認証、403保護、共通ナビ＆IF契約スタブまで全員で土台を固めます。', 1, true)
+VALUES ('22222222-2222-4222-8222-222222221501', '11111111-1111-4111-8111-111111111115', '第1章：チーム始動・Git運用・共通基盤の協働構築（Step 1〜5）', '3名分担と所有権合意、共通6テーブルDB、ADMIN/USER認証、403保護、共通ナビ＆IF契約スタブまで全員で土台を固めます。', 1, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -255,7 +255,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221502', '11111111-1111-4111-8111-111111111115', '第2章（2か月目）：担当3画面の並行開発とPR相互レビュー（Step 6〜11）', '各自の専有パッケージで1画面ずつ小さくPRを出し合い、相互レビュー・状態遷移・排他ロック・単体テストを完遂します。', 2, true)
+VALUES ('22222222-2222-4222-8222-222222221502', '11111111-1111-4111-8111-111111111115', '第2章：担当3画面の並行開発とPR相互レビュー（Step 6〜11）', '各自の専有パッケージで1画面ずつ小さくPRを出し合い、相互レビュー・状態遷移・排他ロック・単体テストを完遂します。', 2, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -264,7 +264,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221503', '11111111-1111-4111-8111-111111111115', '第3章（3か月目前半）：横断統合・コンフリクト解消・結合テスト（Step 12〜14）', 'IF契約の本接続、コンフリクト解消実践、権限総当たり＆同時承認排他検証、横断結合テストIT-001〜012とIssue改修を行います。', 3, true)
+VALUES ('22222222-2222-4222-8222-222222221503', '11111111-1111-4111-8111-111111111115', '第3章：横断統合・コンフリクト解消・結合テスト（Step 12〜14）', 'IF契約の本接続、コンフリクト解消実践、権限総当たり＆同時承認排他検証、横断結合テストIT-001〜012とIssue改修を行います。', 3, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -273,7 +273,7 @@ ON CONFLICT (id) DO UPDATE SET
   is_published = EXCLUDED.is_published;
 
 INSERT INTO public.chapters (id, course_id, title, description, order_index, is_published)
-VALUES ('22222222-2222-4222-8222-222222221504', '11111111-1111-4111-8111-111111111115', '第4章（3か月目後半）：リリースPR・GitHub監査・デモ発表＆最終提出（Step 15〜16）', 'develop→mainリリース、3名全員のGitHub貢献監査（IT-007）、README整備と最終デモ発表で集大成を迎えます。', 4, true)
+VALUES ('22222222-2222-4222-8222-222222221504', '11111111-1111-4111-8111-111111111115', '第4章：リリースPR・GitHub監査・デモ発表＆最終提出（Step 15〜16）', 'develop→mainリリース、3名全員のGitHub貢献監査（IT-007）、README整備と最終デモ発表で集大成を迎えます。', 4, true)
 ON CONFLICT (id) DO UPDATE SET
   course_id = EXCLUDED.course_id,
   title = EXCLUDED.title,
@@ -669,7 +669,7 @@ flowchart TD
 - **正常系**：正しい入力をしたときに期待通り登録・表示されること
 - **異常系**：空欄やマイナス値、存在しないIDを入れたときにクラッシュせず適切なエラーメッセージが出ること
 
-これで3日間のITリテラシー導入は完了です！次は **Excel実務マスター** へ進みましょう。',
+これでITリテラシー導入は完了です！次は **Excel実務マスター** へ進みましょう。',
   'easy', 15, ARRAY['ITリテラシー', '報連相', 'テスト'],
   '{"questions":[{"id":"q1","question":"エラーが起きて15〜30分調べても解決しないとき、現場で最も評価される質問の仕方はどれですか？","options":["「動きません。助けてください」とだけ送る","「やりたいこと・試したこと・出たエラー文（スクショ）」を整理して質問する","誰にも相談せず3日間ずっと黙って悩む","エラー画面を閉じて見なかったことにする"],"correctIndex":1,"explanation":"①ゴール（やりたいこと）②現状（エラー全文）③試したこと の3点を添えると回答者が即座に原因を特定できます。"},{"id":"q2","question":"「単体テスト」と「結合テスト」の違いとして正しいものはどれですか？","options":["単体テストは1つの機能・画面単位の確認、結合テストは複数画面やDB・他メンバー機能との連携確認","どちらも全く同じ意味である","単体テストはリリース後に行う","結合テストは設計書を見ないで行う"],"correctIndex":0,"explanation":"小さな部品が正しく動くか（単体）→ 繋げたときに全体が正しく動くか（結合）の順で品質を担保します。"}]}', '{"q1":1,"q2":0}', '「やりたいこと・エラー全文・試したこと」の3点セットは、この学習システムの講師質問チャットでもそのまま活用してください。',
   6, true
