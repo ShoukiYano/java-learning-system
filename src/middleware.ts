@@ -135,9 +135,9 @@ export async function middleware(request: NextRequest) {
       redirectRes.cookies.set("dss_admin_gate", expectedAdminGate, {
         httpOnly: true,
         secure: isProd,
-        sameSite: "lax",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 30, // 30日間有効
+        sameSite: "strict",
+        path: "/admin",
+        maxAge: 60 * 10, // 10分間のみ有効（ログイン完了後は不要・共有PCリスク低減）
       });
       return applySecurityHeaders(redirectRes, true);
     }
@@ -173,9 +173,9 @@ export async function middleware(request: NextRequest) {
       redirectRes.cookies.set("dss_company_gate", expectedCompanyGate, {
         httpOnly: true,
         secure: isProd,
-        sameSite: "lax",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "strict",
+        path: "/company",
+        maxAge: 60 * 10, // 10分間のみ有効
       });
       return applySecurityHeaders(redirectRes, true);
     }

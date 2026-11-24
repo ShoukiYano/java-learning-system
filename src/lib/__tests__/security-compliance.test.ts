@@ -129,4 +129,17 @@ describe("セキュリティ必須要件 UT / ITA（IDOR防止・ヘッダー・
       if (prevUrl !== undefined) process.env.NEXT_PUBLIC_SUPABASE_URL = prevUrl;
     }
   });
+
+  it("ITA-SEC-08: ゲートCookieは10分(600秒)・HttpOnly・SameSite=Strict・ログインパス限定で発行される", async () => {
+    const res = await middleware(
+      new NextRequest("http://localhost:3000/admin/login?gate=dss-admin-gate-2025")
+    );
+    expect(res.status).toBe(307);
+    const setCookie = res.headers.get("set-cookie") || "";
+    expect(setCookie).toContain("dss_admin_gate=");
+    expect(setCookie).toMatch(/Max-Age=600/i);
+    expect(setCookie).toMatch(/HttpOnly/i);
+    expect(setCookie).toMatch(/SameSite=strict/i);
+    expect(setCookie).toMatch(/Path=\/admin/i);
+  });
 });

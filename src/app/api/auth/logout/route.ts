@@ -41,6 +41,9 @@ export async function POST() {
 
     const res = NextResponse.json({ ok: true });
     res.headers.set("Cache-Control", "no-store");
+    // ログアウト時に管理者・企業ゲートCookieも即座に破棄（共有PCリスク低減）
+    res.cookies.set("dss_admin_gate", "", { path: "/admin", maxAge: 0, httpOnly: true, sameSite: "strict" });
+    res.cookies.set("dss_company_gate", "", { path: "/company", maxAge: 0, httpOnly: true, sameSite: "strict" });
     return res;
   } catch {
     return NextResponse.json({ ok: true });
