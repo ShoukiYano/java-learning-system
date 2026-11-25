@@ -15,6 +15,7 @@
 import crypto from "crypto";
 import { StudentAnalyticsRecord } from "@/lib/mock-analytics";
 import { TrainingMilestone } from "@/types/database";
+import { MAX_QA_IMAGE_BYTES } from "@/lib/qa-attachments";
 
 export interface SlackSendResult {
   ok: boolean;
@@ -502,11 +503,12 @@ export async function fetchSlackUserName(
 }
 
 /**
- * Slackのプライベート画像URLをBot Tokenでダウンロードする
+ * Slackのプライベート画像URLをBot Tokenでダウンロードする（サイズ上限付き）
  */
 export async function downloadSlackFileBuffer(
   botToken: string,
-  privateUrl: string
+  privateUrl: string,
+  maxBytes = MAX_QA_IMAGE_BYTES
 ): Promise<{ buffer: Buffer; contentType: string } | null> {
   try {
     if (!privateUrl.startsWith("https://files.slack.com/")) {
@@ -516,7 +518,20 @@ export async function downloadSlackFileBuffer(
       headers: { Authorization: `Bearer ${botToken}` },
     });
     if (!res.ok) return null;
+
+    const contentLengthHeader = res.headers.get("content-length");
+    if (contentLengthHeader) {
+      const contentLength = Number(contentLengthHeader);
+      if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+        return null;
+      }
+    }
+
     const arrayBuffer = await res.arrayBuffer();
+    if (arrayBuffer.byteLength > maxBytes) {
+      return null;
+    }
+
     const contentType = res.headers.get("content-type") || "image/png";
     return { buffer: Buffer.from(arrayBuffer), contentType };
   } catch {

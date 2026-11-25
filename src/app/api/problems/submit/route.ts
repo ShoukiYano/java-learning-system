@@ -38,12 +38,16 @@ import {
   detectProblemLanguage,
 } from "@/lib/seed-data";
 import { isSupabaseConfigured, getCoursesWithProgress } from "@/lib/data-service";
+import { requireApiAuth } from "@/lib/api-auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SubmissionStatus, TestCase } from "@/types/database";
 
+/** 提出コードのUTF-8最大バイト長（64KB） */
+const MAX_CODE_BYTES = 65536;
+
 /**
- * 簡易レート制限用のIP・問題キーごとの最終提出タイムスタンプ管理マップ
+ * 簡易レート制限用のユーザー/IP・問題キーごとの最終提出タイムスタンプ管理マップ
  */
 const recentSubmitMap = new Map<string, number>();
 
@@ -91,30 +95,78 @@ export interface TestCaseClientJudgeResult {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const {
-      problemId,
-      code,
-      timeSpentSeconds = 0,
-      unlockedHintStep = 0,
-    }: {
-      problemId: string;
-      code: string;
-      timeSpentSeconds?: number;
-      unlockedHintStep?: number;
-    } = body;
+    // 1. 共通認証・認可ガード（本番Supabase未設定は503、未認証は401、profiles欠落・ロール外は403）
+    const auth = await requireApiAuth(["student", "company", "admin"]);
+    if (!auth.ok) {
+      return auth.response;
+    }
 
-    // パラメータ検証
-    if (!problemId || typeof code !== "string") {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "リクエスト形式が不正です。" },
+        { status: 400 }
+      );
+    }
+
+    const {
+      problemId: rawProblemId,
+      code,
+      timeSpentSeconds: rawTimeSpent = 0,
+      unlockedHintStep: rawHintStep = 0,
+    }: {
+      problemId?: unknown;
+      code?: unknown;
+      timeSpentSeconds?: unknown;
+      unlockedHintStep?: unknown;
+    } = body ?? {};
+
+    // 2. パラメータ型検証・サイズ上限チェック（UTF-8 64KB）
+    if (
+      typeof rawProblemId !== "string" ||
+      rawProblemId.trim().length < 1 ||
+      rawProblemId.trim().length > 128 ||
+      typeof code !== "string"
+    ) {
       return NextResponse.json(
         { error: "problemId と code は必須です。" },
         { status: 400 }
       );
     }
+    const problemId = rawProblemId.trim();
 
-    // レート制限（1.5秒以内の連打を防止）
-    const clientIp = request.headers.get("x-forwarded-for") ?? "local";
-    const lastTs = recentSubmitMap.get(`${clientIp}:${problemId}`) ?? 0;
+    if (Buffer.byteLength(code, "utf8") > MAX_CODE_BYTES) {
+      return NextResponse.json(
+        {
+          error:
+            "提出コードのサイズが上限（64KB）を超えています。コードを短くして再提出してください。",
+        },
+        { status: 413 }
+      );
+    }
+
+    const parsedTimeSpent = Number(rawTimeSpent);
+    const timeSpentSeconds = Number.isFinite(parsedTimeSpent)
+      ? Math.min(86400, Math.max(0, parsedTimeSpent))
+      : 0;
+
+    const parsedHintStep = Number(rawHintStep);
+    const unlockedHintStep = Number.isFinite(parsedHintStep)
+      ? Math.min(3, Math.max(0, Math.trunc(parsedHintStep)))
+      : 0;
+
+    // 3. レート制限（1.5秒以内の連打を防止）
+    const supabaseEnabled = isSupabaseConfigured();
+    const clientIp =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip")?.trim() ||
+      "local";
+    const rateLimitKey = supabaseEnabled
+      ? `${auth.profile.id}:${problemId}`
+      : `demo:${clientIp}:${problemId}`;
+    const lastTs = recentSubmitMap.get(rateLimitKey) ?? 0;
     const now = Date.now();
     if (now - lastTs < 1500) {
       return NextResponse.json(
@@ -122,11 +174,11 @@ export async function POST(request: NextRequest) {
         { status: 429 }
       );
     }
-    recentSubmitMap.set(`${clientIp}:${problemId}`, now);
+    recentSubmitMap.set(rateLimitKey, now);
 
     const seedProb = SEED_PROBLEMS.find((p) => p.id === problemId);
 
-    // シード外（管理画面で新規作成された問題）のメタデータをDBから取得
+    // 4. シード外（管理画面で新規作成された問題）のメタデータをDBから取得（エラー時は503 Fail-Closed）
     let dbProblemMeta: {
       tags: string[];
       starter_code: string;
@@ -134,18 +186,31 @@ export async function POST(request: NextRequest) {
       course_id: string | null;
     } | null = null;
 
-    if (!seedProb && isSupabaseConfigured()) {
+    if (!seedProb && supabaseEnabled) {
       try {
         const metaClient =
           process.env.SUPABASE_SERVICE_ROLE_KEY &&
           !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
             ? createAdminClient()
             : await createClient();
-        const { data: probRow } = await metaClient
+        const { data: probRow, error: probErr } = await metaClient
           .from("problems")
           .select("tags, starter_code, solution_code, lessons(chapters(course_id))")
           .eq("id", problemId)
           .maybeSingle();
+        if (probErr) {
+          console.error(
+            "[POST /api/problems/submit] problem metadata fetch error:",
+            probErr
+          );
+          return NextResponse.json(
+            {
+              error:
+                "問題情報の取得に失敗しました。時間をおいて再度お試しください。",
+            },
+            { status: 503 }
+          );
+        }
         if (probRow) {
           const typed = probRow as unknown as {
             tags?: string[];
@@ -160,60 +225,75 @@ export async function POST(request: NextRequest) {
             course_id: typed.lessons?.chapters?.course_id ?? null,
           };
         }
-      } catch {
-        // ignore
+      } catch (metaErr) {
+        console.error(
+          "[POST /api/problems/submit] problem metadata fetch exception:",
+          metaErr
+        );
+        return NextResponse.json(
+          {
+            error:
+              "問題情報の取得に失敗しました。時間をおいて再度お試しください。",
+          },
+          { status: 503 }
+        );
       }
     }
 
-    // コース受講制限（ロック）のサーバー側ガード
-    if (isSupabaseConfigured()) {
+    // 5. コース受講権限・ロックのサーバー側ガード（例外握りつぶし廃止・Fail-Closed）
+    if (supabaseEnabled) {
       try {
-        const userSupabase = await createClient();
-        const {
-          data: { user },
-        } = await userSupabase.auth.getUser();
+        const userCourses = await getCoursesWithProgress(
+          auth.profile.id,
+          auth.profile.company_id ?? null,
+          { throwOnError: true }
+        );
+        const seedChRef = seedProb
+          ? SEED_CHAPTERS.find((ch) => ch.id === seedProb.chapter_id)
+          : undefined;
+        const metaTags = seedProb?.tags ?? dbProblemMeta?.tags ?? [];
+        const isGit =
+          seedProb?.language === "git" ||
+          metaTags.some((t) => t.toUpperCase().includes("GIT"));
+        const isSql =
+          seedProb?.language === "sql" ||
+          metaTags.some((t) => t.toUpperCase().includes("SQL"));
+        const targetCourseId =
+          dbProblemMeta?.course_id ??
+          seedChRef?.course_id ??
+          (isGit
+            ? SEED_GIT_COURSE_ID
+            : isSql
+            ? SEED_SQL_COURSE_ID
+            : SEED_COURSE_ID);
 
-        if (user) {
-          const { data: prof } = await userSupabase
-            .from("profiles")
-            .select("company_id")
-            .eq("id", user.id)
-            .maybeSingle();
-          const userCourses = await getCoursesWithProgress(
-            user.id,
-            prof?.company_id ?? null
+        const matchedCourse = userCourses.find((c) => c.id === targetCourseId);
+        if (!matchedCourse) {
+          return NextResponse.json(
+            { error: "この問題が属するコースは現在受講できません。" },
+            { status: 403 }
           );
-          const seedChRef = seedProb
-            ? SEED_CHAPTERS.find((ch) => ch.id === seedProb.chapter_id)
-            : undefined;
-          const metaTags = seedProb?.tags ?? dbProblemMeta?.tags ?? [];
-          const isGit =
-            seedProb?.language === "git" ||
-            metaTags.some((t) => t.toUpperCase().includes("GIT"));
-          const isSql =
-            seedProb?.language === "sql" ||
-            metaTags.some((t) => t.toUpperCase().includes("SQL"));
-          const targetCourseId =
-            dbProblemMeta?.course_id ??
-            seedChRef?.course_id ??
-            (isGit
-              ? SEED_GIT_COURSE_ID
-              : isSql
-              ? SEED_SQL_COURSE_ID
-              : SEED_COURSE_ID);
-
-          const matchedCourse = userCourses.find((c) => c.id === targetCourseId);
-          if (matchedCourse?.isLocked) {
-            return NextResponse.json(
-              {
-                error: `この問題が属するコースは現在受講制限（ロック）されています。（${matchedCourse.lockReason}）`,
-              },
-              { status: 403 }
-            );
-          }
         }
-      } catch {
-        // ignore
+        if (matchedCourse.isLocked) {
+          return NextResponse.json(
+            {
+              error: `この問題が属するコースは現在受講制限（ロック）されています。（${matchedCourse.lockReason}）`,
+            },
+            { status: 403 }
+          );
+        }
+      } catch (lockErr) {
+        console.error(
+          "[POST /api/problems/submit] course lock check failed:",
+          lockErr
+        );
+        return NextResponse.json(
+          {
+            error:
+              "コース受講権限の確認に失敗しました。時間をおいて再度お試しください。",
+          },
+          { status: 503 }
+        );
       }
     }
 
@@ -454,150 +534,144 @@ export async function POST(request: NextRequest) {
     // 3. Supabase が設定されている場合、submissions / progress / study_logs / profiles を更新
     let savedSubmissionId: string | null = null;
     let updatedAttemptsCount = 1;
-    let dbSaved = !isSupabaseConfigured();
+    let dbSaved = !supabaseEnabled;
 
-    if (isSupabaseConfigured()) {
+    if (supabaseEnabled) {
       try {
-        const userSupabase = await createClient();
-        const {
-          data: { user },
-        } = await userSupabase.auth.getUser();
-
+        const userId = auth.profile.id;
         const dbClient =
           process.env.SUPABASE_SERVICE_ROLE_KEY &&
           !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
             ? createAdminClient()
-            : userSupabase;
+            : await createClient();
 
-        if (user) {
-          // 3-1. submissions に保存
-          const { data: subRow, error: subErr } = await dbClient
-            .from("submissions")
-            .insert({
-              user_id: user.id,
-              problem_id: problemId,
-              code,
-              status: allPassed ? "passed" : overallStatus,
-              passed_count: passedCount,
-              total_count: totalTestsCount,
-              execution_time_ms: totalExecTimeMs,
-              memory_kb: Math.max(128, Math.round(totalSteps / 10)),
-              compile_error: compileErrorText,
-              time_spent_seconds: Math.max(1, Math.round(timeSpentSeconds)),
-            })
-            .select("id")
-            .single();
+        // 3-1. submissions に保存
+        const { data: subRow, error: subErr } = await dbClient
+          .from("submissions")
+          .insert({
+            user_id: userId,
+            problem_id: problemId,
+            code,
+            status: allPassed ? "passed" : overallStatus,
+            passed_count: passedCount,
+            total_count: totalTestsCount,
+            execution_time_ms: totalExecTimeMs,
+            memory_kb: Math.max(128, Math.round(totalSteps / 10)),
+            compile_error: compileErrorText,
+            time_spent_seconds: Math.max(1, Math.round(timeSpentSeconds)),
+          })
+          .select("id")
+          .single();
 
-          if (subErr) {
-            console.error("[POST /api/problems/submit] submissions insert error:", subErr);
-          } else {
-            savedSubmissionId = subRow?.id ?? null;
-          }
-
-          // 3-2. progress の挑戦回数・所要時間・ステータスを更新
-          const { data: existingProg } = await dbClient
-            .from("progress")
-            .select("*")
-            .eq("user_id", user.id)
-            .eq("problem_id", problemId)
-            .maybeSingle();
-
-          updatedAttemptsCount = (existingProg?.attempts_count ?? 0) + 1;
-          const newTotalTime =
-            (existingProg?.total_time_spent_seconds ?? 0) +
-            Math.max(1, Math.round(timeSpentSeconds));
-
-          const newStatus =
-            existingProg?.status === "completed" || allPassed
-              ? "completed"
-              : "in_progress";
-
-          const { error: progErr } = await dbClient.from("progress").upsert(
-            {
-              user_id: user.id,
-              problem_id: problemId,
-              status: newStatus,
-              attempts_count: updatedAttemptsCount,
-              total_time_spent_seconds: newTotalTime,
-              unlocked_hint_step: Math.max(
-                existingProg?.unlocked_hint_step ?? 0,
-                unlockedHintStep
-              ),
-              completed_at: allPassed
-                ? existingProg?.completed_at ?? new Date().toISOString()
-                : existingProg?.completed_at ?? null,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "user_id,problem_id" }
-          );
-          if (progErr) {
-            console.error("[POST /api/problems/submit] progress upsert error:", progErr);
-          }
-
-          // 3-3. study_logs（学習カレンダー用）を更新
-          const todayStr = new Date().toISOString().slice(0, 10);
-          const addedMins = Math.max(1, Math.ceil(timeSpentSeconds / 60));
-
-          const { data: todayLog } = await dbClient
-            .from("study_logs")
-            .select("*")
-            .eq("user_id", user.id)
-            .eq("study_date", todayStr)
-            .maybeSingle();
-
-          const { error: logErr } = await dbClient.from("study_logs").upsert(
-            {
-              user_id: user.id,
-              study_date: todayStr,
-              minutes: (todayLog?.minutes ?? 0) + addedMins,
-              problems_solved:
-                (todayLog?.problems_solved ?? 0) + (allPassed ? 1 : 0),
-            },
-            { onConflict: "user_id,study_date" }
-          );
-          if (logErr) {
-            console.error("[POST /api/problems/submit] study_logs upsert error:", logErr);
-          }
-
-          // 3-4. profiles の連続学習日数（streak_days）と last_study_date を自動更新
-          const { data: prof } = await dbClient
-            .from("profiles")
-            .select("streak_days, last_study_date")
-            .eq("id", user.id)
-            .maybeSingle();
-
-          if (prof) {
-            const lastDateStr = prof.last_study_date;
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toISOString().slice(0, 10);
-
-            let newStreak = prof.streak_days ?? 0;
-            if (lastDateStr === todayStr) {
-              // 今日すでに学習済みの場合は維持（最低1日）
-              newStreak = Math.max(1, newStreak);
-            } else if (lastDateStr === yesterdayStr) {
-              // 昨日学習していた場合はストリーク +1
-              newStreak = newStreak + 1;
-            } else {
-              // 2日以上空いていた、または初回学習の場合は 1 から再スタート
-              newStreak = 1;
-            }
-
-            const { error: profErr } = await dbClient
-              .from("profiles")
-              .update({
-                streak_days: newStreak,
-                last_study_date: todayStr,
-              })
-              .eq("id", user.id);
-            if (profErr) {
-              console.error("[POST /api/problems/submit] profiles update error:", profErr);
-            }
-          }
-
-          dbSaved = !subErr && !progErr && !logErr;
+        if (subErr) {
+          console.error("[POST /api/problems/submit] submissions insert error:", subErr);
+        } else {
+          savedSubmissionId = subRow?.id ?? null;
         }
+
+        // 3-2. progress の挑戦回数・所要時間・ステータスを更新
+        const { data: existingProg } = await dbClient
+          .from("progress")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("problem_id", problemId)
+          .maybeSingle();
+
+        updatedAttemptsCount = (existingProg?.attempts_count ?? 0) + 1;
+        const newTotalTime =
+          (existingProg?.total_time_spent_seconds ?? 0) +
+          Math.max(1, Math.round(timeSpentSeconds));
+
+        const newStatus =
+          existingProg?.status === "completed" || allPassed
+            ? "completed"
+            : "in_progress";
+
+        const { error: progErr } = await dbClient.from("progress").upsert(
+          {
+            user_id: userId,
+            problem_id: problemId,
+            status: newStatus,
+            attempts_count: updatedAttemptsCount,
+            total_time_spent_seconds: newTotalTime,
+            unlocked_hint_step: Math.max(
+              existingProg?.unlocked_hint_step ?? 0,
+              unlockedHintStep
+            ),
+            completed_at: allPassed
+              ? existingProg?.completed_at ?? new Date().toISOString()
+              : existingProg?.completed_at ?? null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,problem_id" }
+        );
+        if (progErr) {
+          console.error("[POST /api/problems/submit] progress upsert error:", progErr);
+        }
+
+        // 3-3. study_logs（学習カレンダー用）を更新
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const addedMins = Math.max(1, Math.ceil(timeSpentSeconds / 60));
+
+        const { data: todayLog } = await dbClient
+          .from("study_logs")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("study_date", todayStr)
+          .maybeSingle();
+
+        const { error: logErr } = await dbClient.from("study_logs").upsert(
+          {
+            user_id: userId,
+            study_date: todayStr,
+            minutes: (todayLog?.minutes ?? 0) + addedMins,
+            problems_solved:
+              (todayLog?.problems_solved ?? 0) + (allPassed ? 1 : 0),
+          },
+          { onConflict: "user_id,study_date" }
+        );
+        if (logErr) {
+          console.error("[POST /api/problems/submit] study_logs upsert error:", logErr);
+        }
+
+        // 3-4. profiles の連続学習日数（streak_days）と last_study_date を自動更新
+        const { data: prof } = await dbClient
+          .from("profiles")
+          .select("streak_days, last_study_date")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (prof) {
+          const lastDateStr = prof.last_study_date;
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+          let newStreak = prof.streak_days ?? 0;
+          if (lastDateStr === todayStr) {
+            // 今日すでに学習済みの場合は維持（最低1日）
+            newStreak = Math.max(1, newStreak);
+          } else if (lastDateStr === yesterdayStr) {
+            // 昨日学習していた場合はストリーク +1
+            newStreak = newStreak + 1;
+          } else {
+            // 2日以上空いていた、または初回学習の場合は 1 から再スタート
+            newStreak = 1;
+          }
+
+          const { error: profErr } = await dbClient
+            .from("profiles")
+            .update({
+              streak_days: newStreak,
+              last_study_date: todayStr,
+            })
+            .eq("id", userId);
+          if (profErr) {
+            console.error("[POST /api/problems/submit] profiles update error:", profErr);
+          }
+        }
+
+        dbSaved = !subErr && !progErr && !logErr;
       } catch (dbEx) {
         console.error("[POST /api/problems/submit] DB persistence error:", dbEx);
       }
@@ -618,13 +692,9 @@ export async function POST(request: NextRequest) {
       dbSaved,
     });
   } catch (err) {
+    console.error("[POST /api/problems/submit] error:", err);
     return NextResponse.json(
-      {
-        error:
-          err instanceof Error
-            ? err.message
-            : "サーバー採点処理中にエラーが発生しました。",
-      },
+      { error: "サーバー採点処理中にエラーが発生しました。" },
       { status: 500 }
     );
   }

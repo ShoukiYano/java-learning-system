@@ -30,7 +30,7 @@ export async function POST() {
         await recordAuditLog({
           actorId: user.id,
           actorEmail: user.email ?? null,
-          actorRole: (profile?.role as string) ?? (user.user_metadata?.role as string) ?? "student",
+          actorRole: (profile?.role as string) ?? "student",
           action: "logout",
           targetSummary: `${profile?.full_name ?? user.email ?? "ユーザー"} がログアウトしました`,
         });

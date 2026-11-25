@@ -41,13 +41,16 @@ export default function StudentProfilePage() {
         if (!user) return;
         const { data: profile } = await supabase
           .from("profiles")
-          .select("*, companies(*)")
+          .select("id, email, full_name, role, company_id, companies(id, name, company_code)")
           .eq("id", user.id)
           .single();
         if (profile) {
           setFullName(profile.full_name);
           setEmail(profile.email);
-          setCompanyName(profile.companies?.name ?? "未所属（個人受講）");
+          const comp = Array.isArray(profile.companies)
+            ? profile.companies[0]
+            : profile.companies;
+          setCompanyName(comp?.name ?? "未所属（個人受講）");
         }
       } catch {
         setFullName("山田 太郎");

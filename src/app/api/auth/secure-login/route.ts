@@ -19,6 +19,7 @@
  * - ログイン失敗時は残り試行回数を明示し、5回連続失敗で15分間のロックアウトが発動します。
  */
 
+import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -34,31 +35,54 @@ import {
   clearAttempts,
 } from "@/lib/login-attempts";
 
+const VALID_ROLES: ReadonlySet<UserRole> = new Set([
+  "admin",
+  "company",
+  "student",
+]);
+
+function timingSafeStringEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a, "utf8");
+  const bufB = Buffer.from(b, "utf8");
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
+
 /**
  * 処理概要：
  * 指定されたロールに対応する期待されるゲートキー文字列を取得する
+ * 本番環境では環境変数未設定時に null を返却し Fail-Closed とする
  *
  * @param role 認証対象のロール（admin / company）
- * @returns 環境変数設定値またはフォールバックのゲートキー文字列
+ * @returns 環境変数設定値（非本番のみ開発用フォールバック可、本番未設定時は null）
  */
-function getExpectedGateKey(role: UserRole): string {
+function getExpectedGateKey(role: UserRole): string | null {
+  const isProd = process.env.NODE_ENV === "production";
   if (role === "admin") {
-    return process.env.ADMIN_GATE_KEY || "dss-admin-gate-2025";
+    return isProd
+      ? process.env.ADMIN_GATE_KEY?.trim() || null
+      : process.env.ADMIN_GATE_KEY?.trim() || "dss-admin-gate-2025";
   }
   if (role === "company") {
-    return process.env.COMPANY_GATE_KEY || "dss-corp-gate-2025";
+    return isProd
+      ? process.env.COMPANY_GATE_KEY?.trim() || null
+      : process.env.COMPANY_GATE_KEY?.trim() || "dss-corp-gate-2025";
   }
-  return "";
+  return null;
 }
 
 /**
  * 処理概要：
  * 管理者ログイン用のマスターPINコードを取得する
+ * 本番環境では環境変数未設定時に null を返却し Fail-Closed とする
  *
- * @returns 環境変数設定値またはデフォルトのマスターPIN（"778899"）
+ * @returns 環境変数設定値（非本番のみ開発用フォールバック可、本番未設定時は null）
  */
-function getExpectedAdminPin(): string {
-  return process.env.ADMIN_MASTER_PIN || "778899";
+function getExpectedAdminPin(): string | null {
+  const isProd = process.env.NODE_ENV === "production";
+  return isProd
+    ? process.env.ADMIN_MASTER_PIN?.trim() || null
+    : process.env.ADMIN_MASTER_PIN?.trim() || "778899";
 }
 
 /**
@@ -98,6 +122,14 @@ export async function POST(request: NextRequest) {
       gateKey?: string;
     } = body;
 
+    if (!expectedRole || !VALID_ROLES.has(expectedRole)) {
+      return NextResponse.json(
+        { error: "不正なログイン種別です。" },
+        { status: 400 }
+      );
+    }
+
+    const isProd = process.env.NODE_ENV === "production";
     const clientIp =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       request.headers.get("x-real-ip")?.trim() ||
@@ -135,7 +167,24 @@ export async function POST(request: NextRequest) {
       const cookieVal = request.cookies.get(cookieName)?.value;
       const requiredGate = getExpectedGateKey(expectedRole);
 
-      if (cookieVal !== requiredGate && gateKey !== requiredGate) {
+      if (!requiredGate) {
+        return NextResponse.json(
+          {
+            error:
+              "認証ゲートウェイが正しく構成されていません。管理者へお問い合わせください。",
+          },
+          { status: 503 }
+        );
+      }
+
+      const cookieMatched =
+        typeof cookieVal === "string" &&
+        timingSafeStringEqual(cookieVal, requiredGate);
+      const gateKeyMatched =
+        typeof gateKey === "string" &&
+        timingSafeStringEqual(gateKey, requiredGate);
+
+      if (!cookieMatched && !gateKeyMatched) {
         recordFailedAttempt(botIpKey, MAX_BOT_IP_FAILED_ATTEMPTS);
         return NextResponse.json(
           { error: "不正なゲートウェイアクセスです。" },
@@ -147,7 +196,19 @@ export async function POST(request: NextRequest) {
     // 3. 管理者ログイン時のマスターPIN検証
     if (expectedRole === "admin") {
       const expectedPin = getExpectedAdminPin();
-      if (!adminPin || adminPin.trim() !== expectedPin) {
+      if (!expectedPin) {
+        return NextResponse.json(
+          {
+            error:
+              "管理者認証設定が正しく構成されていません。管理者へお問い合わせください。",
+          },
+          { status: 503 }
+        );
+      }
+      if (
+        typeof adminPin !== "string" ||
+        !timingSafeStringEqual(adminPin.trim(), expectedPin)
+      ) {
         const att = recordFailedAttempt(
           tenantAccountKey,
           MAX_ACCOUNT_FAILED_ATTEMPTS
@@ -173,8 +234,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 4.5. Supabase未設定（ローカルデモ環境）時の安全なデモ認証ハンドリング
+    // 4.5. Supabase未設定時のハンドリング（本番は503 Fail-Closed、非本番のみローカルデモ認証）
     if (!isSupabaseConfigured()) {
+      if (isProd) {
+        return NextResponse.json(
+          {
+            error:
+              "認証基盤が正しく構成されていません。管理者へお問い合わせください。",
+          },
+          { status: 503 }
+        );
+      }
       if (expectedRole === "company") {
         const verifiedLocalManager = verifyInMemoryCompanyManagerLogin(
           normalizedEmail,
@@ -254,27 +324,34 @@ export async function POST(request: NextRequest) {
         ? createAdminClient()
         : supabase;
 
-    const { data: profile } = await dbClient
+    const { data: profile, error: profileErr } = await dbClient
       .from("profiles")
       .select("role, company_id, companies(company_code)")
       .eq("id", data.user.id)
       .maybeSingle();
 
-    const metaRole = data.user.user_metadata?.role as UserRole | undefined;
-    const emailBasedRole: UserRole | undefined =
-      data.user.email === "admin@example.com"
-        ? "admin"
-        : data.user.email === "company@example.com"
-        ? "company"
-        : undefined;
+    if (profileErr) {
+      await supabase.auth.signOut();
+      console.error(
+        "[POST /api/auth/secure-login] profiles fetch error:",
+        profileErr
+      );
+      return NextResponse.json(
+        {
+          error:
+            "ユーザー権限の確認に失敗しました。時間をおいて再度お試しください。",
+        },
+        { status: 503 }
+      );
+    }
 
-    const actualRole: UserRole =
-      (profile?.role as UserRole) ??
-      metaRole ??
-      emailBasedRole ??
-      "student";
+    const actualRole = profile?.role as UserRole | undefined;
 
-    if (actualRole !== expectedRole) {
+    if (
+      !actualRole ||
+      !VALID_ROLES.has(actualRole) ||
+      actualRole !== expectedRole
+    ) {
       await supabase.auth.signOut();
       const att = recordFailedAttempt(
         tenantAccountKey,
@@ -289,17 +366,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 企業担当者の場合、入力された企業コードと所属テナントの企業コードが一致するか検証
+    // 企業担当者の場合、入力された企業コードと所属テナントのDB企業コードが完全一致するか検証
     if (expectedRole === "company") {
-      const dbCompanyCode = (
-        profile as unknown as { companies?: { company_code?: string } }
-      )?.companies?.company_code?.toUpperCase();
-      const metaCompanyCode = (
-        data.user.user_metadata?.company_code as string | undefined
-      )?.toUpperCase();
+      const dbCompanyCode =
+        (
+          profile as unknown as { companies?: { company_code?: string } }
+        )?.companies?.company_code
+          ?.trim()
+          .toUpperCase() || null;
 
-      const validCode = dbCompanyCode || metaCompanyCode || "ACME2025";
-      if (normalizedCompanyCode !== validCode) {
+      if (!dbCompanyCode || normalizedCompanyCode !== dbCompanyCode) {
         await supabase.auth.signOut();
         const att = recordFailedAttempt(
           tenantAccountKey,

@@ -11,11 +11,18 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured, getCurrentProfile } from "@/lib/data-service";
+import { COMPANY_PUBLIC_COLUMNS } from "@/lib/security-utils";
 import type { Profile, UserRole } from "@/types/database";
 
 export type ApiAuthResult =
   | { ok: true; profile: Profile; role: UserRole }
   | { ok: false; response: NextResponse };
+
+const VALID_ROLES: ReadonlySet<UserRole> = new Set([
+  "admin",
+  "company",
+  "student",
+]);
 
 /**
  * 企業間データ分離（IDOR対策）チェック：
@@ -72,24 +79,40 @@ export async function requireApiAuth(
       };
     }
 
-    const { data: dbProfile } = await supabase
+    const { data: dbProfile, error: profileError } = await supabase
       .from("profiles")
-      .select("*, companies(*)")
+      .select(`*, companies(${COMPANY_PUBLIC_COLUMNS})`)
       .eq("id", user.id)
       .maybeSingle();
 
-    const metaRole = user.user_metadata?.role as UserRole | undefined;
-    // 本番環境ではメールアドレスによるロールフォールバックを行わず、DB/Authの正式ロールのみ採用（DEBT-002対策）
-    const emailBasedRole: UserRole | undefined = isProd
-      ? undefined
-      : user.email === "admin@example.com"
-      ? "admin"
-      : user.email === "company@example.com"
-      ? "company"
-      : undefined;
+    if (profileError) {
+      console.error("[requireApiAuth] profiles fetch error:", profileError);
+      return {
+        ok: false,
+        response: NextResponse.json(
+          {
+            error:
+              "ユーザー権限の確認に失敗しました。時間をおいて再度お試しください。",
+          },
+          { status: 503 }
+        ),
+      };
+    }
 
-    const role: UserRole =
-      (dbProfile?.role as UserRole) ?? metaRole ?? emailBasedRole ?? "student";
+    if (!dbProfile || !VALID_ROLES.has(dbProfile.role as UserRole)) {
+      return {
+        ok: false,
+        response: NextResponse.json(
+          {
+            error:
+              "ユーザープロファイルが未登録または無効なため、この操作を実行できません。",
+          },
+          { status: 403 }
+        ),
+      };
+    }
+
+    const role = dbProfile.role as UserRole;
 
     if (allowedRoles && !allowedRoles.includes(role)) {
       return {
@@ -101,26 +124,17 @@ export async function requireApiAuth(
       };
     }
 
-    const profile: Profile = (dbProfile as Profile) ?? {
-      id: user.id,
-      email: user.email ?? "",
-      full_name: (user.user_metadata?.full_name as string) ?? "ユーザー",
-      role,
-      company_id: null,
-      avatar_url: null,
-      streak_days: 0,
-      last_study_date: null,
-      last_login_at: null,
-      created_at: new Date().toISOString(),
-    };
-
-    return { ok: true, profile, role };
-  } catch {
+    return { ok: true, profile: dbProfile as Profile, role };
+  } catch (err) {
+    console.error("[requireApiAuth] unexpected auth error:", err);
     return {
       ok: false,
       response: NextResponse.json(
-        { error: "認証情報の検証に失敗しました。" },
-        { status: 401 }
+        {
+          error:
+            "認証情報の検証に失敗しました。時間をおいて再度お試しください。",
+        },
+        { status: 503 }
       ),
     };
   }

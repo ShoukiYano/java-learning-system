@@ -21,6 +21,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (!isSupabaseConfigured()) {
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json(
+          { error: "認証基盤が正しく構成されていません。管理者へお問い合わせください。" },
+          { status: 503 }
+        );
+      }
       await recordAuditLog({
         actorEmail: "demo-user@example.com",
         actorRole: "student",
@@ -48,16 +54,23 @@ export async function POST(request: NextRequest) {
 
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
+      console.error("[POST /api/auth/change-password] updateUser error:", error);
       return NextResponse.json(
-        { error: `パスワード更新に失敗しました: ${error.message}` },
+        { error: "パスワードの更新に失敗しました。入力内容を確認してください。" },
         { status: 400 }
       );
     }
 
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
     await recordAuditLog({
       actorId: user.id,
       actorEmail: user.email,
-      actorRole: (user.user_metadata?.role as string) ?? "student",
+      actorRole: (profile?.role as string) ?? "student",
       action: "change_password",
       targetSummary: `${user.email ?? user.id} がパスワードを変更`,
     });
@@ -67,13 +80,9 @@ export async function POST(request: NextRequest) {
       message: "パスワードを正常に変更しました。",
     });
   } catch (err) {
+    console.error("[POST /api/auth/change-password] error:", err);
     return NextResponse.json(
-      {
-        error:
-          err instanceof Error
-            ? err.message
-            : "パスワード変更中にエラーが発生しました。",
-      },
+      { error: "パスワード変更中にエラーが発生しました。" },
       { status: 500 }
     );
   }

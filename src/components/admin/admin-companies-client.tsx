@@ -32,6 +32,8 @@ import {
   AlertTriangle,
   Settings,
   ArrowRight,
+  Copy,
+  Check,
 } from "lucide-react";
 
 export interface CompanyListItem {
@@ -56,6 +58,23 @@ export function AdminCompaniesClient({
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [generatedCreds, setGeneratedCreds] = useState<{
+    companyName: string;
+    email: string;
+    password: string;
+  } | null>(null);
+  const [copiedPassword, setCopiedPassword] = useState(false);
+
+  const handleCopyPassword = async () => {
+    if (!generatedCreds?.password) return;
+    try {
+      await navigator.clipboard.writeText(generatedCreds.password);
+      setCopiedPassword(true);
+      setTimeout(() => setCopiedPassword(false), 2000);
+    } catch {
+      // clipboard API unavailable
+    }
+  };
 
   const generateRandomCode = () => {
     const prefix = name
@@ -71,6 +90,8 @@ export function AdminCompaniesClient({
     setSaving(true);
     setNotice(null);
     setErrorMsg(null);
+    setGeneratedCreds(null);
+    setCopiedPassword(false);
 
     try {
       const res = await fetch("/api/admin/actions", {
@@ -82,7 +103,6 @@ export function AdminCompaniesClient({
             name: name.trim(),
             company_code: code.trim().toUpperCase(),
             contact_email: contactEmail.trim(),
-            initial_password: "Password123!",
           },
         }),
       });
@@ -112,9 +132,16 @@ export function AdminCompaniesClient({
           `テナント企業「${item.name}」は登録されましたが、企業担当者アカウントの自動発行に失敗しました：${data.accountError}（企業詳細画面から担当者アカウントを追加してください）`
         );
       } else {
+        if (data.accountCreated && typeof data.generatedPassword === "string" && data.generatedPassword) {
+          setGeneratedCreds({
+            companyName: item.name,
+            email: item.contact_email,
+            password: data.generatedPassword,
+          });
+        }
         setNotice(
           data.accountCreated
-            ? `✅ テナント企業「${item.name}」（企業コード: ${item.company_code}）をDBに登録し、企業担当者アカウント（${item.contact_email} / 初期パスワード: Password123!）を自動発行しました！`
+            ? `✅ テナント企業「${item.name}」（企業コード: ${item.company_code}）をDBに登録し、企業担当者アカウント（${item.contact_email}）を自動発行しました。`
             : `✅ テナント企業「${item.name}」（企業コード: ${item.company_code}）をデータベースに登録しました。`
         );
       }
@@ -148,6 +175,55 @@ export function AdminCompaniesClient({
         <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
           <span>{notice}</span>
+        </div>
+      )}
+
+      {generatedCreds && (
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 text-xs space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="font-bold flex items-center gap-1.5">
+              <Key className="h-4 w-4 text-amber-700 shrink-0" />
+              <span>
+                発行された初期パスワード（{generatedCreds.companyName} / {generatedCreds.email}）
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs text-amber-900 hover:bg-amber-100"
+              onClick={() => setGeneratedCreds(null)}
+            >
+              閉じる
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <code className="px-3 py-1.5 rounded bg-slate-900 text-emerald-300 font-mono text-sm font-bold select-all">
+              {generatedCreds.password}
+            </code>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 bg-white"
+              onClick={handleCopyPassword}
+            >
+              {copiedPassword ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-emerald-600" />
+                  コピーしました
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" />
+                  パスワードをコピー
+                </>
+              )}
+            </Button>
+          </div>
+          <p className="text-amber-900 font-medium">
+            ※ この初期パスワードはセキュリティ上、今回限り表示され再表示できません。必ず控えて企業担当者へ安全に共有し、初回ログイン後に変更するよう案内してください。
+          </p>
         </div>
       )}
 

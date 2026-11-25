@@ -3,6 +3,11 @@ import { getCurrentProfile, isSupabaseConfigured } from "@/lib/data-service";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
+  extractQaStoragePath,
+  QA_SIGNED_URL_TTL_VIEW_SEC,
+  resolveQaAttachmentSignedUrlBatch,
+} from "@/lib/qa-attachments";
+import {
   StudentQuestionsClient,
   StudentQuestionThread,
   QuestionReplyItem,
@@ -16,11 +21,11 @@ async function loadStudentQuestions(
   if (!isSupabaseConfigured()) return [];
 
   try {
-    const db =
+    const hasServiceRole = Boolean(
       process.env.SUPABASE_SERVICE_ROLE_KEY &&
-      !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
-        ? createAdminClient()
-        : await createClient();
+        !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
+    );
+    const db = hasServiceRole ? createAdminClient() : await createClient();
 
     const { data: qRows } = await db
       .from("student_questions")
@@ -43,11 +48,41 @@ async function loadStudentQuestions(
       .in("question_id", qIds)
       .order("created_at", { ascending: true });
 
-    for (const r of (rRows ?? []) as QuestionReplyItem[]) {
+    const replyRows = (rRows ?? []) as QuestionReplyItem[];
+    const batchItems = replyRows
+      .filter((r) => Array.isArray(r.image_urls) && r.image_urls.length > 0)
+      .map((r) => ({
+        entries: r.image_urls,
+        allowedPrefixes: [`student/${userId}/`, `${r.question_id}/`],
+      }));
+
+    const signedUrlMap =
+      batchItems.length > 0
+        ? await resolveQaAttachmentSignedUrlBatch(
+            db,
+            batchItems,
+            QA_SIGNED_URL_TTL_VIEW_SEC
+          )
+        : new Map<string, string>();
+
+    for (const r of replyRows) {
       if (!repliesMap[r.question_id]) repliesMap[r.question_id] = [];
+      const allowedPrefixes = [`student/${userId}/`, `${r.question_id}/`];
+      const rawUrls = Array.isArray(r.image_urls) ? r.image_urls : [];
+      const resolvedUrls: string[] = [];
+      for (const entry of rawUrls) {
+        const normalized = extractQaStoragePath(entry);
+        if (
+          normalized &&
+          allowedPrefixes.some((prefix) => normalized.startsWith(prefix))
+        ) {
+          const signed = signedUrlMap.get(normalized);
+          if (signed) resolvedUrls.push(signed);
+        }
+      }
       repliesMap[r.question_id].push({
         ...r,
-        image_urls: Array.isArray(r.image_urls) ? r.image_urls : [],
+        image_urls: resolvedUrls,
       });
     }
 

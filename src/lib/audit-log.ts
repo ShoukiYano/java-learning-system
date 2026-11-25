@@ -5,7 +5,6 @@
 
 import { isSupabaseConfigured } from "@/lib/data-service";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 
 export interface AuditLogEntry {
   id: string;
@@ -47,6 +46,11 @@ function getDemoStore(): AuditLogEntry[] {
   return globalThis.__demoAuditLogs;
 }
 
+function hasValidServiceRoleKey(): boolean {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return Boolean(key && !key.includes("your-service-role-key"));
+}
+
 export async function recordAuditLog(params: {
   actorId?: string | null;
   actorEmail?: string | null;
@@ -55,6 +59,9 @@ export async function recordAuditLog(params: {
   targetSummary: string;
   detail?: Record<string, unknown>;
 }) {
+  const isProd = process.env.NODE_ENV === "production";
+  const supabaseEnabled = isSupabaseConfigured();
+
   const entry: AuditLogEntry = {
     id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     actor_id: params.actorId ?? null,
@@ -66,19 +73,26 @@ export async function recordAuditLog(params: {
     created_at: new Date().toISOString(),
   };
 
-  getDemoStore().unshift(entry);
-  if (getDemoStore().length > 200) {
-    getDemoStore().length = 200;
+  // インメモリ保持は非本番ローカルデモ時のみに限定（本番でのメモリ内PII滞留を禁止）
+  if (!isProd && !supabaseEnabled) {
+    getDemoStore().unshift(entry);
+    if (getDemoStore().length > 200) {
+      getDemoStore().length = 200;
+    }
   }
 
-  if (isSupabaseConfigured()) {
+  if (supabaseEnabled) {
+    if (!hasValidServiceRoleKey()) {
+      console.error(
+        "[recordAuditLog] SUPABASE_SERVICE_ROLE_KEY is missing; audit log was not persisted.",
+        { action: entry.action, actorRole: entry.actor_role }
+      );
+      return;
+    }
+
     try {
-      const db =
-        process.env.SUPABASE_SERVICE_ROLE_KEY &&
-        !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
-          ? createAdminClient()
-          : await createClient();
-      await db.from("audit_logs").insert({
+      const db = createAdminClient();
+      const { error } = await db.from("audit_logs").insert({
         actor_id: entry.actor_id,
         actor_email: entry.actor_email,
         actor_role: entry.actor_role,
@@ -86,31 +100,47 @@ export async function recordAuditLog(params: {
         target_summary: entry.target_summary,
         detail_json: entry.detail_json,
       });
-    } catch {
-      // テーブル未作成時はインメモリのみで継続
+      if (error) {
+        console.error("[recordAuditLog] DB insert failed:", error);
+      }
+    } catch (err) {
+      console.error("[recordAuditLog] DB insert failed:", err);
     }
   }
 }
 
 export async function getAuditLogs(limit = 100): Promise<AuditLogEntry[]> {
+  const isProd = process.env.NODE_ENV === "production";
+
   if (isSupabaseConfigured()) {
+    if (!hasValidServiceRoleKey()) {
+      console.error("[getAuditLogs] SUPABASE_SERVICE_ROLE_KEY is missing.");
+      return isProd ? [] : getDemoStore().slice(0, limit);
+    }
+
     try {
-      const db =
-        process.env.SUPABASE_SERVICE_ROLE_KEY &&
-        !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
-          ? createAdminClient()
-          : await createClient();
-      const { data } = await db
+      const db = createAdminClient();
+      const { data, error } = await db
         .from("audit_logs")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(limit);
+      if (error) {
+        console.error("[getAuditLogs] DB select failed:", error);
+        return isProd ? [] : getDemoStore().slice(0, limit);
+      }
       if (data && data.length > 0) {
         return data as AuditLogEntry[];
       }
-    } catch {
-      // fallback
+      return isProd ? [] : getDemoStore().slice(0, limit);
+    } catch (err) {
+      console.error("[getAuditLogs] DB select failed:", err);
+      return isProd ? [] : getDemoStore().slice(0, limit);
     }
+  }
+
+  if (isProd) {
+    return [];
   }
   return getDemoStore().slice(0, limit);
 }

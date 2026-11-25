@@ -9,6 +9,12 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/data-service";
 import type { UserRole } from "@/types/database";
 
+const VALID_ROLES: ReadonlySet<UserRole> = new Set([
+  "admin",
+  "company",
+  "student",
+]);
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -26,20 +32,29 @@ export async function GET() {
       return NextResponse.json({ authenticated: false });
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role, full_name")
       .eq("id", user.id)
       .maybeSingle();
 
-    const metaRole = user.user_metadata?.role as UserRole | undefined;
-    const role: UserRole = (profile?.role as UserRole) ?? metaRole ?? "student";
+    if (
+      profileError ||
+      !profile?.role ||
+      !VALID_ROLES.has(profile.role as UserRole)
+    ) {
+      const unauthRes = NextResponse.json({ authenticated: false });
+      unauthRes.headers.set("Cache-Control", "no-store");
+      return unauthRes;
+    }
+
+    const role = profile.role as UserRole;
 
     const res = NextResponse.json({
       authenticated: true,
       role,
       email: user.email ?? "",
-      fullName: profile?.full_name ?? "",
+      fullName: profile.full_name ?? "",
     });
     res.headers.set("Cache-Control", "no-store");
     return res;

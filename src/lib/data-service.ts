@@ -16,6 +16,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+  COMPANY_PUBLIC_COLUMNS,
+  PROBLEM_STUDENT_COLUMNS,
+} from "@/lib/security-utils";
+import {
   SEED_CHAPTERS,
   SEED_COURSE_ID,
   SEED_COURSES,
@@ -99,7 +103,7 @@ export async function getCurrentProfile(): Promise<Profile> {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("*, companies(*)")
+      .select(`*, companies(${COMPANY_PUBLIC_COLUMNS})`)
       .eq("id", user.id)
       .single();
 
@@ -146,8 +150,10 @@ export interface CourseWithStats extends Course {
  */
 export async function getCoursesWithProgress(
   userId: string,
-  companyId?: string | null
+  companyId?: string | null,
+  options?: { throwOnError?: boolean }
 ): Promise<CourseWithStats[]> {
+  const throwOnError = options?.throwOnError === true;
   // フォールバック用の計算ロジック
   const buildFallbackList = (): CourseWithStats[] => {
     const courseStatsMap = new Map<
@@ -230,19 +236,25 @@ export async function getCoursesWithProgress(
 
   try {
     const supabase = await createClient();
-    const { data: courses } = await supabase
+    const { data: courses, error: coursesErr } = await supabase
       .from("courses")
       .select("*")
       .eq("is_published", true)
       .order("order_index", { ascending: true });
+    if (throwOnError && coursesErr) {
+      throw new Error(`courses fetch failed: ${coursesErr.message}`);
+    }
 
     // 所属企業（companyId）がある場合、company_courses で非表示（is_visible = false）に設定されたコースを除外する
     let hiddenCourseIds = new Set<string>();
     if (companyId) {
-      const { data: visRows } = await supabase
+      const { data: visRows, error: visErr } = await supabase
         .from("company_courses")
         .select("course_id, is_visible")
         .eq("company_id", companyId);
+      if (throwOnError && visErr) {
+        throw new Error(`company_courses fetch failed: ${visErr.message}`);
+      }
       if (visRows) {
         for (const r of visRows as { course_id: string; is_visible: boolean }[]) {
           if (r.is_visible === false) {
@@ -252,29 +264,41 @@ export async function getCoursesWithProgress(
       }
     }
 
-    const { data: problems } = await supabase
+    const { data: problems, error: problemsErr } = await supabase
       .from("problems")
       .select("id, lesson_id, lessons!inner(chapter_id, chapters!inner(course_id))")
       .eq("is_published", true);
+    if (throwOnError && problemsErr) {
+      throw new Error(`problems fetch failed: ${problemsErr.message}`);
+    }
 
-    const { data: progresses } = await supabase
+    const { data: progresses, error: progressErr } = await supabase
       .from("progress")
       .select("*")
       .eq("user_id", userId);
+    if (throwOnError && progressErr) {
+      throw new Error(`progress fetch failed: ${progressErr.message}`);
+    }
 
     // 受講生個別のコースロック・解放設定を取得
     let studentLocksMap = new Map<string, CourseLockStatus>();
     try {
-      const { data: lockRows } = await supabase
+      const { data: lockRows, error: lockErr } = await supabase
         .from("student_course_locks")
         .select("course_id, status")
         .eq("user_id", userId);
+      if (throwOnError && lockErr) {
+        throw new Error(`student_course_locks fetch failed: ${lockErr.message}`);
+      }
       if (lockRows) {
         for (const lr of lockRows as { course_id: string; status: CourseLockStatus }[]) {
           studentLocksMap.set(lr.course_id, lr.status);
         }
       }
-    } catch {
+    } catch (lockCatchErr) {
+      if (throwOnError) {
+        throw lockCatchErr;
+      }
       // テーブル未マイグレーション時はインメモリフォールバック
       for (const sc of SEED_COURSES) {
         studentLocksMap.set(sc.id, getInMemoryStudentCourseLock(userId, sc.id));
@@ -373,7 +397,7 @@ export async function getCoursesWithProgress(
       // 個別ロックオーバーライドの判定
       const lockStatus: CourseLockStatus =
         studentLocksMap.get(course.id) ??
-        getInMemoryStudentCourseLock(userId, course.id);
+        (throwOnError ? "auto" : getInMemoryStudentCourseLock(userId, course.id));
 
       let isLocked = false;
       let lockReason = "受講可能です";
@@ -403,7 +427,10 @@ export async function getCoursesWithProgress(
         prerequisiteCourseTitle: prereqTitle,
       };
     });
-  } catch {
+  } catch (err) {
+    if (throwOnError) {
+      throw err;
+    }
     return fallbackList;
   }
 }
@@ -522,7 +549,7 @@ export async function getCourseTree(
 
     const { data: chaptersData } = await supabase
       .from("chapters")
-      .select("*, lessons(*, problems(*))")
+      .select(`*, lessons(*, problems(${PROBLEM_STUDENT_COLUMNS}))`)
       .eq("course_id", courseId)
       .order("order_index", { ascending: true });
 
@@ -560,6 +587,7 @@ export async function getCourseTree(
               const prog = progressMap.get(prob.id);
               return {
                 ...prob,
+                solution_code: "",
                 status: prog?.status ?? "not_started",
                 attempts_count: prog?.attempts_count ?? 0,
               };
@@ -651,7 +679,7 @@ export async function getProblemDetailForStudent(
     const supabase = await createClient();
     const { data: problem } = await supabase
       .from("problems")
-      .select("*")
+      .select(PROBLEM_STUDENT_COLUMNS)
       .eq("id", problemId)
       .single();
 
@@ -923,7 +951,7 @@ export async function getStudentsAnalyticsFromDb(
 
     let query = adminOrUserClient
       .from("profiles")
-      .select("*, companies(*)")
+      .select(`*, companies(${COMPANY_PUBLIC_COLUMNS})`)
       .eq("role", "student")
       .order("created_at", { ascending: true });
 
@@ -1494,10 +1522,14 @@ export async function getAdminCompaniesList() {
   if (!isSupabaseConfigured()) return defaultCompanies;
 
   try {
-    const db = getServerQueryClient() ?? (await createClient());
+    const adminDb = getServerQueryClient();
+    const db = adminDb ?? (await createClient());
+    const companySelect = adminDb
+      ? "id, name, company_code, contact_email, delay_alert_days, created_at"
+      : COMPANY_PUBLIC_COLUMNS;
     const { data: companies } = await db
       .from("companies")
-      .select("*")
+      .select(companySelect)
       .order("created_at", { ascending: false });
 
     const { data: profiles } = await db
@@ -1507,7 +1539,7 @@ export async function getAdminCompaniesList() {
 
     if (!companies || companies.length === 0) return defaultCompanies;
 
-    return (companies as Company[]).map((c) => {
+    return (companies as unknown as Company[]).map((c) => {
       const cnt = ((profiles ?? []) as { company_id: string | null }[]).filter(
         (p) => p.company_id === c.id
       ).length;

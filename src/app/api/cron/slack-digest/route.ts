@@ -16,22 +16,20 @@ import {
 import { sendCompanyDigestMessage } from "@/lib/slack";
 import { recordAuditLog } from "@/lib/audit-log";
 import { isFirstBusinessDayOfWeekJst } from "@/lib/jp-holidays";
+import { timingSafeStringEqual } from "@/lib/security-utils";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    // CRON_SECRET による認証（本番環境で未設定の場合はフェイルクローズで401拒否）
-    const cronSecret = process.env.CRON_SECRET;
+    // CRON_SECRET による定数時間認証（本番環境で未設定の場合はフェイルクローズで401拒否）
+    const cronSecret = process.env.CRON_SECRET?.trim() || "";
     if (process.env.NODE_ENV === "production" && !cronSecret) {
-      return NextResponse.json(
-        { error: "CRON_SECRET が設定されていないため実行できません。" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     if (cronSecret) {
-      const authHeader = request.headers.get("authorization");
-      if (authHeader !== `Bearer ${cronSecret}`) {
+      const authHeader = request.headers.get("authorization") ?? "";
+      if (!timingSafeStringEqual(authHeader, `Bearer ${cronSecret}`)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
     }
@@ -104,11 +102,9 @@ export async function GET(request: NextRequest) {
       deliveryResults,
     });
   } catch (err) {
+    console.error("[GET /api/cron/slack-digest] error:", err);
     return NextResponse.json(
-      {
-        error:
-          err instanceof Error ? err.message : "Cron実行中にエラーが発生しました。",
-      },
+      { error: "Cron実行中にエラーが発生しました。" },
       { status: 500 }
     );
   }

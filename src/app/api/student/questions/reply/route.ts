@@ -117,8 +117,9 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insErr) {
+      console.error("[POST /api/student/questions/reply] insert error:", insErr);
       return NextResponse.json(
-        { error: `返信の保存に失敗しました: ${insErr.message}` },
+        { error: "返信の保存に失敗しました。時間をおいて再度お試しください。" },
         { status: 500 }
       );
     }
@@ -134,13 +135,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, reply: inserted });
   } catch (err) {
+    console.error("[POST /api/student/questions/reply] error:", err);
     return NextResponse.json(
-      {
-        error:
-          err instanceof Error
-            ? err.message
-            : "返信の送信中にエラーが発生しました。",
-      },
+      { error: "返信の送信中にエラーが発生しました。" },
       { status: 500 }
     );
   }

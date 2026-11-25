@@ -120,13 +120,13 @@ describe("Full Curriculum ST: All 68 Problems (Java / SQL / Git) & 90-Day Plan",
 describe("Full System Security & Route Integrity ST", () => {
   const root = process.cwd();
 
-  it("POST /api/admin/actions enforces 401 when unauthenticated and IDOR guards on feedback & slack digest", () => {
+  it("POST /api/admin/actions enforces requireApiAuth (401/403/503) and IDOR guards on feedback & slack digest", () => {
     const src = fs.readFileSync(
       path.join(root, "src/app/api/admin/actions/route.ts"),
       "utf8"
     );
-    expect(src).toContain("if (!user)");
-    expect(src).toContain("status: 401");
+    expect(src).toContain('requireApiAuth(["admin", "company"])');
+    expect(src).toContain("isSameCompanyTenant");
     expect(src).toContain("他社の受講生に対する評価・コメントは編集できません。");
     expect(src).toContain("他社の受講生に対する評価・コメントは削除できません。");
     expect(src).toContain("他社の進捗ダイジェストは送信できません。");

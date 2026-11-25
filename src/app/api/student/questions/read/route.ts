@@ -38,19 +38,18 @@ export async function POST(request: NextRequest) {
 
     const { error } = await q;
     if (error) {
+      console.error("[POST /api/student/questions/read] update error:", error);
       return NextResponse.json(
-        { error: `既読更新に失敗しました: ${error.message}` },
+        { error: "既読更新に失敗しました。時間をおいて再度お試しください。" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
+    console.error("[POST /api/student/questions/read] error:", err);
     return NextResponse.json(
-      {
-        error:
-          err instanceof Error ? err.message : "既読更新中にエラーが発生しました。",
-      },
+      { error: "既読更新中にエラーが発生しました。" },
       { status: 500 }
     );
   }

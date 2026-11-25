@@ -18,9 +18,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireApiAuth, isSameCompanyTenant } from "@/lib/api-auth";
 import { isSupabaseConfigured, getStudentsAnalyticsFromDb, getMilestonesFromDb } from "@/lib/data-service";
 import { recordAuditLog } from "@/lib/audit-log";
 import { resetLoginAttemptsForEmail } from "@/lib/login-attempts";
+import {
+  generateSecureInitialPassword,
+  validatePasswordStrength,
+} from "@/lib/security-utils";
 import {
   setInMemoryStudentCourseLock,
   addInMemoryCompanyManager,
@@ -34,6 +39,23 @@ import {
 } from "@/lib/seed-data";
 import { sendSlackTestMessage, sendCompanyDigestMessage } from "@/lib/slack";
 
+const COMPANY_ALLOWED_ACTIONS = new Set([
+  "create_feedback",
+  "update_feedback",
+  "delete_feedback",
+  "set_student_course_lock",
+  "send_slack_digest",
+  "delete_student",
+] as const);
+
+type CompanyAllowedAction =
+  | "create_feedback"
+  | "update_feedback"
+  | "delete_feedback"
+  | "set_student_course_lock"
+  | "send_slack_digest"
+  | "delete_student";
+
 /**
  * 処理概要：
  * 管理者・企業向け各種アクションのディスパッチハンドラー
@@ -43,8 +65,29 @@ import { sendSlackTestMessage, sendCompanyDigestMessage } from "@/lib/slack";
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { action, payload } = body;
+    // 1. 共通認証・認可ガード（本番Supabase未設定は503、未認証は401、profiles欠落・student等は403）
+    const auth = await requireApiAuth(["admin", "company"]);
+    if (!auth.ok) {
+      return auth.response;
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "リクエスト形式が不正です。" },
+        { status: 400 }
+      );
+    }
+
+    const { action, payload } = body ?? {};
+    if (typeof action !== "string" || !action.trim()) {
+      return NextResponse.json(
+        { error: "リクエスト形式が不正です。" },
+        { status: 400 }
+      );
+    }
 
     if (!isSupabaseConfigured()) {
       if (action === "test_slack_notification") {
@@ -166,15 +209,23 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const userSupabase = await createClient();
-    const {
-      data: { user },
-    } = await userSupabase.auth.getUser();
+    const callerRole = auth.role;
+    const callerCompanyId = auth.profile.company_id ?? null;
+    const callerName = auth.profile.full_name || "担当者";
+    const callerUserId = auth.profile.id;
+    const callerEmail = auth.profile.email || null;
+    const isProd = process.env.NODE_ENV === "production";
 
-    if (!user) {
+    if (
+      callerRole !== "admin" &&
+      !(
+        callerRole === "company" &&
+        COMPANY_ALLOWED_ACTIONS.has(action as CompanyAllowedAction)
+      )
+    ) {
       return NextResponse.json(
-        { error: "認証が必要です。ログインしてから再度お試しください。" },
-        { status: 401 }
+        { error: "この操作を行う権限がありません。" },
+        { status: 403 }
       );
     }
 
@@ -183,49 +234,7 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY &&
       !process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
         ? createAdminClient()
-        : userSupabase;
-
-    // 権限の確認（admin または 許可された操作を行う company ロール）
-    let callerRole = "student";
-    let callerCompanyId: string | null = null;
-    let callerName = "担当者";
-
-    {
-      const { data: profile } = await db
-        .from("profiles")
-        .select("role, company_id, full_name")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      callerRole =
-        profile?.role ??
-        (user.user_metadata?.role as string | undefined) ??
-        "admin";
-      callerCompanyId = profile?.company_id ?? null;
-      callerName =
-        profile?.full_name ??
-        (user.user_metadata?.full_name as string | undefined) ??
-        "担当者";
-
-      const isFeedbackAction =
-        action === "create_feedback" ||
-        action === "update_feedback" ||
-        action === "delete_feedback";
-
-      const isLockAction = action === "set_student_course_lock";
-      const isSlackDigestAction = action === "send_slack_digest";
-      const isDeleteStudentAction = action === "delete_student";
-
-      if (
-        callerRole !== "admin" &&
-        !(callerRole === "company" && (isFeedbackAction || isLockAction || isSlackDigestAction || isDeleteStudentAction))
-      ) {
-        return NextResponse.json(
-          { error: "この操作を行う権限がありません。" },
-          { status: 403 }
-        );
-      }
-    }
+        : await createClient();
 
     switch (action) {
       // 1. コースの新規作成
@@ -456,7 +465,24 @@ export async function POST(request: NextRequest) {
         const cleanName = String(name || "").trim();
         const cleanCode = String(company_code || "").trim().toUpperCase();
         const cleanEmail = contact_email ? String(contact_email).trim().toLowerCase() : null;
-        const cleanPass = String(initial_password || "Password123!").trim();
+
+        const rawInitialPassword =
+          typeof initial_password === "string" ? initial_password : "";
+        let cleanPass: string;
+        let wasPasswordGenerated = false;
+        if (rawInitialPassword.length > 0) {
+          const pwCheck = validatePasswordStrength(rawInitialPassword);
+          if (!pwCheck.valid) {
+            return NextResponse.json(
+              { ok: false, error: pwCheck.error },
+              { status: 400 }
+            );
+          }
+          cleanPass = rawInitialPassword;
+        } else {
+          cleanPass = generateSecureInitialPassword(14);
+          wasPasswordGenerated = true;
+        }
 
         const { data: company, error: compErr } = await db
           .from("companies")
@@ -469,13 +495,14 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (compErr) {
+          console.error("[POST /api/admin/actions] create_company error:", compErr);
           const isDup = compErr.code === "23505" || compErr.message?.includes("duplicate");
           return NextResponse.json(
             {
               ok: false,
               error: isDup
                 ? `企業コード「${cleanCode}」はすでに登録されています。別の企業コードを指定してください。`
-                : `DB登録エラー: ${compErr.message}`,
+                : "企業の登録処理に失敗しました。",
             },
             { status: isDup ? 409 : 500 }
           );
@@ -484,6 +511,8 @@ export async function POST(request: NextRequest) {
         // サービスロールキーがある場合、企業担当者ログイン用アカウント（role='company'）も確実に作成・紐付け
         let accountCreated = false;
         let accountError: string | null = null;
+        const genericAccountError =
+          "担当者アカウントの自動発行に失敗しました。企業詳細画面から手動で追加してください。";
         if (cleanEmail) {
           if (
             process.env.SUPABASE_SERVICE_ROLE_KEY &&
@@ -516,7 +545,11 @@ export async function POST(request: NextRequest) {
                   { onConflict: "id" }
                 );
               if (profErr) {
-                accountError = `プロファイル保存エラー: ${profErr.message}`;
+                console.error(
+                  "[POST /api/admin/actions] create_company profile upsert error:",
+                  profErr
+                );
+                accountError = genericAccountError;
               } else {
                 accountCreated = true;
               }
@@ -560,67 +593,88 @@ export async function POST(request: NextRequest) {
                 if (!updAuthErr && !profUpErr) {
                   accountCreated = true;
                 } else {
-                  accountError = updAuthErr?.message || profUpErr?.message || null;
+                  console.error(
+                    "[POST /api/admin/actions] create_company sync existing user error:",
+                    updAuthErr || profUpErr
+                  );
+                  accountError = genericAccountError;
                 }
               } else {
-                accountError = authErr.message;
+                console.error(
+                  "[POST /api/admin/actions] create_company createUser error:",
+                  authErr
+                );
+                accountError = genericAccountError;
               }
             }
           } else {
-            accountError = "SUPABASE_SERVICE_ROLE_KEY が未設定のため担当者アカウントを自動発行できませんでした。";
+            console.error(
+              "[POST /api/admin/actions] create_company skipped manager creation: service role key not configured"
+            );
+            accountError = genericAccountError;
           }
         }
 
         await recordAuditLog({
-          actorId: user?.id ?? null,
-          actorEmail: user?.email ?? null,
+          actorId: callerUserId,
+          actorEmail: callerEmail,
           actorRole: callerRole,
           action: "create_company",
           targetSummary: `テナント企業「${cleanName}」（コード: ${cleanCode}）を新規登録しました`,
           detail: { companyId: company.id, accountCreated },
         });
 
-        return NextResponse.json({
-          ok: true,
-          company,
-          accountCreated,
-          accountError,
-        });
+        const includeGeneratedPassword = accountCreated && wasPasswordGenerated;
+        return NextResponse.json(
+          {
+            ok: true,
+            company,
+            accountCreated,
+            accountError,
+            ...(includeGeneratedPassword ? { generatedPassword: cleanPass } : {}),
+          },
+          {
+            headers: { "Cache-Control": "no-store" },
+          }
+        );
       }
 
       // 8. 受講生への評価・コメントの新規登録（管理者・企業担当者共通）
       case "create_feedback": {
         const { student_id, submission_id, rating, comment } = payload;
 
-        // 企業担当者の場合、自社の受講生であるか確認
-        if (callerRole === "company" && callerCompanyId) {
-          const { data: targetSt } = await db
-            .from("profiles")
-            .select("company_id")
-            .eq("id", student_id)
-            .maybeSingle();
-          if (targetSt?.company_id && targetSt.company_id !== callerCompanyId) {
-            return NextResponse.json(
-              { error: "他社の受講生には評価・コメントを登録できません。" },
-              { status: 403 }
-            );
-          }
+        const { data: targetSt, error: targetStErr } = await db
+          .from("profiles")
+          .select("id, role, company_id")
+          .eq("id", student_id)
+          .maybeSingle();
+
+        if (targetStErr) throw targetStErr;
+        if (!targetSt) {
+          return NextResponse.json(
+            { error: "対象の受講生が見つかりませんでした。" },
+            { status: 404 }
+          );
+        }
+        if (targetSt.role !== "student") {
+          return NextResponse.json(
+            { error: "受講生アカウント以外には評価・コメントを登録できません。" },
+            { status: 400 }
+          );
         }
 
-        let authorId = user?.id;
-        if (!authorId) {
-          const { data: anyAdmin } = await db
-            .from("profiles")
-            .select("id")
-            .in("role", ["admin", "company"])
-            .limit(1)
-            .maybeSingle();
-          authorId = anyAdmin?.id;
+        // 企業担当者の場合、自社の受講生であるか厳格に確認（company_id === null も必ず拒否）
+        if (
+          callerRole === "company" &&
+          !isSameCompanyTenant(callerRole, callerCompanyId, targetSt.company_id)
+        ) {
+          return NextResponse.json(
+            { error: "他社の受講生には評価・コメントを登録できません。" },
+            { status: 403 }
+          );
         }
 
-        if (!authorId) {
-          throw new Error("作成者プロファイルが見つかりません。");
-        }
+        const authorId = callerUserId;
 
         const { data: fb, error: fbErr } = await db
           .from("feedbacks")
@@ -646,25 +700,33 @@ export async function POST(request: NextRequest) {
       case "update_feedback": {
         const { feedback_id, rating, comment } = payload;
 
-        // デモ用ID（eval-...）の場合はDBクエリをスキップして成功を返す
-        if (String(feedback_id).startsWith("eval-")) {
+        // デモ用ID（eval-...）のバイパスは非本番環境のみ許可
+        if (!isProd && String(feedback_id).startsWith("eval-")) {
           return NextResponse.json({ ok: true });
         }
 
         if (callerRole === "company") {
-          const { data: fbOwner } = await db
+          const { data: fbOwner, error: fbOwnerErr } = await db
             .from("feedbacks")
             .select("student_id")
             .eq("id", feedback_id)
             .maybeSingle();
-          const { data: stProf } = fbOwner?.student_id
-            ? await db
-                .from("profiles")
-                .select("company_id")
-                .eq("id", fbOwner.student_id)
-                .maybeSingle()
-            : { data: null };
-          if (!callerCompanyId || !stProf || stProf.company_id !== callerCompanyId) {
+          if (fbOwnerErr) throw fbOwnerErr;
+          if (!fbOwner?.student_id) {
+            return NextResponse.json(
+              { error: "対象の評価・コメントが見つかりませんでした。" },
+              { status: 404 }
+            );
+          }
+          const { data: stProf, error: stProfErr } = await db
+            .from("profiles")
+            .select("company_id")
+            .eq("id", fbOwner.student_id)
+            .maybeSingle();
+          if (stProfErr) throw stProfErr;
+          if (
+            !isSameCompanyTenant(callerRole, callerCompanyId, stProf?.company_id)
+          ) {
             return NextResponse.json(
               { error: "他社の受講生に対する評価・コメントは編集できません。" },
               { status: 403 }
@@ -689,23 +751,32 @@ export async function POST(request: NextRequest) {
       // 8-3. 評価・コメントの削除（管理者・企業担当者共通）
       case "delete_feedback": {
         const { feedback_id } = payload;
-        if (String(feedback_id).startsWith("eval-")) {
+        // デモ用ID（eval-...）のバイパスは非本番環境のみ許可
+        if (!isProd && String(feedback_id).startsWith("eval-")) {
           return NextResponse.json({ ok: true });
         }
         if (callerRole === "company") {
-          const { data: fbOwner } = await db
+          const { data: fbOwner, error: fbOwnerErr } = await db
             .from("feedbacks")
             .select("student_id")
             .eq("id", feedback_id)
             .maybeSingle();
-          const { data: stProf } = fbOwner?.student_id
-            ? await db
-                .from("profiles")
-                .select("company_id")
-                .eq("id", fbOwner.student_id)
-                .maybeSingle()
-            : { data: null };
-          if (!callerCompanyId || !stProf || stProf.company_id !== callerCompanyId) {
+          if (fbOwnerErr) throw fbOwnerErr;
+          if (!fbOwner?.student_id) {
+            return NextResponse.json(
+              { error: "対象の評価・コメントが見つかりませんでした。" },
+              { status: 404 }
+            );
+          }
+          const { data: stProf, error: stProfErr } = await db
+            .from("profiles")
+            .select("company_id")
+            .eq("id", fbOwner.student_id)
+            .maybeSingle();
+          if (stProfErr) throw stProfErr;
+          if (
+            !isSameCompanyTenant(callerRole, callerCompanyId, stProf?.company_id)
+          ) {
             return NextResponse.json(
               { error: "他社の受講生に対する評価・コメントは削除できません。" },
               { status: 403 }
@@ -729,7 +800,7 @@ export async function POST(request: NextRequest) {
             title: String(title).trim(),
             content_md: String(content_md).trim(),
             company_id: company_id || null,
-            created_by: user?.id ?? null,
+            created_by: callerUserId,
           })
           .select("*")
           .single();
@@ -802,6 +873,14 @@ export async function POST(request: NextRequest) {
           compUpdateData.question_slack_channel_id = payload.question_slack_channel_id;
         }
 
+        // 新しい担当者パスワードが指定されている場合は、DB更新前に強度ポリシーを検証
+        if (cleanEmail && new_manager_password) {
+          const pwCheck = validatePasswordStrength(String(new_manager_password));
+          if (!pwCheck.valid) {
+            return NextResponse.json({ error: pwCheck.error }, { status: 400 });
+          }
+        }
+
         const { data: updatedCompany, error: upErr } = await db
           .from("companies")
           .update(compUpdateData)
@@ -810,19 +889,15 @@ export async function POST(request: NextRequest) {
           .maybeSingle();
 
         if (upErr) {
+          console.error("[POST /api/admin/actions] update_company error:", upErr);
           return NextResponse.json(
-            {
-              error: `DB保存エラー: ${upErr.message}（カラム追加直後の場合はSupabaseで NOTIFY pgrst, 'reload schema'; を実行してください）`,
-            },
+            { error: "企業情報の更新に失敗しました。" },
             { status: 500 }
           );
         }
         if (!updatedCompany) {
           return NextResponse.json(
-            {
-              error:
-                "企業レコードの更新が反映されませんでした（RLS権限またはSUPABASE_SERVICE_ROLE_KEY設定を確認してください）。",
-            },
+            { error: "企業情報の更新権限がないか、対象企業が見つかりませんでした。" },
             { status: 403 }
           );
         }
@@ -831,15 +906,18 @@ export async function POST(request: NextRequest) {
         let managerUpdated = false;
         if (cleanEmail && new_manager_password) {
           const normalizedEmail = cleanEmail.toLowerCase();
-          const pass = String(new_manager_password).trim();
+          const pass = String(new_manager_password);
           if (
             !process.env.SUPABASE_SERVICE_ROLE_KEY ||
             process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
           ) {
+            console.error(
+              "[POST /api/admin/actions] update_company manager password update failed: service role key not configured"
+            );
             return NextResponse.json(
               {
                 error:
-                  "企業情報は保存しましたが、SUPABASE_SERVICE_ROLE_KEY が未設定のため担当者パスワードを更新できませんでした。",
+                  "企業情報は保存しましたが、担当者パスワードの更新に失敗しました。管理者へお問い合わせください。",
               },
               { status: 500 }
             );
@@ -881,8 +959,12 @@ export async function POST(request: NextRequest) {
                   { onConflict: "id" }
                 );
               if (profErr) {
+                console.error(
+                  "[POST /api/admin/actions] update_company profile upsert error:",
+                  profErr
+                );
                 return NextResponse.json(
-                  { error: `担当者プロファイル保存エラー: ${profErr.message}` },
+                  { error: "担当者プロファイルの保存に失敗しました。" },
                   { status: 500 }
                 );
               }
@@ -896,10 +978,12 @@ export async function POST(request: NextRequest) {
               if (matched?.id) {
                 targetUid = matched.id;
               } else {
+                console.error(
+                  "[POST /api/admin/actions] update_company createUser error:",
+                  createErr
+                );
                 return NextResponse.json(
-                  {
-                    error: `担当者アカウント作成エラー: ${createErr?.message ?? "不明なエラー"}`,
-                  },
+                  { error: "担当者アカウントの作成に失敗しました。" },
                   { status: 500 }
                 );
               }
@@ -918,8 +1002,12 @@ export async function POST(request: NextRequest) {
                 },
               });
             if (pwErr) {
+              console.error(
+                "[POST /api/admin/actions] update_company password update error:",
+                pwErr
+              );
               return NextResponse.json(
-                { error: `担当者パスワード更新エラー: ${pwErr.message}` },
+                { error: "担当者パスワードの更新に失敗しました。" },
                 { status: 500 }
               );
             }
@@ -936,8 +1024,12 @@ export async function POST(request: NextRequest) {
                 { onConflict: "id" }
               );
             if (profUpErr) {
+              console.error(
+                "[POST /api/admin/actions] update_company profile update error:",
+                profUpErr
+              );
               return NextResponse.json(
-                { error: `担当者プロファイル更新エラー: ${profUpErr.message}` },
+                { error: "担当者プロファイルの更新に失敗しました。" },
                 { status: 500 }
               );
             }
@@ -951,8 +1043,8 @@ export async function POST(request: NextRequest) {
         }
 
         await recordAuditLog({
-          actorId: user?.id ?? null,
-          actorEmail: user?.email ?? null,
+          actorId: callerUserId,
+          actorEmail: callerEmail,
           actorRole: callerRole,
           action: "update_company",
           targetSummary: `企業「${name}」の設定を更新しました（コード: ${cleanCode}）`,
@@ -983,17 +1075,22 @@ export async function POST(request: NextRequest) {
         const validStatus =
           status === "unlocked" || status === "locked" ? status : "auto";
 
-        // 企業担当者の場合は自社受講生か確認
+        // 企業担当者の場合は自社受講生か厳格に確認（company_id === null も必ず拒否）
         if (callerRole === "company") {
-          const { data: studentProfile } = await db
+          const { data: studentProfile, error: stErr } = await db
             .from("profiles")
-            .select("company_id")
+            .select("id, company_id")
             .eq("id", userId)
             .maybeSingle();
 
+          if (stErr) throw stErr;
+
           if (
-            !studentProfile ||
-            studentProfile.company_id !== callerCompanyId
+            !isSameCompanyTenant(
+              callerRole,
+              callerCompanyId,
+              studentProfile?.company_id
+            )
           ) {
             return NextResponse.json(
               { error: "自社所属以外の受講生の設定を変更することはできません。" },
@@ -1013,14 +1110,18 @@ export async function POST(request: NextRequest) {
               course_id: courseId,
               status: validStatus,
               note: note ?? null,
-              updated_by: user?.id ?? null,
+              updated_by: callerUserId,
               updated_at: new Date().toISOString(),
             },
             { onConflict: "user_id,course_id" }
           );
         if (lockErr) {
+          console.error(
+            "[POST /api/admin/actions] set_student_course_lock error:",
+            lockErr
+          );
           return NextResponse.json(
-            { error: `コース受講ロックのDB保存に失敗しました: ${lockErr.message}` },
+            { error: "コース受講ロックの保存に失敗しました。" },
             { status: 500 }
           );
         }
@@ -1036,15 +1137,28 @@ export async function POST(request: NextRequest) {
       // 14. 企業担当者（マネージャー）アカウントの新規作成
       case "create_company_manager": {
         const { companyId, fullName, email, password } = payload;
-        const cleanEmail = String(email).trim().toLowerCase();
+        const cleanEmail = String(email || "").trim().toLowerCase();
         const cleanName = String(fullName || "企業担当者").trim();
-        const cleanPass = String(password).trim();
+        const rawPass = typeof password === "string" ? password : "";
 
-        if (!cleanEmail || !cleanPass) {
+        if (!cleanEmail) {
           return NextResponse.json(
-            { error: "メールアドレスとパスワードを入力してください。" },
+            { error: "メールアドレスを入力してください。" },
             { status: 400 }
           );
+        }
+
+        let cleanPass: string;
+        let wasPasswordGenerated = false;
+        if (rawPass.length > 0) {
+          const pwCheck = validatePasswordStrength(rawPass);
+          if (!pwCheck.valid) {
+            return NextResponse.json({ error: pwCheck.error }, { status: 400 });
+          }
+          cleanPass = rawPass;
+        } else {
+          cleanPass = generateSecureInitialPassword(14);
+          wasPasswordGenerated = true;
         }
 
         // 企業の企業コードを取得
@@ -1141,18 +1255,23 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        return NextResponse.json({ ok: true, manager: localMgr });
+        return NextResponse.json(
+          {
+            ok: true,
+            manager: localMgr,
+            ...(wasPasswordGenerated ? { generatedPassword: cleanPass } : {}),
+          },
+          { headers: { "Cache-Control": "no-store" } }
+        );
       }
 
       // 15. 企業担当者（マネージャー）のパスワード再設定
       case "reset_company_manager_password": {
         const { managerId, email, newPassword } = payload;
-        const cleanPass = String(newPassword).trim();
-        if (!cleanPass || cleanPass.length < 6) {
-          return NextResponse.json(
-            { error: "パスワードは6文字以上で入力してください。" },
-            { status: 400 }
-          );
+        const cleanPass = String(newPassword ?? "");
+        const pwCheck = validatePasswordStrength(cleanPass);
+        if (!pwCheck.valid) {
+          return NextResponse.json({ error: pwCheck.error }, { status: 400 });
         }
 
         updateInMemoryCompanyManagerPassword(managerId || email, cleanPass);
@@ -1185,8 +1304,8 @@ export async function POST(request: NextRequest) {
         }
 
         await recordAuditLog({
-          actorId: user?.id ?? null,
-          actorEmail: user?.email ?? null,
+          actorId: callerUserId,
+          actorEmail: callerEmail,
           actorRole: callerRole,
           action: "reset_manager_password",
           targetSummary: `企業担当者(${email || managerId})のパスワードを再設定しました`,
@@ -1261,20 +1380,61 @@ export async function POST(request: NextRequest) {
       // 19. 研修進捗ダイジェストSlack送信
       case "send_slack_digest": {
         const { webhookUrl, companyName, companyId, channelName } = payload;
+        if (
+          callerRole === "company" &&
+          !isSameCompanyTenant(callerRole, callerCompanyId, companyId)
+        ) {
+          return NextResponse.json(
+            { error: "他社の進捗ダイジェストは送信できません。" },
+            { status: 403 }
+          );
+        }
+        const targetCompanyId =
+          callerRole === "company" ? callerCompanyId! : companyId;
+
+        let effectiveWebhookUrl = webhookUrl;
+        let effectiveChannelName = channelName;
+        let effectiveCompanyName = companyName;
+
+        // company ロール時はクライアント送信の webhookUrl を一切無視し、DB companies.slack_webhook_url のみを正本参照
         if (callerRole === "company") {
-          if (!callerCompanyId || companyId !== callerCompanyId) {
+          const { data: compRow, error: compErr } = await db
+            .from("companies")
+            .select("name, slack_webhook_url, slack_channel_name")
+            .eq("id", targetCompanyId)
+            .maybeSingle();
+          if (compErr) throw compErr;
+          const dbWebhookUrl = compRow?.slack_webhook_url?.trim();
+          if (!dbWebhookUrl) {
             return NextResponse.json(
-              { error: "他社の進捗ダイジェストは送信できません。" },
-              { status: 403 }
+              {
+                ok: false,
+                error:
+                  "企業のSlack Webhook URLが未設定です。管理者へ設定を依頼してください。",
+              },
+              { status: 400 }
             );
           }
+          effectiveWebhookUrl = dbWebhookUrl;
+          effectiveChannelName =
+            compRow?.slack_channel_name ?? effectiveChannelName;
+          effectiveCompanyName = compRow?.name ?? effectiveCompanyName;
         }
-        const targetCompanyId = callerRole === "company" ? callerCompanyId! : companyId;
+
         const students = await getStudentsAnalyticsFromDb(targetCompanyId);
         const milestones = await getMilestonesFromDb(targetCompanyId);
-        const result = await sendCompanyDigestMessage(webhookUrl, companyName, students, milestones, channelName);
+        const result = await sendCompanyDigestMessage(
+          effectiveWebhookUrl,
+          effectiveCompanyName,
+          students,
+          milestones,
+          effectiveChannelName
+        );
         if (!result.ok) {
-          return NextResponse.json({ ok: false, error: result.error || "Slack送信に失敗しました。" }, { status: 400 });
+          return NextResponse.json(
+            { ok: false, error: result.error || "Slack送信に失敗しました。" },
+            { status: 400 }
+          );
         }
         return NextResponse.json({ ok: true, result });
       }
@@ -1319,10 +1479,9 @@ export async function POST(request: NextRequest) {
           .select("*")
           .single();
         if (msErr) {
+          console.error("[POST /api/admin/actions] save_milestone error:", msErr);
           return NextResponse.json(
-            {
-              error: `目標マイルストーンのDB保存に失敗しました: ${msErr.message}`,
-            },
+            { error: "目標マイルストーンの保存に失敗しました。" },
             { status: 500 }
           );
         }
@@ -1330,8 +1489,8 @@ export async function POST(request: NextRequest) {
         const scheduleLabel =
           offsetVal !== null ? `登録から${offsetVal}日後` : cleanDate;
         await recordAuditLog({
-          actorId: user?.id ?? null,
-          actorEmail: user?.email ?? null,
+          actorId: callerUserId,
+          actorEmail: callerEmail,
           actorRole: callerRole,
           action: "save_milestone",
           targetSummary: `目標マイルストーン「${payload.title}」(${scheduleLabel})を保存しました`,
@@ -1348,14 +1507,15 @@ export async function POST(request: NextRequest) {
           .delete()
           .eq("id", payload.id);
         if (delMsErr) {
+          console.error("[POST /api/admin/actions] delete_milestone error:", delMsErr);
           return NextResponse.json(
-            { error: `目標マイルストーンの削除に失敗しました: ${delMsErr.message}` },
+            { error: "目標マイルストーンの削除に失敗しました。" },
             { status: 500 }
           );
         }
         await recordAuditLog({
-          actorId: user?.id ?? null,
-          actorEmail: user?.email ?? null,
+          actorId: callerUserId,
+          actorEmail: callerEmail,
           actorRole: callerRole,
           action: "delete_milestone",
           targetSummary: `目標マイルストーン(${payload.id})を削除しました`,
@@ -1398,7 +1558,7 @@ export async function POST(request: NextRequest) {
 
         if (
           callerRole === "company" &&
-          (!callerCompanyId || targetProf.company_id !== callerCompanyId)
+          !isSameCompanyTenant(callerRole, callerCompanyId, targetProf.company_id)
         ) {
           return NextResponse.json(
             { error: "他社所属の受講生は削除できません。" },
@@ -1410,11 +1570,11 @@ export async function POST(request: NextRequest) {
           !process.env.SUPABASE_SERVICE_ROLE_KEY ||
           process.env.SUPABASE_SERVICE_ROLE_KEY.includes("your-service-role-key")
         ) {
+          console.error(
+            "[POST /api/admin/actions] delete_student failed: service role key not configured"
+          );
           return NextResponse.json(
-            {
-              error:
-                "SUPABASE_SERVICE_ROLE_KEY が未設定のため受講生アカウントを削除できません。",
-            },
+            { error: "受講生アカウントの削除処理を実行できません。管理者へお問い合わせください。" },
             { status: 500 }
           );
         }
@@ -1432,8 +1592,8 @@ export async function POST(request: NextRequest) {
         if (delProfErr) throw delProfErr;
 
         await recordAuditLog({
-          actorId: user?.id ?? null,
-          actorEmail: user?.email ?? null,
+          actorId: callerUserId,
+          actorEmail: callerEmail,
           actorRole: callerRole,
           action: "delete_student",
           targetSummary: `受講生「${targetProf.full_name}（${targetProf.email}）」を削除しました`,
@@ -1450,25 +1610,10 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (err) {
-    let errorMessage = "データベース保存中にエラーが発生しました。";
-    if (err instanceof Error && err.message) {
-      errorMessage = err.message;
-    } else if (err && typeof err === "object" && "message" in err) {
-      const e = err as {
-        message?: string;
-        code?: string;
-        details?: string;
-        hint?: string;
-      };
-      const parts = [
-        e.code ? `[${e.code}]` : "",
-        e.message || "",
-        e.details ? `(${e.details})` : "",
-        e.hint ? `Hint: ${e.hint}` : "",
-      ].filter(Boolean);
-      if (parts.length > 0) errorMessage = parts.join(" ");
-    }
     console.error("[POST /api/admin/actions] error:", err);
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return NextResponse.json(
+      { error: "処理中にサーバーエラーが発生しました。時間をおいて再度お試しください。" },
+      { status: 500 }
+    );
   }
 }

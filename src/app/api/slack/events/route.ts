@@ -17,11 +17,18 @@ import {
 } from "@/lib/slack";
 import { isSupabaseConfigured } from "@/lib/data-service";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  QA_ATTACHMENTS_BUCKET,
+  MAX_QA_IMAGE_BYTES,
+  MAX_SLACK_EVENT_IMAGES,
+  detectAndValidateImage,
+} from "@/lib/qa-attachments";
 
 interface SlackFileItem {
   id?: string;
   name?: string;
   mimetype?: string;
+  size?: number;
   url_private_download?: string;
   url_private?: string;
 }
@@ -42,33 +49,15 @@ interface SlackEventPayload {
   };
 }
 
-function extFromMime(mime: string): string {
-  if (mime.includes("jpeg") || mime.includes("jpg")) return "jpg";
-  if (mime.includes("gif")) return "gif";
-  if (mime.includes("webp")) return "webp";
-  return "png";
-}
-
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text();
-    let payload: SlackEventPayload;
-    try {
-      payload = JSON.parse(rawBody) as SlackEventPayload;
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
 
-    // 1. Slack Event Subscriptions の URL 疎通確認（url_verification）
-    if (payload.type === "url_verification" && payload.challenge) {
-      return NextResponse.json({ challenge: payload.challenge });
-    }
-
-    // 2. Slack 署名検証（SLACK_SIGNING_SECRET）
-    const signingSecret = process.env.SLACK_SIGNING_SECRET || "";
+    // 1. 最優先で Slack 署名検証（SLACK_SIGNING_SECRET）を実行（url_verification を含む全リクエストを保護）
+    const signingSecret = process.env.SLACK_SIGNING_SECRET?.trim() || "";
     if (process.env.NODE_ENV === "production" && !signingSecret) {
       return NextResponse.json(
-        { error: "SLACK_SIGNING_SECRET が未設定です。" },
+        { error: "認証設定が構成されていません。" },
         { status: 401 }
       );
     }
@@ -82,6 +71,18 @@ export async function POST(request: NextRequest) {
       if (!valid) {
         return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
       }
+    }
+
+    let payload: SlackEventPayload;
+    try {
+      payload = JSON.parse(rawBody) as SlackEventPayload;
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    // 2. 署名検証済みの Slack Event Subscriptions URL 疎通確認（url_verification）
+    if (payload.type === "url_verification" && typeof payload.challenge === "string") {
+      return NextResponse.json({ challenge: payload.challenge });
     }
 
     // 3. イベントフィルタリング（Bot投稿・削除・編集・親メッセージ自体は除外し、スレッド返信のみ処理）
@@ -132,36 +133,46 @@ export async function POST(request: NextRequest) {
         ? await fetchSlackUserName(botToken, ev.user)
         : "担当講師";
 
-    // 5. 添付画像がある場合は Slack から取得して Supabase Storage (qa-attachments) へ永続保存
-    const uploadedImageUrls: string[] = [];
-    const imageFiles = (ev.files ?? []).filter((f) =>
-      (f.mimetype || "").startsWith("image/")
-    );
+    // 5. 添付画像がある場合は Slack から取得してマジックバイト検証後に Supabase Storage (qa-attachments) へ保存（DBにはパスのみ保存）
+    const uploadedImagePaths: string[] = [];
+    const imageFiles = (ev.files ?? [])
+      .filter((f) => (f.mimetype || "").startsWith("image/"))
+      .slice(0, MAX_SLACK_EVENT_IMAGES);
 
     if (botToken && imageFiles.length > 0) {
       for (let i = 0; i < imageFiles.length; i++) {
         const f = imageFiles[i];
+        if (typeof f.size === "number" && f.size > MAX_QA_IMAGE_BYTES) {
+          console.warn("[POST /api/slack/events] skipped oversized Slack attachment");
+          continue;
+        }
         const url = f.url_private_download || f.url_private;
         if (!url) continue;
-        const downloaded = await downloadSlackFileBuffer(botToken, url);
+        const downloaded = await downloadSlackFileBuffer(
+          botToken,
+          url,
+          MAX_QA_IMAGE_BYTES
+        );
         if (!downloaded) continue;
 
-        const ext = extFromMime(downloaded.contentType);
-        const storagePath = `${question.id}/${Date.now()}-${i}.${ext}`;
+        const validated = detectAndValidateImage(downloaded.buffer);
+        if (!validated.valid) {
+          console.warn(
+            "[POST /api/slack/events] skipped invalid Slack image attachment"
+          );
+          continue;
+        }
+
+        const storagePath = `${question.id}/${Date.now()}-${i}.${validated.ext}`;
         const { error: uploadErr } = await adminClient.storage
-          .from("qa-attachments")
+          .from(QA_ATTACHMENTS_BUCKET)
           .upload(storagePath, downloaded.buffer, {
-            contentType: downloaded.contentType,
+            contentType: validated.mime,
             upsert: false,
           });
 
         if (!uploadErr) {
-          const { data: pub } = adminClient.storage
-            .from("qa-attachments")
-            .getPublicUrl(storagePath);
-          if (pub?.publicUrl) {
-            uploadedImageUrls.push(pub.publicUrl);
-          }
+          uploadedImagePaths.push(storagePath);
         } else {
           console.error("[Slack Events] Storage upload error:", uploadErr);
         }
@@ -169,7 +180,7 @@ export async function POST(request: NextRequest) {
     }
 
     const replyBody = String(ev.text ?? "").trim();
-    if (!replyBody && uploadedImageUrls.length === 0) {
+    if (!replyBody && uploadedImagePaths.length === 0) {
       return NextResponse.json({ ok: true, ignored: "empty_reply" });
     }
 
@@ -182,7 +193,7 @@ export async function POST(request: NextRequest) {
           sender_role: "instructor",
           sender_name: senderName,
           body: replyBody,
-          image_urls: uploadedImageUrls,
+          image_urls: uploadedImagePaths,
           slack_ts: ev.ts,
         },
         { onConflict: "slack_ts", ignoreDuplicates: true }
@@ -190,7 +201,10 @@ export async function POST(request: NextRequest) {
 
     if (repErr) {
       console.error("[Slack Events] reply insert error:", repErr);
-      return NextResponse.json({ error: repErr.message }, { status: 500 });
+      return NextResponse.json(
+        { error: "回答の保存に失敗しました。" },
+        { status: 500 }
+      );
     }
 
     // 7. 質問ステータスを「回答済み」＋「受講生未読」に更新
@@ -206,12 +220,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       questionId: question.id,
-      imagesSaved: uploadedImageUrls.length,
+      imagesSaved: uploadedImagePaths.length,
     });
   } catch (err) {
     console.error("[POST /api/slack/events] error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Slack event error" },
+      { error: "イベント処理中にエラーが発生しました。" },
       { status: 500 }
     );
   }

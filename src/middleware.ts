@@ -197,12 +197,28 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // Supabase未設定または初期値の場合はモック動作として通過
+  // Supabase未設定または初期値の場合
   if (
     !supabaseUrl ||
     !supabaseAnonKey ||
     supabaseUrl.includes("your-project-id")
   ) {
+    const isProtectedPortalPath =
+      pathname.startsWith("/student") ||
+      pathname.startsWith("/company") ||
+      pathname.startsWith("/admin");
+    if (isProd && isProtectedPortalPath) {
+      return applySecurityHeaders(
+        NextResponse.json(
+          {
+            error:
+              "認証基盤が正しく構成されていません。管理者へお問い合わせください。",
+          },
+          { status: 503 }
+        ),
+        isSensitivePortal
+      );
+    }
     return applySecurityHeaders(supabaseResponse, isSensitivePortal);
   }
 
@@ -256,7 +272,7 @@ export async function middleware(request: NextRequest) {
     }
     if (isCompanyPortal) {
       const cookieGate = request.cookies.get("dss_company_gate")?.value;
-      if (cookieGate === expectedCompanyGate) {
+      if (expectedCompanyGate && cookieGate === expectedCompanyGate) {
         const url = request.nextUrl.clone();
         url.pathname = "/company/login";
         return applySecurityHeaders(NextResponse.redirect(url), true);
@@ -271,7 +287,7 @@ export async function middleware(request: NextRequest) {
     }
     if (isAdminPortal) {
       const cookieGate = request.cookies.get("dss_admin_gate")?.value;
-      if (cookieGate === expectedAdminGate) {
+      if (expectedAdminGate && cookieGate === expectedAdminGate) {
         const url = request.nextUrl.clone();
         url.pathname = "/admin/login";
         return applySecurityHeaders(NextResponse.redirect(url), true);
@@ -287,27 +303,34 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(supabaseResponse, isSensitivePortal);
   }
 
-  // 5. ログイン済みの場合、profiles.role（または user_metadata.role）を取得してロール境界を厳格に強制
+  // 5. ログイン済みの場合、DB正本 profiles.role のみを参照してロール境界を厳格に強制
   if (isAuthPage || isStudentPortal || isCompanyPortal || isAdminPortal) {
-    const { data: profile } = await supabase
+    const validRoles: ReadonlySet<UserRole> = new Set([
+      "admin",
+      "company",
+      "student",
+    ]);
+    const { data: profile, error: profileErr } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .maybeSingle();
 
-    const metaRole = user.user_metadata?.role as UserRole | undefined;
-    const emailBasedRole: UserRole | undefined =
-      user.email === "admin@example.com"
-        ? "admin"
-        : user.email === "company@example.com"
-        ? "company"
-        : undefined;
+    if (
+      profileErr ||
+      !profile?.role ||
+      !validRoles.has(profile.role as UserRole)
+    ) {
+      if (isAuthPage) {
+        return applySecurityHeaders(supabaseResponse, isSensitivePortal);
+      }
+      // プロファイル欠落・DBエラー時は高権限ポータルから確実に遮断し再認証へ誘導
+      const url = request.nextUrl.clone();
+      url.pathname = "/student/login";
+      return applySecurityHeaders(NextResponse.redirect(url), isSensitivePortal);
+    }
 
-    const role: UserRole =
-      (profile?.role as UserRole) ??
-      metaRole ??
-      emailBasedRole ??
-      "student";
+    const role = profile.role as UserRole;
 
     const roleHome =
       role === "admin"
